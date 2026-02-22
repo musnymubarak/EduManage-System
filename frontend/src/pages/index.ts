@@ -1,0 +1,10 @@
+export { default as StudentsPage } from './StudentsPlaceholder';
+export { default as TeachersPage } from './TeachersPlaceholder';
+export { default as AttendancePage } from './AttendancePlaceholder';
+export { default as FeesPage } from './FeesPlaceholder';
+export { default as ExamsPage } from './ExamsPlaceholder';
+export { default as InventoryPage } from './InventoryPlaceholder';
+export { default as TodoPage } from './TodoPlaceholder';
+export { default as UsersPage } from './UsersPlaceholder';
+export { default as ExpenditurePage } from './ExpenditurePlaceholder';
+export { default as DonationsPage } from './DonationsPlaceholder';

@@ -1,0 +1,609 @@
+// Prisma schema for Buhary Madrasa Management System
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// USER MANAGEMENT & AUTHENTICATION
+// ============================================
+
+enum UserRole {
+  SUPER_ADMIN
+  PRINCIPAL
+  VICE_PRINCIPAL
+  RECEPTIONIST
+  EXPENDITURE_RECEPTIONIST
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+model User {
+  id            String     @id @default(uuid())
+  username      String     @unique
+  email         String?    @unique
+  password      String
+  role          UserRole
+  status        UserStatus @default(ACTIVE)
+  fullName      String
+  phoneNumber   String?
+  createdBy     String?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  lastLogin     DateTime?
+
+  // Relations
+  createdTodos  Todo[]     @relation("CreatedTodos")
+  assignedTodos Todo[]     @relation("AssignedTodos")
+
+  @@map("users")
+}
+
+// ============================================
+// STUDENT MANAGEMENT
+// ============================================
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum BloodGroup {
+  A_POSITIVE
+  A_NEGATIVE
+  B_POSITIVE
+  B_NEGATIVE
+  O_POSITIVE
+  O_NEGATIVE
+  AB_POSITIVE
+  AB_NEGATIVE
+}
+
+model Student {
+  id                    String       @id @default(uuid())
+  admissionNumber       String       @unique
+  fullName              String
+  nameWithInitials      String
+  dateOfBirth           DateTime
+  gender                Gender
+  bloodGroup            BloodGroup?
+  religion              String
+  ethnicity             String
+  nationality           String       @default("Sri Lankan")
+  nic                   String?      @unique
+  birthCertificateNo    String?      @unique
+  
+  // Contact Information
+  address               String
+  city                  String
+  district              String
+  province              String
+  postalCode            String?
+  mobileNumber          String?
+  homePhone             String?
+  email                 String?
+  
+  // Academic Information
+  classId               String
+  class                 Class        @relation(fields: [classId], references: [id])
+  admissionDate         DateTime     @default(now())
+  previousSchool        String?
+  
+  // Guardian Information
+  guardianName          String
+  guardianRelationship  String
+  guardianNIC           String
+  guardianPhone         String
+  guardianAddress       String?
+  guardianOccupation    String?
+  guardianEmail         String?
+  
+  // Emergency Contact
+  emergencyContactName  String
+  emergencyContactPhone String
+  emergencyRelationship String
+  
+  // Medical Information
+  medicalConditions     String?
+  allergies             String?
+  
+  // Documents & Attachments
+  profilePhoto          String?
+  documents             StudentDocument[]
+  
+  // Status
+  status                String       @default("ACTIVE") // ACTIVE, INACTIVE, GRADUATED, TRANSFERRED
+  
+  // Timestamps
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
+  
+  // Relations
+  attendance            StudentAttendance[]
+  feePayments           FeePayment[]
+  examMarks             ExamMark[]
+
+  @@map("students")
+}
+
+model StudentDocument {
+  id          String   @id @default(uuid())
+  studentId   String
+  student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  documentType String  // "Birth Certificate", "ID Copy", "Previous School Leaving Certificate", etc.
+  fileName    String
+  fileUrl     String
+  uploadedAt  DateTime @default(now())
+
+  @@map("student_documents")
+}
+
+// ============================================
+// TEACHER MANAGEMENT
+// ============================================
+
+model Teacher {
+  id                 String   @id @default(uuid())
+  employeeNumber     String   @unique
+  fullName           String
+  nameWithInitials   String
+  dateOfBirth        DateTime
+  gender             Gender
+  nic                String   @unique
+  
+  // Contact Information
+  address            String
+  city               String
+  district           String
+  province           String
+  mobileNumber       String
+  email              String?
+  
+  // Qualifications
+  qualifications     TeacherQualification[]
+  specialization     String?
+  experience         String?
+  
+  // Employment Information
+  joinedDate         DateTime @default(now())
+  designation        String
+  employmentType     String   // PERMANENT, CONTRACT, TEMPORARY
+  
+  // Documents
+  profilePhoto       String?
+  documents          TeacherDocument[]
+  
+  // Status
+  status             String   @default("ACTIVE") // ACTIVE, INACTIVE, RESIGNED, TERMINATED
+  
+  // Timestamps
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  
+  // Relations
+  attendance         TeacherAttendance[]
+  schedules          TeacherSchedule[]
+
+  @@map("teachers")
+}
+
+model TeacherQualification {
+  id            String  @id @default(uuid())
+  teacherId     String
+  teacher       Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  qualification String  // Degree/Diploma name
+  institution   String
+  year          Int
+  field         String?
+
+  @@map("teacher_qualifications")
+}
+
+model TeacherDocument {
+  id           String   @id @default(uuid())
+  teacherId    String
+  teacher      Teacher  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  documentType String
+  fileName     String
+  fileUrl      String
+  uploadedAt   DateTime @default(now())
+
+  @@map("teacher_documents")
+}
+
+// ============================================
+// CLASS MANAGEMENT
+// ============================================
+
+model Class {
+  id           String   @id @default(uuid())
+  name         String   @unique // 9A, 9B, 10A, etc.
+  grade        Int      // 9, 10, 11, 12, 13, 14
+  section      String?  // A, B, or null
+  capacity     Int      @default(30)
+  academicYear String
+  
+  // Relations
+  students     Student[]
+  schedules    TeacherSchedule[]
+  attendance   StudentAttendance[]
+  exams        Exam[]
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("classes")
+}
+
+// ============================================
+// ATTENDANCE MANAGEMENT
+// ============================================
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  SICK_LEAVE
+  EXCUSED
+}
+
+model StudentAttendance {
+  id        String           @id @default(uuid())
+  studentId String
+  student   Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  classId   String
+  class     Class            @relation(fields: [classId], references: [id])
+  date      DateTime
+  status    AttendanceStatus
+  remarks   String?
+  markedBy  String           // User ID who marked attendance
+  createdAt DateTime         @default(now())
+
+  @@unique([studentId, date])
+  @@map("student_attendance")
+}
+
+model TeacherAttendance {
+  id        String           @id @default(uuid())
+  teacherId String
+  teacher   Teacher          @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  date      DateTime
+  status    AttendanceStatus
+  remarks   String?
+  markedBy  String
+  createdAt DateTime         @default(now())
+
+  @@unique([teacherId, date])
+  @@map("teacher_attendance")
+}
+
+// ============================================
+// TEACHER SCHEDULE
+// ============================================
+
+enum DayOfWeek {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+model TeacherSchedule {
+  id         String    @id @default(uuid())
+  teacherId  String
+  teacher    Teacher   @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  classId    String
+  class      Class     @relation(fields: [classId], references: [id])
+  subject    String
+  dayOfWeek  DayOfWeek
+  startTime  String    // Format: "08:00"
+  endTime    String    // Format: "09:00"
+  room       String?
+  isActive   Boolean   @default(true)
+  
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@map("teacher_schedules")
+}
+
+// ============================================
+// FEE MANAGEMENT
+// ============================================
+
+enum FeeType {
+  MONTHLY
+  EXAM
+  ADMISSION
+  OTHER
+}
+
+enum PaymentStatus {
+  PAID
+  PARTIAL
+  PENDING
+  OVERDUE
+}
+
+enum PaymentMethod {
+  CASH
+  BANK_TRANSFER
+  ONLINE
+  CHEQUE
+}
+
+model FeePayment {
+  id              String        @id @default(uuid())
+  studentId       String
+  student         Student       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  feeType         FeeType
+  amount          Float
+  paidAmount      Float         @default(0)
+  balance         Float
+  status          PaymentStatus
+  dueDate         DateTime
+  paymentDate     DateTime?
+  paymentMethod   PaymentMethod?
+  receiptNumber   String?       @unique
+  month           String?       // For monthly fees: "2024-01"
+  academicYear    String
+  remarks         String?
+  
+  // Partial payment tracking
+  partialPayments PartialPayment[]
+  
+  collectedBy     String        // User ID
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@map("fee_payments")
+}
+
+model PartialPayment {
+  id            String     @id @default(uuid())
+  feePaymentId  String
+  feePayment    FeePayment @relation(fields: [feePaymentId], references: [id], onDelete: Cascade)
+  amount        Float
+  paymentDate   DateTime
+  paymentMethod PaymentMethod
+  receiptNumber String?
+  collectedBy   String     // User ID
+  remarks       String?
+  createdAt     DateTime   @default(now())
+
+  @@map("partial_payments")
+}
+
+// ============================================
+// EXAM MANAGEMENT
+// ============================================
+
+enum ExamTerm {
+  FIRST_TERM
+  SECOND_TERM
+  THIRD_TERM
+}
+
+model Exam {
+  id           String    @id @default(uuid())
+  name         String
+  term         ExamTerm
+  classId      String
+  class        Class     @relation(fields: [classId], references: [id])
+  subject      String
+  examDate     DateTime
+  totalMarks   Float
+  passingMarks Float
+  examFee      Float?
+  academicYear String
+  
+  // Relations
+  marks        ExamMark[]
+  
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@map("exams")
+}
+
+model ExamMark {
+  id         String   @id @default(uuid())
+  examId     String
+  exam       Exam     @relation(fields: [examId], references: [id], onDelete: Cascade)
+  studentId  String
+  student    Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  marksObtained Float
+  grade      String?
+  remarks    String?
+  enteredBy  String   // User ID
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([examId, studentId])
+  @@map("exam_marks")
+}
+
+// ============================================
+// INVENTORY MANAGEMENT
+// ============================================
+
+enum InventoryCategory {
+  FURNITURE
+  STATIONERY
+  ELECTRONICS
+  SPORTS
+  BOOKS
+  OTHER
+}
+
+enum InventoryStatus {
+  AVAILABLE
+  IN_USE
+  DAMAGED
+  OUT_OF_STOCK
+}
+
+model Inventory {
+  id          String            @id @default(uuid())
+  itemName    String
+  category    InventoryCategory
+  quantity    Int
+  minQuantity Int               @default(10) // Threshold for low stock alert
+  unit        String            // pieces, boxes, etc.
+  location    String?
+  status      InventoryStatus   @default(AVAILABLE)
+  purchaseDate DateTime?
+  price       Float?
+  supplier    String?
+  remarks     String?
+  
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@map("inventory")
+}
+
+// ============================================
+// DONATIONS
+// ============================================
+
+model Donation {
+  id            String        @id @default(uuid())
+  donorName     String
+  donorContact  String?
+  donorAddress  String?
+  amount        Float
+  donationType  String        // MONETARY, GOODS, OTHER
+  purpose       String?
+  paymentMethod PaymentMethod @default(CASH)
+  receiptNumber String?       @unique
+  date          DateTime      @default(now())
+  remarks       String?
+  recordedBy    String        // User ID
+  createdAt     DateTime      @default(now())
+
+  @@map("donations")
+}
+
+// ============================================
+// EXPENDITURE TRACKING
+// ============================================
+
+enum ExpenditureCategory {
+  SALARIES
+  UTILITIES
+  MAINTENANCE
+  SUPPLIES
+  TRANSPORTATION
+  EVENTS
+  OTHER
+}
+
+model Expenditure {
+  id          String               @id @default(uuid())
+  date        DateTime
+  category    ExpenditureCategory
+  description String
+  amount      Float
+  vendor      String?
+  billNumber  String?
+  paymentMethod PaymentMethod
+  remarks     String?
+  recordedBy  String               // User ID (Expenditure Receptionist)
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+
+  @@map("expenditures")
+}
+
+// ============================================
+// TODO / ISSUE MANAGEMENT
+// ============================================
+
+enum TodoStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+}
+
+enum TodoPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+model Todo {
+  id          String       @id @default(uuid())
+  title       String
+  description String
+  priority    TodoPriority @default(MEDIUM)
+  status      TodoStatus   @default(TODO)
+  category    String?      // INVENTORY, MAINTENANCE, ACADEMIC, OTHER
+  
+  // For push notifications
+  createdBy   String
+  creator     User         @relation("CreatedTodos", fields: [createdBy], references: [id])
+  assignedTo  String?
+  assignee    User?        @relation("AssignedTodos", fields: [assignedTo], references: [id])
+  
+  // Timestamps
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  completedAt DateTime?
+  
+  // History tracking
+  history     TodoHistory[]
+
+  @@map("todos")
+}
+
+model TodoHistory {
+  id        String     @id @default(uuid())
+  todoId    String
+  todo      Todo       @relation(fields: [todoId], references: [id], onDelete: Cascade)
+  action    String     // CREATED, STATUS_CHANGED, ASSIGNED, COMPLETED
+  oldValue  String?
+  newValue  String?
+  changedBy String     // User ID
+  timestamp DateTime   @default(now())
+
+  @@map("todo_history")
+}
+
+// ============================================
+// SYSTEM SETTINGS & CONFIGURATION
+// ============================================
+
+model AcademicYear {
+  id        String   @id @default(uuid())
+  year      String   @unique // "2024-2025"
+  startDate DateTime
+  endDate   DateTime
+  isCurrent Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@map("academic_years")
+}
+
+model SystemSetting {
+  id    String @id @default(uuid())
+  key   String @unique
+  value String
+  updatedAt DateTime @updatedAt
+
+  @@map("system_settings")
+}

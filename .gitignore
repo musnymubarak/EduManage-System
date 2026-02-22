@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.env
+*.log
+.DS_Store
+*.pem
+.vscode/
+coverage/
+uploads/
+
+# Keep .env.example
+!.env.example
