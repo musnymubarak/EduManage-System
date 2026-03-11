@@ -1,7 +1,6 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
 import prisma from '../utils/prisma';
-import { format } from 'date-fns';
 
 export const markStudentAttendance = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -121,7 +120,7 @@ export const getStudentAttendance = async (req: AuthRequest, res: Response): Pro
   }
 };
 
-export const getAttendanceSummary = async (req: AuthRequest, res: Response): Promise<void> => {
+export const getAttendanceSummary = async (_req: AuthRequest, res: Response): Promise<void> => {
   try {
     const today = new Date();
     today.setHours(0, 0, 0, 0);

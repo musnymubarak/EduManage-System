@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, InventoryCategory } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
@@ -63,16 +63,16 @@ async function main() {
   console.log('✅ Classes created: 9A, 9B, 10A, 10B, 11A, 11B, 12, 13, 14');
 
   // Create sample inventory items
-  const inventoryItems = [
-    { itemName: 'Student Tables', category: 'FURNITURE', quantity: 150, minQuantity: 20, unit: 'pieces' },
-    { itemName: 'Student Chairs', category: 'FURNITURE', quantity: 150, minQuantity: 20, unit: 'pieces' },
-    { itemName: 'Whiteboard Markers (Black)', category: 'STATIONERY', quantity: 50, minQuantity: 10, unit: 'pieces' },
-    { itemName: 'Whiteboard Markers (Blue)', category: 'STATIONERY', quantity: 50, minQuantity: 10, unit: 'pieces' },
-    { itemName: 'Whiteboard Markers (Red)', category: 'STATIONERY', quantity: 30, minQuantity: 10, unit: 'pieces' },
-    { itemName: 'Whiteboard Erasers', category: 'STATIONERY', quantity: 20, minQuantity: 5, unit: 'pieces' },
-    { itemName: 'Exercise Books', category: 'STATIONERY', quantity: 500, minQuantity: 100, unit: 'pieces' },
-    { itemName: 'Pens (Blue)', category: 'STATIONERY', quantity: 200, minQuantity: 50, unit: 'pieces' },
-  ];
+ const inventoryItems = [
+  { itemName: 'Student Tables', category: InventoryCategory.FURNITURE, quantity: 150, minQuantity: 20, unit: 'pieces' },
+  { itemName: 'Student Chairs', category: InventoryCategory.FURNITURE, quantity: 150, minQuantity: 20, unit: 'pieces' },
+  { itemName: 'Whiteboard Markers (Black)', category: InventoryCategory.STATIONERY, quantity: 50, minQuantity: 10, unit: 'pieces' },
+  { itemName: 'Whiteboard Markers (Blue)', category: InventoryCategory.STATIONERY, quantity: 50, minQuantity: 10, unit: 'pieces' },
+  { itemName: 'Whiteboard Markers (Red)', category: InventoryCategory.STATIONERY, quantity: 30, minQuantity: 10, unit: 'pieces' },
+  { itemName: 'Whiteboard Erasers', category: InventoryCategory.STATIONERY, quantity: 20, minQuantity: 5, unit: 'pieces' },
+  { itemName: 'Exercise Books', category: InventoryCategory.STATIONERY, quantity: 500, minQuantity: 100, unit: 'pieces' },
+  { itemName: 'Pens (Blue)', category: InventoryCategory.STATIONERY, quantity: 200, minQuantity: 50, unit: 'pieces' },
+];
 
   for (const item of inventoryItems) {
     await prisma.inventory.create({

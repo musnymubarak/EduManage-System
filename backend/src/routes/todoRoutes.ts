@@ -1,12 +1,13 @@
 import { Router } from 'express';
 import { authenticateToken, authorize } from '../middleware/auth';
 import * as todoController from '../controllers/todoController';
+import { UserRole } from '@prisma/client';
 
 const router = Router();
 
 router.use(authenticateToken);
 
-const managers = ['RECEPTIONIST', 'PRINCIPAL', 'VICE_PRINCIPAL', 'SUPER_ADMIN'];
+const managers: UserRole[] = ['RECEPTIONIST', 'PRINCIPAL', 'VICE_PRINCIPAL', 'SUPER_ADMIN'];
 
 router.post('/', authorize('RECEPTIONIST', 'SUPER_ADMIN'), todoController.createTodo);
 router.get('/', todoController.getAllTodos);

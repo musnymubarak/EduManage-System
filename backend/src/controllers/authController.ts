@@ -44,8 +44,8 @@ export const login = async (req: AuthRequest, res: Response): Promise<void> => {
         username: user.username,
         role: user.role,
       },
-      config.jwt.secret,
-      { expiresIn: config.jwt.expiresIn }
+      String(config.jwt.secret),
+      { expiresIn: '7d' }
     );
 
     res.json({
@@ -159,8 +159,8 @@ export const refreshToken = async (req: AuthRequest, res: Response): Promise<voi
         username: user.username,
         role: user.role,
       },
-      config.jwt.secret,
-      { expiresIn: config.jwt.expiresIn }
+      String(config.jwt.secret),
+      { expiresIn: '7d' }
     );
 
     res.json({

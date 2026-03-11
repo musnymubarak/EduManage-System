@@ -1,12 +1,13 @@
 import { Router } from 'express';
 import { authenticateToken, authorize } from '../middleware/auth';
 import * as commonController from '../controllers/commonController';
+import { UserRole } from '@prisma/client';
 
 const router = Router();
 
 router.use(authenticateToken);
 
-const managers = ['RECEPTIONIST', 'PRINCIPAL', 'VICE_PRINCIPAL', 'SUPER_ADMIN'];
+const managers: UserRole[] = ['RECEPTIONIST', 'PRINCIPAL', 'VICE_PRINCIPAL', 'SUPER_ADMIN'];
 
 // Classes
 router.get('/classes', commonController.getAllClasses);

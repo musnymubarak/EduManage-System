@@ -3,7 +3,7 @@ import { AuthRequest } from '../middleware/auth';
 import prisma from '../utils/prisma';
 
 // Classes
-export const getAllClasses = async (req: AuthRequest, res: Response): Promise<void> => {
+export const getAllClasses = async (_req: AuthRequest, res: Response): Promise<void> => {
   try {
     const classes = await prisma.class.findMany({
       include: {
@@ -144,7 +144,7 @@ export const updateInventoryItem = async (req: AuthRequest, res: Response): Prom
   }
 };
 
-export const getLowStockItems = async (req: AuthRequest, res: Response): Promise<void> => {
+export const getLowStockItems = async (_req: AuthRequest, res: Response): Promise<void> => {
   try {
     const items = await prisma.inventory.findMany({
       where: {

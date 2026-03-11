@@ -9,7 +9,7 @@ export const config = {
   // JWT Configuration
   jwt: {
     secret: process.env.JWT_SECRET || 'your-secret-key',
-    expiresIn: process.env.JWT_EXPIRES_IN || '7d',
+    expiresIn: (process.env.JWT_EXPIRES_IN || '7d') as string,
   },
   
   // Database

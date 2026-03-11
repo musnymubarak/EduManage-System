@@ -2,13 +2,14 @@ import { Router } from 'express';
 import { authenticateToken, authorize } from '../middleware/auth';
 import { upload } from '../middleware/upload';
 import * as studentController from '../controllers/studentController';
+import { UserRole } from '@prisma/client';
 
 const router = Router();
 
 router.use(authenticateToken);
 
 // Receptionist, Principal, Vice Principal, Super Admin can manage students
-const studentManagers = ['RECEPTIONIST', 'PRINCIPAL', 'VICE_PRINCIPAL', 'SUPER_ADMIN'];
+const studentManagers: UserRole[] = ['RECEPTIONIST', 'PRINCIPAL', 'VICE_PRINCIPAL', 'SUPER_ADMIN'];
 
 router.post('/', authorize(...studentManagers), studentController.registerStudent);
 router.get('/', studentController.getAllStudents);
