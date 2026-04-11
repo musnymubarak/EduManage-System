@@ -1,3 +1,9 @@
+<!-- 
+
+I used reference name as Buhary Madrasa just for an example change it into apropriate one 
+
+-->
+
 # Development Setup Guide
 
 ## Prerequisites
@@ -37,6 +43,8 @@ copy .env.example .env
 
 ```env
 DATABASE_URL="postgresql://postgres:password@localhost:5432/buhary_madrasa"
+DATABASE_URL="postgresql://eduadmin1:eduadmin1@localhost:5432/edumanage_system"
+
 JWT_SECRET="your-super-secret-jwt-key-min-32-chars"
 JWT_EXPIRES_IN="7d"
 PORT=5000

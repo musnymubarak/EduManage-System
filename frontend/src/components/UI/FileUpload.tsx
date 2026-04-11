@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Upload, X, File, Image as ImageIcon, FileText } from 'lucide-react';
+import { Upload, X, File as FileIcon, Image as ImageIcon, FileText } from 'lucide-react';
 import { cn } from '../../utils/helpers';
 
 interface FileUploadProps {
@@ -83,7 +83,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
     } else if (file.type.includes('pdf')) {
       return <FileText className="h-8 w-8 text-red-500" />;
     } else {
-      return <File className="h-8 w-8 text-gray-500" />;
+      return <FileIcon className="h-8 w-8 text-gray-500" />;
     }
   };
 
