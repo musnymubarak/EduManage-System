@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
-import { Plus, BookOpen, Search, Edit, Award, FileText } from 'lucide-react';
+import { Plus, BookOpen, Award, FileText } from 'lucide-react';
 import api from '../services/api';
 import { Exam, Class, Student } from '../types';
 import { Card } from '../components/UI/Card';
@@ -18,7 +18,6 @@ const ExamsPage: React.FC = () => {
   const [selectedExam, setSelectedExam] = useState<Exam | null>(null);
   const [isMarksEntryModalOpen, setIsMarksEntryModalOpen] = useState(false);
 
-  const queryClient = useQueryClient();
 
   // Fetch exams
   const { data: examsData, isLoading } = useQuery({
@@ -130,7 +129,9 @@ const ExamsPage: React.FC = () => {
                     <td className="px-4 py-3">
                       <Badge variant="info">{exam.term.replace('_', ' ')}</Badge>
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">{exam.classId}</td>
+                    <td className="px-4 py-3 text-sm text-gray-600">
+                      {exam.class?.name || exam.classId}
+                    </td>
                     <td className="px-4 py-3 text-sm text-gray-600">{exam.subject}</td>
                     <td className="px-4 py-3 text-sm text-gray-600">{formatDate(exam.examDate)}</td>
                     <td className="px-4 py-3 text-center text-sm font-medium text-gray-900">

@@ -166,6 +166,7 @@ model Teacher {
   city               String
   district           String
   province           String
+  postalCode         String?
   mobileNumber       String
   email              String?
   
@@ -178,6 +179,7 @@ model Teacher {
   joinedDate         DateTime @default(now())
   designation        String
   employmentType     String   // PERMANENT, CONTRACT, TEMPORARY
+  basicSalary        Float    @default(0)
   
   // Documents
   profilePhoto       String?

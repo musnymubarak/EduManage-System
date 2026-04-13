@@ -9,7 +9,8 @@ router.use(authenticateToken);
 
 const managers: UserRole[] = ['RECEPTIONIST', 'PRINCIPAL', 'VICE_PRINCIPAL', 'SUPER_ADMIN'];
 
-router.post('/payment', authorize(...managers), feeController.recordPayment);
+router.get('/payments', feeController.getAllFeePayments);
+router.post('/payments', authorize(...managers), feeController.recordPayment);
 router.post('/partial-payment', authorize(...managers), feeController.recordPartialPayment);
 router.get('/student/:studentId', feeController.getStudentFeeHistory);
 router.get('/pending', feeController.getPendingPayments);

@@ -2,32 +2,65 @@ import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
 import { AppError } from '../middleware/errorHandler';
 import prisma from '../utils/prisma';
-import { uploadToCloudinary } from '../utils/cloudinary';
+import { uploadToCloudinary, deleteFromCloudinary } from '../utils/cloudinary';
 
 export const registerStudent = async (req: AuthRequest, res: Response): Promise<void> => {
+  const uploadedUrls: string[] = [];
   try {
-    const studentData = req.body;
-    console.log('DEBUG: Full req.body:', JSON.stringify(studentData, null, 2));
-    console.log('DEBUG: Date of Birth received:', studentData.dateOfBirth);
+    const { ...studentData } = req.body;
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+
+    // Filter fields to match Prisma schema
+    const {
+      fullName, nameWithInitials, gender, bloodGroup, religion, ethnicity, 
+      nationality, nic, birthCertificateNo, address, city, district, 
+      province, postalCode, mobileNumber, homePhone, email, classId,
+      admissionDate, previousSchool, guardianName, guardianRelationship,
+      guardianNIC, guardianPhone, guardianAddress, guardianOccupation,
+      guardianEmail, emergencyContactName, emergencyContactPhone,
+      emergencyRelationship, medicalConditions, allergies, status
+    } = studentData;
+
+    if (!fullName || !nameWithInitials || !gender || !studentData.dateOfBirth || !classId) {
+      res.status(400).json({ success: false, error: 'Missing required student information' });
+      return;
+    }
 
     // Validate date strings
     const dob = new Date(studentData.dateOfBirth);
     if (isNaN(dob.getTime())) {
       res.status(400).json({ 
         success: false, 
-        error: `Invalid date of birth provided: ${studentData.dateOfBirth}`,
-        receivedBody: studentData 
+        error: `Invalid date of birth provided: ${studentData.dateOfBirth}`
       });
       return;
     }
 
-    const admDate = studentData.admissionDate ? new Date(studentData.admissionDate) : new Date();
+    const admDate = admissionDate ? new Date(admissionDate) : new Date();
     if (isNaN(admDate.getTime())) {
-      res.status(400).json({ 
-        success: false, 
-        error: 'Invalid admission date provided' 
-      });
+      res.status(400).json({ success: false, error: 'Invalid admission date provided' });
       return;
+    }
+
+    // Handle Profile Photo Upload
+    let profilePhotoUrl = null;
+    if (files && files['profilePhoto'] && files['profilePhoto'][0]) {
+      profilePhotoUrl = await uploadToCloudinary(files['profilePhoto'][0], 'students/profiles');
+      uploadedUrls.push(profilePhotoUrl);
+    }
+
+    // Handle Documents Upload
+    const documentsData: any[] = [];
+    if (files && files['documents']) {
+      for (const file of files['documents']) {
+        const fileUrl = await uploadToCloudinary(file, 'students/documents');
+        uploadedUrls.push(fileUrl);
+        documentsData.push({
+          documentType: 'OTHER', // Default type
+          fileName: file.originalname,
+          fileUrl: fileUrl,
+        });
+      }
     }
 
     // Generate admission number
@@ -43,13 +76,49 @@ export const registerStudent = async (req: AuthRequest, res: Response): Promise<
 
     const student = await prisma.student.create({
       data: {
-        ...studentData,
         admissionNumber,
+        fullName,
+        nameWithInitials,
         dateOfBirth: dob,
+        gender,
+        bloodGroup,
+        religion,
+        ethnicity,
+        nationality: nationality || 'Sri Lankan',
+        nic,
+        birthCertificateNo,
+        address,
+        city,
+        district,
+        province,
+        postalCode,
+        mobileNumber,
+        homePhone,
+        email,
+        classId,
         admissionDate: admDate,
+        previousSchool,
+        guardianName,
+        guardianRelationship,
+        guardianNIC,
+        guardianPhone,
+        guardianAddress,
+        guardianOccupation,
+        guardianEmail,
+        emergencyContactName,
+        emergencyContactPhone,
+        emergencyRelationship,
+        medicalConditions,
+        allergies,
+        profilePhoto: profilePhotoUrl,
+        status: status || 'ACTIVE',
+        documents: {
+          create: documentsData,
+        },
       },
       include: {
         class: true,
+        documents: true,
       },
     });
 
@@ -58,8 +127,36 @@ export const registerStudent = async (req: AuthRequest, res: Response): Promise<
       message: 'Student registered successfully',
       data: student,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error registering student:', error);
+    
+    // Cleanup uploaded files if registration fails
+    for (const url of uploadedUrls) {
+      try {
+        await deleteFromCloudinary(url);
+      } catch (deleteError) {
+        console.error('Failed to cleanup file:', url, deleteError);
+      }
+    }
+    
+    // Handle Prisma Unique Constraint Errors (P2002)
+    if (error.code === 'P2002') {
+      const target = error.meta?.target || [];
+      const field = Array.isArray(target) ? target.join(', ') : String(target);
+      
+      let message = 'A record with this information already exists.';
+      if (field.includes('admissionNumber')) message = 'This admission number is already in use.';
+      if (field.includes('nic')) message = 'A student with this NIC is already registered.';
+      if (field.includes('birthCertificateNo')) message = 'A student with this Birth Certificate number is already registered.';
+      if (field.includes('email')) message = 'This email address is already in use.';
+
+      res.status(400).json({ 
+        success: false, 
+        error: message 
+      });
+      return;
+    }
+
     if (error instanceof Error) {
       res.status(500).json({ success: false, error: error.message });
     } else {
@@ -111,8 +208,12 @@ export const getAllStudents = async (req: AuthRequest, res: Response): Promise<v
       },
     });
   } catch (error) {
-    console.error('Error fetching students:', error);
-    res.status(500).json({ success: false, error: 'Failed to fetch students' });
+    console.error('CRITICAL: Error fetching students:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to fetch students',
+      details: error instanceof Error ? error.message : String(error)
+    });
   }
 };
 

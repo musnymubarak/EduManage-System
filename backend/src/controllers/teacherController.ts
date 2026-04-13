@@ -2,11 +2,13 @@ import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
 import { AppError } from '../middleware/errorHandler';
 import prisma from '../utils/prisma';
-import { uploadToCloudinary } from '../utils/cloudinary';
+import { uploadToCloudinary, deleteFromCloudinary } from '../utils/cloudinary';
 
 export const registerTeacher = async (req: AuthRequest, res: Response): Promise<void> => {
+  const uploadedUrls: string[] = [];
   try {
     const { qualifications, ...teacherData } = req.body;
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] };
 
     // Validate date strings
     const dob = new Date(teacherData.dateOfBirth);
@@ -21,6 +23,13 @@ export const registerTeacher = async (req: AuthRequest, res: Response): Promise<
       return;
     }
 
+    // Handle Profile Photo Upload
+    let profilePhotoUrl = null;
+    if (files && files['profilePhoto'] && files['profilePhoto'][0]) {
+      profilePhotoUrl = await uploadToCloudinary(files['profilePhoto'][0], 'teachers/profiles');
+      uploadedUrls.push(profilePhotoUrl);
+    }
+
     // Generate employee number
     const lastTeacher = await prisma.teacher.findFirst({
       orderBy: { employeeNumber: 'desc' },
@@ -32,14 +41,41 @@ export const registerTeacher = async (req: AuthRequest, res: Response): Promise<
     
     const employeeNumber = `TCH-${nextNumber.toString().padStart(4, '0')}`;
 
+    // Map qualifications
+    const qualificationsArray = qualifications ? (typeof qualifications === 'string' ? JSON.parse(qualifications) : qualifications) : [];
+    const mappedQualifications = qualificationsArray.map((q: any) => ({
+      qualification: q.degree || q.qualification,
+      institution: q.institution,
+      year: parseInt(q.year),
+      field: q.fieldOfStudy || q.field
+    }));
+
+    // Filter teacherData to only include fields in the schema
+    const { basicSalary, ...restData } = teacherData;
+
     const teacher = await prisma.teacher.create({
       data: {
-        ...teacherData,
         employeeNumber,
+        fullName: restData.fullName,
+        nameWithInitials: restData.nameWithInitials,
         dateOfBirth: dob,
+        gender: restData.gender,
+        nic: restData.nic,
+        address: restData.address,
+        city: restData.city,
+        district: restData.district,
+        province: restData.province,
+        postalCode: restData.postalCode,
+        mobileNumber: restData.mobileNumber,
+        email: restData.email,
         joinedDate: joinedDate,
+        designation: restData.designation,
+        employmentType: restData.employmentType,
+        profilePhoto: profilePhotoUrl,
+        basicSalary: basicSalary ? parseFloat(basicSalary) : 0,
+        status: restData.status || 'ACTIVE',
         qualifications: {
-          create: qualifications ? (typeof qualifications === 'string' ? JSON.parse(qualifications) : qualifications) : [],
+          create: mappedQualifications,
         },
       },
       include: {
@@ -47,14 +83,61 @@ export const registerTeacher = async (req: AuthRequest, res: Response): Promise<
       },
     });
 
+    // Handle Documents Upload
+    if (files && files['documents']) {
+      const documentUploadPromises = files['documents'].map(async (file) => {
+        const fileUrl = await uploadToCloudinary(file, 'teachers/documents');
+        return prisma.teacherDocument.create({
+          data: {
+            teacherId: teacher.id,
+            documentType: 'Qualification/Identity',
+            fileName: file.originalname,
+            fileUrl,
+          },
+        });
+      });
+      await Promise.all(documentUploadPromises);
+    }
+
     res.status(201).json({
       success: true,
       message: 'Teacher registered successfully',
       data: teacher,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error registering teacher:', error);
-    res.status(500).json({ success: false, error: 'Failed to register teacher' });
+
+    // Cleanup uploaded files if registration fails
+    for (const url of uploadedUrls) {
+      try {
+        await deleteFromCloudinary(url);
+      } catch (deleteError) {
+        console.error('Failed to cleanup file:', url, deleteError);
+      }
+    }
+
+    // Handle Prisma Unique Constraint Errors (P2002)
+    if (error.code === 'P2002') {
+      const target = error.meta?.target || [];
+      const field = Array.isArray(target) ? target.join(', ') : String(target);
+      
+      let message = 'A record with this information already exists.';
+      if (field.includes('employeeNumber')) message = 'This employee number is already in use.';
+      if (field.includes('nic')) message = 'A teacher with this NIC is already registered.';
+      if (field.includes('email')) message = 'This email address is already in use.';
+
+      res.status(400).json({ 
+        success: false, 
+        error: message 
+      });
+      return;
+    }
+
+    if (error instanceof Error) {
+      res.status(500).json({ success: false, error: error.message });
+    } else {
+      res.status(500).json({ success: false, error: 'Failed to register teacher' });
+    }
   }
 };
 
@@ -135,8 +218,17 @@ export const updateTeacher = async (req: AuthRequest, res: Response): Promise<vo
     const { id } = req.params;
     const { qualifications, ...updateData } = req.body;
 
+    // Convert date strings to Date objects
     if (updateData.dateOfBirth) {
       updateData.dateOfBirth = new Date(updateData.dateOfBirth);
+    }
+    if (updateData.joinedDate) {
+      updateData.joinedDate = new Date(updateData.joinedDate);
+    }
+
+    // Parse numeric fields
+    if (updateData.basicSalary) {
+      updateData.basicSalary = parseFloat(updateData.basicSalary);
     }
 
     const teacher = await prisma.teacher.update({
@@ -153,6 +245,7 @@ export const updateTeacher = async (req: AuthRequest, res: Response): Promise<vo
       data: teacher,
     });
   } catch (error) {
+    console.error('Error updating teacher:', error);
     res.status(500).json({ error: 'Failed to update teacher' });
   }
 };

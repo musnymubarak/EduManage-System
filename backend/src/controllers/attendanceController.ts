@@ -4,11 +4,16 @@ import prisma from '../utils/prisma';
 
 export const markStudentAttendance = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { classId, date, attendanceData } = req.body;
-    // attendanceData: [{ studentId, status, remarks }]
+    const { classId, date, attendanceData, attendance } = req.body;
+    const dataToMap = attendanceData || attendance;
+
+    if (!dataToMap || !Array.isArray(dataToMap)) {
+      res.status(400).json({ success: false, error: 'Attendance data is missing or invalid' });
+      return;
+    }
 
     const attendanceRecords = await Promise.all(
-      attendanceData.map(async (record: any) => {
+      dataToMap.map(async (record: any) => {
         return prisma.studentAttendance.upsert({
           where: {
             studentId_date: {
@@ -46,10 +51,16 @@ export const markStudentAttendance = async (req: AuthRequest, res: Response): Pr
 
 export const markTeacherAttendance = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { date, attendanceData } = req.body;
+    const { date, attendanceData, attendance } = req.body;
+    const dataToMap = attendanceData || attendance;
+
+    if (!dataToMap || !Array.isArray(dataToMap)) {
+      res.status(400).json({ success: false, error: 'Teacher attendance data is missing or invalid' });
+      return;
+    }
 
     const attendanceRecords = await Promise.all(
-      attendanceData.map(async (record: any) => {
+      dataToMap.map(async (record: any) => {
         return prisma.teacherAttendance.upsert({
           where: {
             teacherId_date: {

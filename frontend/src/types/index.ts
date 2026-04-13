@@ -96,6 +96,7 @@ export interface Exam {
   name: string;
   term: 'FIRST_TERM' | 'SECOND_TERM' | 'THIRD_TERM';
   classId: string;
+  class?: Class;
   subject: string;
   examDate: string;
   totalMarks: number;

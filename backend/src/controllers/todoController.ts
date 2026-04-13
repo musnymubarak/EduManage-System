@@ -154,9 +154,12 @@ export const updateTodoStatus = async (req: AuthRequest, res: Response): Promise
 
 export const getTodoHistory = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
+    const { id } = req.params;
     const { startDate, endDate, action } = req.query;
 
     const where: any = {};
+    
+    if (id) where.todoId = id;
 
     if (startDate && endDate) {
       where.timestamp = {

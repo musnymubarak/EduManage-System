@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
-import { Plus, Search, Calendar, DollarSign, FileText } from 'lucide-react';
+import { Plus, Search, Calendar, DollarSign } from 'lucide-react';
 import api from '../services/api';
 import { Expenditure } from '../types';
 import { Card } from '../components/UI/Card';
@@ -17,7 +17,6 @@ const ExpenditurePage: React.FC = () => {
   const [endDate, setEndDate] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
-  const queryClient = useQueryClient();
 
   // Fetch expenditures
   const { data: expendituresData, isLoading } = useQuery({

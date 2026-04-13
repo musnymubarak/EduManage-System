@@ -21,12 +21,71 @@ export const getAllClasses = async (_req: AuthRequest, res: Response): Promise<v
 };
 
 // Exams
+export const getAllExams = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { classId, term, search, page = '1', limit = '50' } = req.query;
+    const where: any = {};
+
+    if (classId) where.classId = classId;
+    if (term) where.term = term;
+    if (search) {
+      where.OR = [
+        { name: { contains: search as string, mode: 'insensitive' } },
+        { subject: { contains: search as string, mode: 'insensitive' } },
+      ];
+    }
+
+    const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
+    const take = parseInt(limit as string);
+
+    const [exams, total] = await Promise.all([
+      prisma.exam.findMany({
+        where,
+        include: { class: true },
+        orderBy: { examDate: 'desc' },
+        skip,
+        take,
+      }),
+      prisma.exam.count({ where }),
+    ]);
+
+    res.json({
+      success: true,
+      data: exams,
+      pagination: {
+        total,
+        page: parseInt(page as string),
+        limit: parseInt(limit as string),
+        totalPages: Math.ceil(total / take),
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch exams' });
+  }
+};
+
 export const createExam = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
+    let currentAcademicYear = req.body.academicYear;
+    
+    if (!currentAcademicYear) {
+      const activeYear = await prisma.academicYear.findFirst({
+        where: { isCurrent: true },
+      });
+      
+      if (activeYear) {
+        currentAcademicYear = activeYear.year;
+      } else {
+        const year = new Date().getFullYear();
+        currentAcademicYear = `${year}-${year + 1}`;
+      }
+    }
+
     const exam = await prisma.exam.create({
       data: {
         ...req.body,
         examDate: new Date(req.body.examDate),
+        academicYear: currentAcademicYear,
       },
       include: { class: true },
     });
@@ -39,7 +98,8 @@ export const createExam = async (req: AuthRequest, res: Response): Promise<void>
 
 export const enterExamMarks = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { examId, marks } = req.body;
+    const { examId } = req.params;
+    const { marks } = req.body;
 
     const markRecords = await Promise.all(
       marks.map((m: any) =>
@@ -51,7 +111,7 @@ export const enterExamMarks = async (req: AuthRequest, res: Response): Promise<v
             },
           },
           update: {
-            marksObtained: m.marksObtained,
+            marksObtained: parseFloat(m.marksObtained),
             grade: m.grade,
             remarks: m.remarks,
             enteredBy: req.user!.id,
@@ -59,7 +119,7 @@ export const enterExamMarks = async (req: AuthRequest, res: Response): Promise<v
           create: {
             examId,
             studentId: m.studentId,
-            marksObtained: m.marksObtained,
+            marksObtained: parseFloat(m.marksObtained),
             grade: m.grade,
             remarks: m.remarks,
             enteredBy: req.user!.id,
@@ -71,6 +131,29 @@ export const enterExamMarks = async (req: AuthRequest, res: Response): Promise<v
     res.status(201).json({ success: true, data: markRecords });
   } catch (error) {
     res.status(500).json({ error: 'Failed to enter marks' });
+  }
+};
+
+export const getExamMarks = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { examId } = req.params;
+
+    const marks = await prisma.examMark.findMany({
+      where: { examId },
+      include: {
+        student: {
+          select: {
+            id: true,
+            fullName: true,
+            admissionNumber: true,
+          },
+        },
+      },
+    });
+
+    res.json({ success: true, data: marks });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch exam marks' });
   }
 };
 
@@ -144,6 +227,21 @@ export const updateInventoryItem = async (req: AuthRequest, res: Response): Prom
   }
 };
 
+export const updateInventoryStock = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+
+    const item = await prisma.inventory.update({
+      where: { id },
+      data: req.body,
+    });
+
+    res.json({ success: true, data: item });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update inventory stock' });
+  }
+};
+
 export const getLowStockItems = async (_req: AuthRequest, res: Response): Promise<void> => {
   try {
     const items = await prisma.inventory.findMany({
@@ -197,6 +295,36 @@ export const getTeacherSchedules = async (req: AuthRequest, res: Response): Prom
 };
 
 // Donations
+export const getAllDonations = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { search, type, startDate, endDate } = req.query;
+    const where: any = {};
+
+    if (type) where.donationType = type;
+    if (search) {
+      where.OR = [
+        { donorName: { contains: search as string, mode: 'insensitive' } },
+        { receiptNumber: { contains: search as string, mode: 'insensitive' } },
+      ];
+    }
+    if (startDate && endDate) {
+      where.date = {
+        gte: new Date(startDate as string),
+        lte: new Date(endDate as string),
+      };
+    }
+
+    const donations = await prisma.donation.findMany({
+      where,
+      orderBy: { date: 'desc' },
+    });
+
+    res.json({ success: true, data: donations });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch donations' });
+  }
+};
+
 export const recordDonation = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const lastDonation = await prisma.donation.findFirst({
@@ -212,9 +340,16 @@ export const recordDonation = async (req: AuthRequest, res: Response): Promise<v
 
     const donation = await prisma.donation.create({
       data: {
-        ...req.body,
+        donorName: req.body.donorName,
+        donorContact: req.body.donorContact || req.body.contactNumber,
+        donorAddress: req.body.donorAddress || req.body.address,
+        amount: req.body.amount,
+        donationType: req.body.donationType,
+        purpose: req.body.purpose,
+        paymentMethod: req.body.paymentMethod || 'CASH',
         date: new Date(req.body.date || Date.now()),
-        receiptNumber,
+        receiptNumber: req.body.receiptNumber || receiptNumber,
+        remarks: req.body.remarks,
         recordedBy: req.user!.id,
       },
     });
@@ -255,6 +390,37 @@ export const getDonationReport = async (req: AuthRequest, res: Response): Promis
 };
 
 // Expenditures
+export const getAllExpenditures = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { search, category, startDate, endDate } = req.query;
+    const where: any = {};
+
+    if (category) where.category = category;
+    if (search) {
+      where.OR = [
+        { description: { contains: search as string, mode: 'insensitive' } },
+        { vendor: { contains: search as string, mode: 'insensitive' } },
+        { billNumber: { contains: search as string, mode: 'insensitive' } },
+      ];
+    }
+    if (startDate && endDate) {
+      where.date = {
+        gte: new Date(startDate as string),
+        lte: new Date(endDate as string),
+      };
+    }
+
+    const expenditures = await prisma.expenditure.findMany({
+      where,
+      orderBy: { date: 'desc' },
+    });
+
+    res.json({ success: true, data: expenditures });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch expenditures' });
+  }
+};
+
 export const recordExpenditure = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const expenditure = await prisma.expenditure.create({

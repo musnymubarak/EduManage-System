@@ -3,6 +3,35 @@ import { AuthRequest } from '../middleware/auth';
 import { AppError } from '../middleware/errorHandler';
 import prisma from '../utils/prisma';
 
+export const getAllFeePayments = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { studentId, search, status } = req.query;
+    const where: any = {};
+
+    if (studentId) where.studentId = studentId;
+    if (status) where.status = status;
+    if (search) {
+      where.OR = [
+        { receiptNumber: { contains: search as string, mode: 'insensitive' } },
+        { student: { fullName: { contains: search as string, mode: 'insensitive' } } },
+      ];
+    }
+
+    const payments = await prisma.feePayment.findMany({
+      where,
+      include: {
+        student: true,
+        partialPayments: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    res.json({ success: true, data: payments });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch fee payments' });
+  }
+};
+
 export const recordPayment = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const {
