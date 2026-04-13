@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
-import { DollarSign, Search, Plus, Eye, AlertCircle } from 'lucide-react';
+import { DollarSign, Search, Plus, AlertCircle, FileText, Printer } from 'lucide-react';
 import api from '../services/api';
 import { Student, FeePayment } from '../types';
 import { Card } from '../components/UI/Card';
@@ -16,40 +16,43 @@ const FeesPage: React.FC = () => {
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'PAID' | 'PENDING' | 'PARTIAL' | 'OVERDUE'>('ALL');
+  const [selectedFee, setSelectedFee] = useState<any>(null);
+  const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
 
-  const queryClient = useQueryClient();
-
-  // Fetch pending fees
-  const { data: pendingFeesData, isLoading } = useQuery({
-    queryKey: ['pendingFees', searchQuery],
+  // Fetch fees
+  const { data: feesData, isLoading } = useQuery({
+    queryKey: ['fees', searchQuery, statusFilter],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (searchQuery) params.append('search', searchQuery);
-      params.append('status', 'PENDING');
+      if (statusFilter !== 'ALL') params.append('status', statusFilter);
       
       const response = await api.get(`/fees/payments?${params}`);
       return response.data;
     },
   });
 
-  const pendingFees = pendingFeesData?.data || [];
+  const fees = feesData?.data || [];
+
+  // Summary calculations
+  const totalAmount = fees.reduce((sum: number, f: any) => sum + f.amount, 0);
+  const totalPaid = fees.reduce((sum: number, f: any) => sum + f.paidAmount, 0);
+  const totalBalance = fees.reduce((sum: number, f: any) => sum + f.balance, 0);
 
   const handleRecordPayment = (student: Student) => {
     setSelectedStudent(student);
     setIsPaymentModalOpen(true);
   };
 
-  const handleViewHistory = (student: Student) => {
-    setSelectedStudent(student);
-    setIsHistoryModalOpen(true);
-  };
+
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <Card>
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <h2 className="text-2xl font-bold text-gray-900">Fee Management</h2>
+          <h2 className="text-2xl font-bold text-gray-900">Fee Ledger</h2>
           <Button onClick={() => setIsPaymentModalOpen(true)}>
             <Plus size={20} className="mr-2" />
             Record Payment
@@ -57,35 +60,88 @@ const FeesPage: React.FC = () => {
         </div>
       </Card>
 
+      {/* Financial Summary Cards */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <Card className="bg-blue-50 border-blue-100 p-4">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-blue-100 text-blue-600 rounded-xl">
+              <DollarSign size={24} />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-blue-600">Total Expected</p>
+              <p className="text-2xl font-bold text-blue-900">{formatCurrency(totalAmount)}</p>
+            </div>
+          </div>
+        </Card>
+        <Card className="bg-green-50 border-green-100 p-4">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-green-100 text-green-600 rounded-xl">
+              <DollarSign size={24} />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-green-600">Total Collected</p>
+              <p className="text-2xl font-bold text-green-900">{formatCurrency(totalPaid)}</p>
+            </div>
+          </div>
+        </Card>
+        <Card className="bg-red-50 border-red-100 p-4">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-red-100 text-red-600 rounded-xl">
+              <DollarSign size={24} />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-red-600">Outstanding Balance</p>
+              <p className="text-2xl font-bold text-red-900">{formatCurrency(totalBalance)}</p>
+            </div>
+          </div>
+        </Card>
+      </div>
+
       {/* Search */}
       <Card>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search by student name or admission number..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search student or admission number..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div className="flex gap-2 bg-gray-100 p-1 rounded-lg">
+            {(['ALL', 'PENDING', 'PARTIAL', 'PAID'] as const).map((status) => (
+              <button
+                key={status}
+                onClick={() => setStatusFilter(status)}
+                className={`px-4 py-1.5 text-sm font-bold rounded-md transition-all ${
+                  statusFilter === status
+                    ? 'bg-white text-blue-600 shadow-sm'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                {status.charAt(0) + status.slice(1).toLowerCase()}
+              </button>
+            ))}
+          </div>
         </div>
       </Card>
 
-      {/* Pending Fees Table */}
-      <Card title="Pending Fee Payments">
+      {/* Fee Ledger Table */}
+      <Card title={`${statusFilter === 'ALL' ? 'All' : statusFilter.charAt(0) + statusFilter.slice(1).toLowerCase()} Fee Payments`}>
         {isLoading ? (
           <div className="py-8 text-center text-gray-500">Loading fees...</div>
-        ) : pendingFees.length === 0 ? (
-          <div className="py-8 text-center text-gray-500">No pending fees found</div>
+        ) : fees.length === 0 ? (
+          <div className="py-8 text-center text-gray-500">No fees found for this filter</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b bg-gray-50">
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Receipt / Date</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Student</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                    Admission No.
-                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Admission No.</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Fee Type</th>
                   <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">Amount</th>
                   <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">Paid</th>
@@ -95,28 +151,35 @@ const FeesPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {pendingFees.map((fee: any) => (
+                {fees.map((fee: any) => (
                   <tr key={fee.id} className="hover:bg-gray-50">
+                    <td className="px-4 py-3 text-sm">
+                      <div className="font-medium text-gray-900">{fee.receiptNumber || 'Pending'}</div>
+                      <div className="text-xs text-gray-500">{fee.paymentDate ? formatDate(fee.paymentDate) : 'Not paid'}</div>
+                    </td>
                     <td className="px-4 py-3 text-sm font-medium text-gray-900">
                       {fee.student.fullName}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-600">{fee.student.admissionNumber}</td>
-                    <td className="px-4 py-3 text-sm text-gray-600">{fee.feeType}</td>
+                    <td className="px-4 py-3 text-sm text-gray-600">
+                      <div className="font-medium">{fee.feeType}</div>
+                      <div className="text-xs text-gray-500">{fee.paymentMethod || 'N/A'}</div>
+                    </td>
                     <td className="px-4 py-3 text-right text-sm font-medium text-gray-900">
                       {formatCurrency(fee.amount)}
                     </td>
-                    <td className="px-4 py-3 text-right text-sm text-green-600">
+                    <td className="px-4 py-3 text-right text-sm text-green-600 font-medium">
                       {formatCurrency(fee.paidAmount)}
                     </td>
                     <td className="px-4 py-3 text-right text-sm font-medium text-red-600">
-                      {formatCurrency(fee.amount - fee.paidAmount)}
+                      {formatCurrency(fee.balance)}
                     </td>
                     <td className="px-4 py-3">
                       <Badge
                         variant={
                           fee.status === 'PAID'
                             ? 'success'
-                            : fee.status === 'PARTIALLY_PAID'
+                            : fee.status === 'PARTIAL'
                             ? 'warning'
                             : 'danger'
                         }
@@ -127,18 +190,21 @@ const FeesPage: React.FC = () => {
                     <td className="px-4 py-3 text-right">
                       <div className="flex justify-end gap-2">
                         <button
-                          onClick={() => handleRecordPayment(fee.student)}
-                          className="rounded p-1 hover:bg-gray-100"
-                          title="Record Payment"
+                          onClick={() => {
+                            setSelectedFee(fee);
+                            setIsReceiptModalOpen(true);
+                          }}
+                          className="rounded p-1.5 hover:bg-blue-50 text-blue-600 transition-colors"
+                          title="View Receipt"
                         >
-                          <DollarSign size={18} className="text-green-600" />
+                          <FileText size={18} />
                         </button>
                         <button
-                          onClick={() => handleViewHistory(fee.student)}
-                          className="rounded p-1 hover:bg-gray-100"
-                          title="View History"
+                          onClick={() => handleRecordPayment(fee.student)}
+                          className="rounded p-1.5 hover:bg-green-50 text-green-600 transition-colors"
+                          title="Record Payment"
                         >
-                          <Eye size={18} className="text-blue-600" />
+                          <DollarSign size={18} />
                         </button>
                       </div>
                     </td>
@@ -149,6 +215,18 @@ const FeesPage: React.FC = () => {
           </div>
         )}
       </Card>
+
+      {/* Fee Receipt Modal */}
+      {selectedFee && (
+        <FeeReceiptModal
+          isOpen={isReceiptModalOpen}
+          onClose={() => {
+            setIsReceiptModalOpen(false);
+            setSelectedFee(null);
+          }}
+          fee={selectedFee}
+        />
+      )}
 
       {/* Record Payment Modal */}
       <RecordPaymentModal
@@ -239,6 +317,8 @@ const RecordPaymentModal: React.FC<RecordPaymentModalProps> = ({
       ...formData,
       amount: parseFloat(formData.amount),
       paidAmount: parseFloat(formData.paidAmount),
+      dueDate: new Date().toISOString(), // Default to today
+      academicYear: "2024-2025", // Fallback, backend should handle better too
     };
 
     recordPaymentMutation.mutate(submitData);
@@ -288,11 +368,9 @@ const RecordPaymentModal: React.FC<RecordPaymentModalProps> = ({
           value={formData.feeType}
           onChange={handleChange}
           options={[
-            { value: 'MONTHLY_FEE', label: 'Monthly Fee' },
-            { value: 'ADMISSION_FEE', label: 'Admission Fee' },
-            { value: 'EXAM_FEE', label: 'Exam Fee' },
-            { value: 'LIBRARY_FEE', label: 'Library Fee' },
-            { value: 'SPORT_FEE', label: 'Sport Fee' },
+            { value: 'MONTHLY', label: 'Monthly Fee' },
+            { value: 'ADMISSION', label: 'Admission Fee' },
+            { value: 'EXAM', label: 'Exam Fee' },
             { value: 'OTHER', label: 'Other' },
           ]}
           required
@@ -336,8 +414,8 @@ const RecordPaymentModal: React.FC<RecordPaymentModalProps> = ({
           options={[
             { value: 'CASH', label: 'Cash' },
             { value: 'BANK_TRANSFER', label: 'Bank Transfer' },
-            { value: 'CARD', label: 'Card' },
             { value: 'ONLINE', label: 'Online Payment' },
+            { value: 'CHEQUE', label: 'Cheque' },
           ]}
           required
         />
@@ -399,7 +477,7 @@ const PaymentHistoryModal: React.FC<PaymentHistoryModalProps> = ({ isOpen, onClo
                   variant={
                     payment.status === 'PAID'
                       ? 'success'
-                      : payment.status === 'PARTIALLY_PAID'
+                      : payment.status === 'PARTIAL'
                       ? 'warning'
                       : 'danger'
                   }
@@ -437,6 +515,141 @@ const PaymentHistoryModal: React.FC<PaymentHistoryModalProps> = ({ isOpen, onClo
           ))}
         </div>
       )}
+    </Modal>
+  );
+};
+
+// Fee Receipt Modal Component
+interface FeeReceiptModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  fee: any;
+}
+
+const FeeReceiptModal: React.FC<FeeReceiptModalProps> = ({ isOpen, onClose, fee }) => {
+  const handlePrint = () => {
+    window.print();
+  };
+
+  if (!fee) return null;
+
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={fee.status === 'PENDING' ? 'Fee Invoice' : 'Fee Receipt'}
+      size="lg"
+      footer={
+        <div className="flex justify-end gap-3 no-print">
+          <Button variant="secondary" onClick={onClose}>
+            Close
+          </Button>
+          <Button onClick={handlePrint}>
+            <Printer size={18} className="mr-2" />
+            Print
+          </Button>
+        </div>
+      }
+    >
+      <div className="receipt-container p-6 bg-white" id="receipt-content">
+        {/* Branding Header */}
+        <div className="flex justify-between items-start border-b-2 border-gray-100 pb-6 mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-blue-900 leading-none">BUHARY MADRASA</h1>
+            <p className="text-sm text-gray-500 mt-2 font-medium uppercase tracking-wider">Official {fee.status === 'PENDING' ? 'Invoice' : 'Payment Receipt'}</p>
+          </div>
+          <div className="text-right">
+            <div className="text-sm font-bold text-gray-900">No: {fee.receiptNumber || `INV-${fee.id.slice(0, 8).toUpperCase()}`}</div>
+            <div className="text-sm text-gray-600 mt-1">{formatDate(fee.paymentDate || new Date().toISOString())}</div>
+          </div>
+        </div>
+
+        {/* Student Box */}
+        <div className="grid grid-cols-2 gap-8 mb-8">
+          <div>
+            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Student Information</h3>
+            <div className="space-y-1">
+              <p className="font-bold text-gray-900 text-lg">{fee.student.fullName}</p>
+              <p className="text-sm text-gray-600">Admission No: {fee.student.admissionNumber}</p>
+              <p className="text-sm text-gray-600">Class: {fee.student.class?.name || 'N/A'}</p>
+            </div>
+          </div>
+          <div className="text-right">
+            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Academic Info</h3>
+            <div className="space-y-1">
+              <p className="text-sm text-gray-600"><span className="font-medium">Academic Year:</span> {fee.academicYear}</p>
+              <p className="text-sm text-gray-600"><span className="font-medium">Fee Type:</span> {fee.feeType}</p>
+              {fee.month && <p className="text-sm text-gray-600"><span className="font-medium">Month:</span> {fee.month}</p>}
+            </div>
+          </div>
+        </div>
+
+        {/* Financial Table */}
+        <div className="border rounded-xl overflow-hidden mb-8">
+          <table className="w-full text-left">
+            <thead className="bg-gray-50 border-b">
+              <tr>
+                <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Description</th>
+                <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase text-right">Amount</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              <tr>
+                <td className="px-6 py-4">
+                  <p className="font-medium text-gray-900">{fee.feeType} Tuition / Fees</p>
+                  <p className="text-xs text-gray-500 mt-1">Payment Method: {fee.paymentMethod || 'N/A'}</p>
+                </td>
+                <td className="px-6 py-4 text-right font-medium text-gray-900">
+                  {formatCurrency(fee.amount)}
+                </td>
+              </tr>
+            </tbody>
+            <tfoot className="bg-gray-50">
+              <tr>
+                <td className="px-6 py-3 text-sm font-medium text-gray-600 text-right">Paid Amount</td>
+                <td className="px-6 py-3 text-sm font-bold text-green-600 text-right">{formatCurrency(fee.paidAmount)}</td>
+              </tr>
+              <tr className="border-t-2 border-double border-gray-200">
+                <td className="px-6 py-4 text-base font-bold text-gray-900 text-right uppercase tracking-wider">Remaining Balance</td>
+                <td className="px-6 py-4 text-lg font-black text-red-600 text-right">{formatCurrency(fee.balance)}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        {/* Footer */}
+        <div className="flex justify-between items-end mt-12 pt-8 border-t border-gray-100">
+          <div>
+            {fee.remarks && (
+              <div className="mb-4">
+                <h4 className="text-xs font-bold text-gray-400 uppercase mb-1">Remarks</h4>
+                <p className="text-sm text-gray-600 max-w-sm italic">"{fee.remarks}"</p>
+              </div>
+            )}
+            <p className="text-[10px] text-gray-400">Generated on {new Date().toLocaleString()} by EduManage System</p>
+          </div>
+          <div className="text-center w-48">
+            <div className="border-b-2 border-gray-300 mb-2 h-12"></div>
+            <p className="text-xs font-bold text-gray-700 uppercase tracking-widest">Authorized Signature</p>
+          </div>
+        </div>
+      </div>
+
+      <style dangerouslySetInnerHTML={{ __html: `
+        @media print {
+          body * { visibility: hidden; }
+          #receipt-content, #receipt-content * { visibility: visible; }
+          #receipt-content {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            padding: 40px;
+            border: none !important;
+          }
+          .no-print { display: none !important; }
+        }
+      `}} />
     </Modal>
   );
 };

@@ -47,42 +47,62 @@ export const recordPayment = async (req: AuthRequest, res: Response): Promise<vo
       remarks,
     } = req.body;
 
-    const balance = amount - paidAmount;
-    const status = balance === 0 ? 'PAID' : paidAmount > 0 ? 'PARTIAL' : 'PENDING';
+    const numAmount = parseFloat(amount);
+    const numPaidAmount = parseFloat(paidAmount || '0');
+    const balance = numAmount - numPaidAmount;
+    const status = balance <= 0 ? 'PAID' : numPaidAmount > 0 ? 'PARTIAL' : 'PENDING';
+
+    // Get current academic year if not provided
+    let targetAcademicYear = academicYear;
+    if (!targetAcademicYear) {
+      const activeYear = await prisma.academicYear.findFirst({
+        where: { isCurrent: true },
+      });
+      targetAcademicYear = activeYear?.year || new Date().getFullYear().toString();
+    }
 
     // Generate receipt number
-    const lastPayment = await prisma.feePayment.findFirst({
-      where: { receiptNumber: { not: null } },
-      orderBy: { createdAt: 'desc' },
-    });
+    let receiptNumber = null;
+    if (numPaidAmount > 0) {
+      const lastPayment = await prisma.feePayment.findFirst({
+        where: { receiptNumber: { startsWith: 'RCP-' } },
+        orderBy: { createdAt: 'desc' },
+      });
 
-    const nextNumber = lastPayment && lastPayment.receiptNumber
-      ? parseInt(lastPayment.receiptNumber.split('-')[1]) + 1
-      : 1;
-    
-    const receiptNumber = `RCP-${nextNumber.toString().padStart(6, '0')}`;
+      let nextNumber = 1;
+      if (lastPayment && lastPayment.receiptNumber) {
+        const parts = lastPayment.receiptNumber.split('-');
+        if (parts.length > 1) {
+          const lastNum = parseInt(parts[1]);
+          if (!isNaN(lastNum)) {
+            nextNumber = lastNum + 1;
+          }
+        }
+      }
+      receiptNumber = `RCP-${nextNumber.toString().padStart(6, '0')}`;
+    }
 
     const payment = await prisma.feePayment.create({
       data: {
         studentId,
         feeType,
-        amount,
-        paidAmount,
+        amount: numAmount,
+        paidAmount: numPaidAmount,
         balance,
         status,
-        dueDate: new Date(dueDate),
-        paymentDate: paymentDate ? new Date(paymentDate) : null,
-        paymentMethod,
-        receiptNumber: paidAmount > 0 ? receiptNumber : null,
+        dueDate: dueDate ? new Date(dueDate) : new Date(), // Default to now if missing
+        paymentDate: paymentDate ? new Date(paymentDate) : (numPaidAmount > 0 ? new Date() : null),
+        paymentMethod: paymentMethod || null,
+        receiptNumber,
         month,
-        academicYear,
+        academicYear: targetAcademicYear,
         remarks,
         collectedBy: req.user!.id,
-        partialPayments: paidAmount > 0 ? {
+        partialPayments: numPaidAmount > 0 ? {
           create: {
-            amount: paidAmount,
-            paymentDate: new Date(paymentDate || Date.now()),
-            paymentMethod,
+            amount: numPaidAmount,
+            paymentDate: new Date(),
+            paymentMethod: paymentMethod || 'CASH',
             collectedBy: req.user!.id,
             receiptNumber,
           },
@@ -124,13 +144,20 @@ export const recordPartialPayment = async (req: AuthRequest, res: Response): Pro
 
     // Generate receipt number
     const lastPayment = await prisma.partialPayment.findFirst({
+      where: { receiptNumber: { startsWith: 'RCP-' } },
       orderBy: { createdAt: 'desc' },
     });
 
-    const nextNumber = lastPayment && lastPayment.receiptNumber
-      ? parseInt(lastPayment.receiptNumber.split('-')[1]) + 1
-      : 1;
-    
+    let nextNumber = 1;
+    if (lastPayment && lastPayment.receiptNumber) {
+      const parts = lastPayment.receiptNumber.split('-');
+      if (parts.length > 1) {
+        const lastNum = parseInt(parts[1]);
+        if (!isNaN(lastNum)) {
+          nextNumber = lastNum + 1;
+        }
+      }
+    }
     const receiptNumber = `RCP-${nextNumber.toString().padStart(6, '0')}`;
 
     // Create partial payment

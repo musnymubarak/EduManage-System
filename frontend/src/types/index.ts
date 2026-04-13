@@ -135,11 +135,11 @@ export interface FeePayment {
   amount: number;
   paidAmount: number;
   balance: number;
-  status: 'PAID' | 'PARTIALLY_PAID' | 'PARTIAL' | 'PENDING' | 'OVERDUE';
+  status: 'PAID' | 'PARTIAL' | 'PENDING' | 'OVERDUE';
   dueDate: string;
   paymentDate?: string;
   receiptNumber?: string;
-  paymentMethod?: string;
+  paymentMethod?: 'CASH' | 'BANK_TRANSFER' | 'ONLINE' | 'CHEQUE';
   remarks?: string;
   month?: string;
   academicYear: string;
