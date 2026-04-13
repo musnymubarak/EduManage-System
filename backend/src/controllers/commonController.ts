@@ -20,6 +20,194 @@ export const getAllClasses = async (_req: AuthRequest, res: Response): Promise<v
   }
 };
 
+export const getClassById = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+
+    const classData = await prisma.class.findUnique({
+      where: { id },
+      include: {
+        _count: {
+          select: { students: true, schedules: true, exams: true },
+        },
+        students: {
+          select: {
+            id: true,
+            fullName: true,
+            admissionNumber: true,
+            gender: true,
+            status: true,
+            profilePhoto: true,
+          },
+          orderBy: { admissionNumber: 'asc' },
+        },
+        schedules: {
+          include: { teacher: true },
+          orderBy: [{ dayOfWeek: 'asc' }, { startTime: 'asc' }],
+        },
+        exams: {
+          orderBy: { examDate: 'desc' },
+          take: 10,
+        },
+      },
+    });
+
+    if (!classData) {
+      res.status(404).json({ error: 'Class not found' });
+      return;
+    }
+
+    res.json({ success: true, data: classData });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch class details' });
+  }
+};
+
+export const createClass = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { name, grade, section, capacity, academicYear } = req.body;
+
+    let targetAcademicYear = academicYear;
+    if (!targetAcademicYear) {
+      const activeYear = await prisma.academicYear.findFirst({
+        where: { isCurrent: true },
+      });
+      targetAcademicYear = activeYear?.year || new Date().getFullYear().toString();
+    }
+
+    const newClass = await prisma.class.create({
+      data: {
+        name,
+        grade: parseInt(grade),
+        section,
+        capacity: parseInt(capacity || '30'),
+        academicYear: targetAcademicYear,
+      },
+    });
+
+    res.status(201).json({ success: true, data: newClass });
+  } catch (error: any) {
+    if (error.code === 'P2002') {
+      res.status(400).json({ error: 'A class with this name already exists' });
+      return;
+    }
+    res.status(500).json({ error: 'Failed to create class' });
+  }
+};
+
+export const updateClass = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { name, grade, section, capacity, academicYear } = req.body;
+
+    const updatedClass = await prisma.class.update({
+      where: { id },
+      data: {
+        name,
+        grade: grade ? parseInt(grade) : undefined,
+        section,
+        capacity: capacity ? parseInt(capacity) : undefined,
+        academicYear,
+      },
+    });
+
+    res.json({ success: true, data: updatedClass });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update class' });
+  }
+};
+
+export const deleteClass = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+
+    // Check if class has students
+    const studentCount = await prisma.student.count({
+      where: { classId: id },
+    });
+
+    if (studentCount > 0) {
+      res.status(400).json({ 
+        error: 'Cannot delete class with assigned students. Please reassign students first.' 
+      });
+      return;
+    }
+
+    await prisma.class.delete({
+      where: { id },
+    });
+
+    res.json({ success: true, message: 'Class deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete class' });
+  }
+};
+
+export const getClassStudents = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const students = await prisma.student.findMany({
+      where: { classId: id },
+      orderBy: { fullName: 'asc' },
+    });
+    res.json({ success: true, data: students });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch class students' });
+  }
+};
+
+export const addStudentToClass = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id: classId } = req.params;
+    const { studentId } = req.body;
+
+    const student = await prisma.student.update({
+      where: { id: studentId },
+      data: { classId },
+    });
+
+    res.json({ success: true, data: student });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to add student to class' });
+  }
+};
+
+export const removeStudentFromClass = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { studentId } = req.params;
+
+    // We don't have an "Unassigned" class ID, so we might need a default one 
+    // or set it to a specific value. Given the schema, classId is REQUIRED.
+    // I will check if there is an "Unassigned" class already.
+    
+    let unassignedClass = await prisma.class.findFirst({
+      where: { name: 'Unassigned' },
+    });
+
+    if (!unassignedClass) {
+      // Create it if it doesn't exist
+      const activeYear = await prisma.academicYear.findFirst({ where: { isCurrent: true } });
+      unassignedClass = await prisma.class.create({
+        data: {
+          name: 'Unassigned',
+          grade: 0,
+          academicYear: activeYear?.year || new Date().getFullYear().toString(),
+          capacity: 9999,
+        }
+      });
+    }
+
+    const student = await prisma.student.update({
+      where: { id: studentId },
+      data: { classId: unassignedClass.id },
+    });
+
+    res.json({ success: true, data: student });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to remove student from class' });
+  }
+};
+
 // Exams
 export const getAllExams = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -291,6 +479,18 @@ export const getTeacherSchedules = async (req: AuthRequest, res: Response): Prom
     res.json({ success: true, data: schedules });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch schedules' });
+  }
+};
+
+export const deleteTeacherSchedule = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    await prisma.teacherSchedule.delete({
+      where: { id },
+    });
+    res.json({ success: true, message: 'Schedule removed successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to remove schedule' });
   }
 };
 

@@ -14,7 +14,8 @@ import {
   TrendingUp,
   Gift,
   LogOut,
-  BarChart3
+  BarChart3,
+  Building
 } from 'lucide-react';
 
 const MainLayout: React.FC = () => {
@@ -24,6 +25,7 @@ const MainLayout: React.FC = () => {
   const menuItems = [
     { path: '/', icon: LayoutDashboard, label: 'Dashboard', roles: ['all'] },
     { path: '/students', icon: Users, label: 'Students', roles: ['SUPER_ADMIN', 'RECEPTIONIST', 'PRINCIPAL', 'VICE_PRINCIPAL'] },
+    { path: '/classes', icon: Building, label: 'Classes', roles: ['SUPER_ADMIN', 'RECEPTIONIST', 'PRINCIPAL', 'VICE_PRINCIPAL'] },
     { path: '/teachers', icon: GraduationCap, label: 'Teachers', roles: ['SUPER_ADMIN', 'RECEPTIONIST', 'PRINCIPAL', 'VICE_PRINCIPAL'] },
     { path: '/attendance', icon: CalendarCheck, label: 'Attendance', roles: ['SUPER_ADMIN', 'RECEPTIONIST', 'PRINCIPAL', 'VICE_PRINCIPAL'] },
     { path: '/fees', icon: DollarSign, label: 'Fees', roles: ['SUPER_ADMIN', 'RECEPTIONIST', 'PRINCIPAL', 'VICE_PRINCIPAL'] },

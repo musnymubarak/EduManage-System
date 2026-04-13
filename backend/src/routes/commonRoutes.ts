@@ -11,6 +11,13 @@ const managers: UserRole[] = ['RECEPTIONIST', 'PRINCIPAL', 'VICE_PRINCIPAL', 'SU
 
 // Classes
 router.get('/classes', commonController.getAllClasses);
+router.get('/classes/:id', commonController.getClassById);
+router.post('/classes', authorize(...managers), commonController.createClass);
+router.put('/classes/:id', authorize(...managers), commonController.updateClass);
+router.delete('/classes/:id', authorize(...managers), commonController.deleteClass);
+router.get('/classes/:id/students', commonController.getClassStudents);
+router.post('/classes/:id/students', authorize(...managers), commonController.addStudentToClass);
+router.delete('/classes/:id/students/:studentId', authorize(...managers), commonController.removeStudentFromClass);
 
 // Exams
 router.get('/exams', commonController.getAllExams);
@@ -29,6 +36,7 @@ router.get('/inventory/low-stock', commonController.getLowStockItems);
 // Teacher Schedule
 router.post('/schedules', authorize(...managers), commonController.assignTeacherSchedule);
 router.get('/schedules', commonController.getTeacherSchedules);
+router.delete('/schedules/:id', authorize(...managers), commonController.deleteTeacherSchedule);
 
 // Donations
 router.get('/donations', commonController.getAllDonations);
