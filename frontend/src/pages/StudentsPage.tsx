@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Search, Edit, Eye, Upload } from 'lucide-react';
+import { Plus, Search, Eye } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../services/api';
 import { Student, Class } from '../types';
@@ -13,13 +14,10 @@ import { SingleImageUpload, FileUpload } from '../components/UI/FileUpload';
 import { formatDate } from '../utils/helpers';
 
 const StudentsPage: React.FC = () => {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedClass, setSelectedClass] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
-  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-
-  const queryClient = useQueryClient();
 
   // Fetch students
   const { data: studentsData, isLoading } = useQuery({
@@ -47,8 +45,7 @@ const StudentsPage: React.FC = () => {
   const classes: Class[] = classesData?.data || [];
 
   const handleViewStudent = (student: Student) => {
-    setSelectedStudent(student);
-    setIsViewModalOpen(true);
+    navigate(`/students/${student.id}`);
   };
 
   return (
@@ -165,18 +162,6 @@ const StudentsPage: React.FC = () => {
         onClose={() => setIsAddModalOpen(false)}
         classes={classes}
       />
-
-      {/* View Student Modal */}
-      {selectedStudent && (
-        <ViewStudentModal
-          isOpen={isViewModalOpen}
-          onClose={() => {
-            setIsViewModalOpen(false);
-            setSelectedStudent(null);
-          }}
-          student={selectedStudent}
-        />
-      )}
     </div>
   );
 };
@@ -531,43 +516,5 @@ const AddStudentModal: React.FC<AddStudentModalProps> = ({ isOpen, onClose, clas
     </Modal>
   );
 };
-
-// View Student Modal Component
-interface ViewStudentModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  student: Student;
-}
-
-const ViewStudentModal: React.FC<ViewStudentModalProps> = ({ isOpen, onClose, student }) => {
-  return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Student Details" size="lg">
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-2xl font-bold text-gray-900">{student.fullName}</h3>
-            <p className="text-sm text-gray-600">{student.admissionNumber}</p>
-          </div>
-          <Badge status={student.status}>{student.status}</Badge>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <InfoItem label="Date of Birth" value={formatDate(student.dateOfBirth)} />
-          <InfoItem label="Gender" value={student.gender} />
-          <InfoItem label="Class" value={student.class.name} />
-          <InfoItem label="Guardian" value={student.guardianName} />
-          <InfoItem label="Guardian Phone" value={student.guardianPhone} />
-        </div>
-      </div>
-    </Modal>
-  );
-};
-
-const InfoItem: React.FC<{ label: string; value: string }> = ({ label, value }) => (
-  <div>
-    <p className="text-sm font-medium text-gray-500">{label}</p>
-    <p className="mt-1 text-sm text-gray-900">{value}</p>
-  </div>
-);
 
 export default StudentsPage;

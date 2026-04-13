@@ -21,14 +21,68 @@ export interface Student {
   id: string;
   admissionNumber: string;
   fullName: string;
+  nameWithInitials: string;
   dateOfBirth: string;
   gender: 'MALE' | 'FEMALE' | 'OTHER';
+  bloodGroup?: string;
+  religion?: string;
+  ethnicity?: string;
+  nationality?: string;
+  nic?: string;
+  birthCertificateNo?: string;
+  address: string;
+  city: string;
+  district: string;
+  province: string;
+  postalCode?: string;
+  mobileNumber?: string;
+  homePhone?: string;
+  email?: string;
   classId: string;
   class: Class;
+  admissionDate: string;
+  previousSchool?: string;
   guardianName: string;
+  guardianRelationship: string;
+  guardianNIC: string;
   guardianPhone: string;
+  guardianAddress?: string;
+  guardianOccupation?: string;
+  guardianEmail?: string;
+  emergencyContactName: string;
+  emergencyContactPhone: string;
+  emergencyRelationship: string;
+  medicalConditions?: string;
+  allergies?: string;
   status: string;
   profilePhoto?: string;
+}
+
+export interface StudentDetail extends Student {
+  documents: StudentDocument[];
+  feePayments: FeePayment[];
+  attendance: Attendance[];
+  examMarks: ExamMark[];
+}
+
+export interface StudentDocument {
+  id: string;
+  studentId: string;
+  documentType: string;
+  fileName: string;
+  fileUrl: string;
+  uploadedAt: string;
+}
+
+export interface ExamMark {
+  id: string;
+  examId: string;
+  exam: Exam;
+  studentId: string;
+  marksObtained: number;
+  grade?: string;
+  remarks?: string;
+  createdAt: string;
 }
 
 export interface Teacher {

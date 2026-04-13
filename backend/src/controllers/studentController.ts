@@ -227,12 +227,20 @@ export const getStudentById = async (req: AuthRequest, res: Response): Promise<v
         class: true,
         documents: true,
         feePayments: {
-          orderBy: { createdAt: 'desc' },
-          take: 10,
+          orderBy: { paymentDate: 'desc' },
         },
         attendance: {
           orderBy: { date: 'desc' },
-          take: 30,
+        },
+        examMarks: {
+          include: {
+            exam: true,
+          },
+          orderBy: {
+            exam: {
+              examDate: 'desc',
+            },
+          },
         },
       },
     });
