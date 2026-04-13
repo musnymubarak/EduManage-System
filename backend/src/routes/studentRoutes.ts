@@ -11,7 +11,15 @@ router.use(authenticateToken);
 // Receptionist, Principal, Vice Principal, Super Admin can manage students
 const studentManagers: UserRole[] = ['RECEPTIONIST', 'PRINCIPAL', 'VICE_PRINCIPAL', 'SUPER_ADMIN'];
 
-router.post('/', authorize(...studentManagers), studentController.registerStudent);
+router.post(
+  '/',
+  authorize(...studentManagers),
+  upload.fields([
+    { name: 'profilePhoto', maxCount: 1 },
+    { name: 'documents', maxCount: 10 }
+  ]),
+  studentController.registerStudent
+);
 router.get('/', studentController.getAllStudents);
 router.get('/class/:classId', studentController.getStudentsByClass);
 router.get('/:id', studentController.getStudentById);

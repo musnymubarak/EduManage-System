@@ -10,11 +10,19 @@ router.use(authenticateToken);
 
 const managers: UserRole[] = ['RECEPTIONIST', 'PRINCIPAL', 'VICE_PRINCIPAL', 'SUPER_ADMIN'];
 
-router.post('/', authorize(...managers), teacherController.registerTeacher);
+router.post(
+  '/',
+  authorize(...managers),
+  upload.fields([
+    { name: 'profilePhoto', maxCount: 1 },
+    { name: 'documents', maxCount: 10 }
+  ]),
+  teacherController.registerTeacher
+);
 router.get('/', teacherController.getAllTeachers);
 router.get('/:id', teacherController.getTeacherById);
 router.get('/:id/schedule', teacherController.getTeacherSchedule);
-router.put('/:id', authorize(...managers), teacherController.updateTeacher);
+router.put('/:id', authorize(...managers), upload.fields([{ name: 'profilePhoto', maxCount: 1 }]), teacherController.updateTeacher);
 router.post(
   '/:id/upload',
   authorize(...managers),

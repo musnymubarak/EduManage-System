@@ -14,7 +14,7 @@ export class AppError extends Error {
 }
 
 export const errorHandler = (
-  err: Error | AppError,
+  err: any,
   _req: Request,
   res: Response,
   _next: NextFunction
@@ -23,6 +23,33 @@ export const errorHandler = (
     res.status(err.statusCode).json({
       status: 'error',
       message: err.message,
+    });
+    return;
+  }
+
+  // Handle Prisma Errors
+  if (err.code && err.code.startsWith('P')) {
+    let message = 'Database error occurred';
+    let statusCode = 400;
+
+    switch (err.code) {
+      case 'P2002':
+        const target = err.meta?.target || 'field';
+        message = `A record with this ${target} already exists.`;
+        break;
+      case 'P2003':
+        message = 'Foreign key constraint failed. Related record not found.';
+        break;
+      case 'P2025':
+        message = 'Record not found.';
+        statusCode = 404;
+        break;
+    }
+
+    res.status(statusCode).json({
+      status: 'error',
+      message,
+      code: err.code,
     });
     return;
   }

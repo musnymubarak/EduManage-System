@@ -7,6 +7,28 @@ import { uploadToCloudinary } from '../utils/cloudinary';
 export const registerStudent = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const studentData = req.body;
+    console.log('DEBUG: Full req.body:', JSON.stringify(studentData, null, 2));
+    console.log('DEBUG: Date of Birth received:', studentData.dateOfBirth);
+
+    // Validate date strings
+    const dob = new Date(studentData.dateOfBirth);
+    if (isNaN(dob.getTime())) {
+      res.status(400).json({ 
+        success: false, 
+        error: `Invalid date of birth provided: ${studentData.dateOfBirth}`,
+        receivedBody: studentData 
+      });
+      return;
+    }
+
+    const admDate = studentData.admissionDate ? new Date(studentData.admissionDate) : new Date();
+    if (isNaN(admDate.getTime())) {
+      res.status(400).json({ 
+        success: false, 
+        error: 'Invalid admission date provided' 
+      });
+      return;
+    }
 
     // Generate admission number
     const lastStudent = await prisma.student.findFirst({
@@ -23,8 +45,8 @@ export const registerStudent = async (req: AuthRequest, res: Response): Promise<
       data: {
         ...studentData,
         admissionNumber,
-        dateOfBirth: new Date(studentData.dateOfBirth),
-        admissionDate: new Date(studentData.admissionDate || Date.now()),
+        dateOfBirth: dob,
+        admissionDate: admDate,
       },
       include: {
         class: true,
@@ -38,7 +60,11 @@ export const registerStudent = async (req: AuthRequest, res: Response): Promise<
     });
   } catch (error) {
     console.error('Error registering student:', error);
-    res.status(500).json({ error: 'Failed to register student' });
+    if (error instanceof Error) {
+      res.status(500).json({ success: false, error: error.message });
+    } else {
+      res.status(500).json({ success: false, error: 'Failed to register student' });
+    }
   }
 };
 
@@ -85,7 +111,8 @@ export const getAllStudents = async (req: AuthRequest, res: Response): Promise<v
       },
     });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch students' });
+    console.error('Error fetching students:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch students' });
   }
 };
 
@@ -133,7 +160,21 @@ export const updateStudent = async (req: AuthRequest, res: Response): Promise<vo
 
     // Convert date strings to Date objects if present
     if (updateData.dateOfBirth) {
-      updateData.dateOfBirth = new Date(updateData.dateOfBirth);
+      const dob = new Date(updateData.dateOfBirth);
+      if (isNaN(dob.getTime())) {
+        res.status(400).json({ success: false, error: 'Invalid date of birth provided' });
+        return;
+      }
+      updateData.dateOfBirth = dob;
+    }
+
+    if (updateData.admissionDate) {
+      const admDate = new Date(updateData.admissionDate);
+      if (isNaN(admDate.getTime())) {
+        res.status(400).json({ success: false, error: 'Invalid admission date provided' });
+        return;
+      }
+      updateData.admissionDate = admDate;
     }
 
     const student = await prisma.student.update({
@@ -150,7 +191,8 @@ export const updateStudent = async (req: AuthRequest, res: Response): Promise<vo
       data: student,
     });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to update student' });
+    console.error('Error updating student:', error);
+    res.status(500).json({ success: false, error: 'Failed to update student' });
   }
 };
 

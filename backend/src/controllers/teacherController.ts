@@ -8,6 +8,19 @@ export const registerTeacher = async (req: AuthRequest, res: Response): Promise<
   try {
     const { qualifications, ...teacherData } = req.body;
 
+    // Validate date strings
+    const dob = new Date(teacherData.dateOfBirth);
+    if (isNaN(dob.getTime())) {
+      res.status(400).json({ success: false, error: 'Invalid date of birth provided' });
+      return;
+    }
+
+    const joinedDate = teacherData.joinedDate ? new Date(teacherData.joinedDate) : new Date();
+    if (isNaN(joinedDate.getTime())) {
+      res.status(400).json({ success: false, error: 'Invalid joined date provided' });
+      return;
+    }
+
     // Generate employee number
     const lastTeacher = await prisma.teacher.findFirst({
       orderBy: { employeeNumber: 'desc' },
@@ -23,10 +36,10 @@ export const registerTeacher = async (req: AuthRequest, res: Response): Promise<
       data: {
         ...teacherData,
         employeeNumber,
-        dateOfBirth: new Date(teacherData.dateOfBirth),
-        joinedDate: new Date(teacherData.joinedDate || Date.now()),
+        dateOfBirth: dob,
+        joinedDate: joinedDate,
         qualifications: {
-          create: qualifications || [],
+          create: qualifications ? (typeof qualifications === 'string' ? JSON.parse(qualifications) : qualifications) : [],
         },
       },
       include: {
@@ -41,7 +54,7 @@ export const registerTeacher = async (req: AuthRequest, res: Response): Promise<
     });
   } catch (error) {
     console.error('Error registering teacher:', error);
-    res.status(500).json({ error: 'Failed to register teacher' });
+    res.status(500).json({ success: false, error: 'Failed to register teacher' });
   }
 };
 
