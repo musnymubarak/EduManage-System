@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: edumanage_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-0826}
+      POSTGRES_DB: edumanage_system
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - edumanage_network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: edumanage_backend
+    restart: always
+    environment:
+      DATABASE_URL: postgresql://postgres:${DATABASE_PASSWORD:-0826}@db:5432/edumanage_system
+      JWT_SECRET: ${JWT_SECRET:-edumanage_system_secure_jwt_secret_123}
+      PORT: 5000
+      NODE_ENV: production
+      FRONTEND_URL: http://localhost:80
+    depends_on:
+      - db
+    networks:
+      - edumanage_network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: http://localhost:80/api
+    container_name: edumanage_frontend
+    restart: always
+    environment:
+      VITE_API_URL: http://localhost:80/api
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - edumanage_network
+
+networks:
+  edumanage_network:
+    driver: bridge
+
+volumes:
+  db_data:
