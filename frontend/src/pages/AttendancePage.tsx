@@ -447,7 +447,7 @@ const TeacherAttendanceMarking: React.FC<TeacherAttendanceMarkingProps> = ({ sel
                 {teachers.map((teacher) => (
                   <tr key={teacher.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3 text-sm font-medium text-gray-900">
-                      {teacher.employeeId}
+                      {teacher.employeeNumber}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-900">{teacher.fullName}</td>
                     <td className="px-4 py-3 text-sm text-gray-600">{teacher.designation}</td>

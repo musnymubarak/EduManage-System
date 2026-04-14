@@ -87,26 +87,65 @@ export interface ExamMark {
 
 export interface Teacher {
   id: string;
-  employeeId: string;
   employeeNumber: string;
   fullName: string;
+  nameWithInitials: string;
   dateOfBirth: string;
   gender: 'MALE' | 'FEMALE' | 'OTHER';
-  designation: string;
-  employmentType: string;
+  nic: string;
+  address: string;
+  city: string;
+  district: string;
+  province: string;
+  postalCode?: string;
   mobileNumber: string;
   email?: string;
   joinedDate: string;
+  designation: string;
+  employmentType: string;
+  basicSalary: number;
+  profilePhoto?: string;
   status: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TeacherDetail extends Teacher {
   qualifications: TeacherQualification[];
+  documents: TeacherDocument[];
+  attendance: Attendance[];
+  schedules: TeacherSchedule[];
 }
 
 export interface TeacherQualification {
   id: string;
+  teacherId: string;
   qualification: string;
   institution: string;
   year: number;
   field?: string;
+}
+
+export interface TeacherDocument {
+  id: string;
+  teacherId: string;
+  documentType: string;
+  fileName: string;
+  fileUrl: string;
+  uploadedAt: string;
+}
+
+export interface TeacherSchedule {
+  id: string;
+  teacherId: string;
+  classId: string;
+  class: Class;
+  subject: string;
+  dayOfWeek: 'MONDAY' | 'TUESDAY' | 'WEDNESDAY' | 'THURSDAY' | 'FRIDAY' | 'SATURDAY' | 'SUNDAY';
+  startTime: string;
+  endTime: string;
+  room?: string;
+  isActive: boolean;
 }
 
 export interface Class {

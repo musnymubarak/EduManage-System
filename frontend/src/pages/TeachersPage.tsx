@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Search, Edit, Eye, Award } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import api from '../services/api';
 import { Teacher } from '../types';
@@ -16,10 +17,8 @@ const TeachersPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
-  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   // Fetch teachers
   const { data: teachersData, isLoading } = useQuery({
@@ -36,9 +35,8 @@ const TeachersPage: React.FC = () => {
 
   const teachers = teachersData?.data || [];
 
-  const handleViewTeacher = (teacher: Teacher) => {
-    setSelectedTeacher(teacher);
-    setIsViewModalOpen(true);
+  const handleViewTeacher = (id: string) => {
+    navigate(`/teachers/${id}`);
   };
 
   return (
@@ -119,7 +117,7 @@ const TeachersPage: React.FC = () => {
                 {teachers.map((teacher: Teacher) => (
                   <tr key={teacher.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3 text-sm font-medium text-gray-900">
-                      {teacher.employeeId}
+                      {teacher.employeeNumber}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-900">{teacher.fullName}</td>
                     <td className="px-4 py-3 text-sm text-gray-600">{teacher.designation}</td>
@@ -131,7 +129,7 @@ const TeachersPage: React.FC = () => {
                     <td className="px-4 py-3 text-right">
                       <div className="flex justify-end gap-2">
                         <button
-                          onClick={() => handleViewTeacher(teacher)}
+                          onClick={() => handleViewTeacher(teacher.id)}
                           className="rounded p-1 hover:bg-gray-100"
                           title="View Details"
                         >
@@ -152,18 +150,6 @@ const TeachersPage: React.FC = () => {
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
       />
-
-      {/* View Teacher Modal */}
-      {selectedTeacher && (
-        <ViewTeacherModal
-          isOpen={isViewModalOpen}
-          onClose={() => {
-            setIsViewModalOpen(false);
-            setSelectedTeacher(null);
-          }}
-          teacher={selectedTeacher}
-        />
-      )}
     </div>
   );
 };
@@ -512,58 +498,5 @@ const AddTeacherModal: React.FC<AddTeacherModalProps> = ({ isOpen, onClose }) =>
     </Modal>
   );
 };
-
-// View Teacher Modal Component
-interface ViewTeacherModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  teacher: Teacher;
-}
-
-const ViewTeacherModal: React.FC<ViewTeacherModalProps> = ({ isOpen, onClose, teacher }) => {
-  return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Teacher Details" size="lg">
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-2xl font-bold text-gray-900">{teacher.fullName}</h3>
-            <p className="text-sm text-gray-600">{teacher.employeeId}</p>
-          </div>
-          <Badge status={teacher.status}>{teacher.status}</Badge>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <InfoItem label="Designation" value={teacher.designation} />
-          <InfoItem label="Employment Type" value={teacher.employmentType} />
-          <InfoItem label="Mobile" value={teacher.mobileNumber} />
-          <InfoItem label="Email" value={teacher.email || 'N/A'} />
-          <InfoItem label="Joined Date" value={formatDate(teacher.joinedDate)} />
-        </div>
-
-        {teacher.qualifications && teacher.qualifications.length > 0 && (
-          <div>
-            <h4 className="mb-3 text-lg font-semibold text-gray-900">Qualifications</h4>
-            <div className="space-y-2">
-              {teacher.qualifications.map((qual: any, index: number) => (
-                <div key={index} className="rounded-lg border p-3">
-                  <p className="font-medium text-gray-900">{qual.degree}</p>
-                  <p className="text-sm text-gray-600">{qual.institution} - {qual.year}</p>
-                  <p className="text-sm text-gray-500">{qual.fieldOfStudy}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-    </Modal>
-  );
-};
-
-const InfoItem: React.FC<{ label: string; value: string }> = ({ label, value }) => (
-  <div>
-    <p className="text-sm font-medium text-gray-500">{label}</p>
-    <p className="mt-1 text-sm text-gray-900">{value}</p>
-  </div>
-);
 
 export default TeachersPage;

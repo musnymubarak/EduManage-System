@@ -21,6 +21,7 @@ import ReportsPage from './pages/ReportsPage';
 import StudentProfilePage from './pages/StudentProfilePage';
 import ClassesPage from './pages/ClassesPage';
 import ClassDetailPage from './pages/ClassDetailPage';
+import TeacherProfilePage from './pages/TeacherProfilePage';
 
 // Layout
 import MainLayout from './components/Layout/MainLayout';
@@ -74,6 +75,7 @@ function App() {
               <Route path="classes" element={<ClassesPage />} />
               <Route path="classes/:id" element={<ClassDetailPage />} />
               <Route path="teachers" element={<TeachersPage />} />
+              <Route path="teachers/:id" element={<TeacherProfilePage />} />
               <Route path="attendance" element={<AttendancePage />} />
               <Route path="fees" element={<FeesPage />} />
               <Route path="exams" element={<ExamsPage />} />
