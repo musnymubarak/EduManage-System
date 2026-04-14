@@ -71,8 +71,8 @@ const PORT = config.port;
 app.listen(PORT, () => {
   console.log(`
 ╔═══════════════════════════════════════════════════════════╗
-║                                                           ║
-║   🕌 Sumaya Madrasa Management System - API Server       ║
+║   Status: healthy,
+║   🕌 Samaiya Madrasa Management System - API Server      ║
 ║                                                           ║
 ║   🚀 Server is running on port ${PORT}                      ║
 ║   🌍 Environment: ${config.nodeEnv.toUpperCase().padEnd(39)}║

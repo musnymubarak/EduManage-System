@@ -27,18 +27,18 @@ const MainLayout: React.FC = () => {
 
   const menuItems = [
     { path: '/', icon: LayoutDashboard, label: 'Dashboard', roles: ['all'] },
-    { path: '/students', icon: Users, label: 'Students', roles: ['SUPER_ADMIN', 'RECEPTIONIST', 'PRINCIPAL', 'VICE_PRINCIPAL'] },
-    { path: '/classes', icon: Building, label: 'Classes', roles: ['SUPER_ADMIN', 'RECEPTIONIST', 'PRINCIPAL', 'VICE_PRINCIPAL'] },
-    { path: '/teachers', icon: GraduationCap, label: 'Teachers', roles: ['SUPER_ADMIN', 'RECEPTIONIST', 'PRINCIPAL', 'VICE_PRINCIPAL'] },
-    { path: '/staff', icon: HardHat, label: 'Staff', roles: ['SUPER_ADMIN', 'RECEPTIONIST', 'PRINCIPAL', 'VICE_PRINCIPAL'] },
-    { path: '/attendance', icon: CalendarCheck, label: 'Attendance', roles: ['SUPER_ADMIN', 'RECEPTIONIST', 'PRINCIPAL', 'VICE_PRINCIPAL'] },
-    { path: '/finance', icon: DollarSign, label: 'Finance', roles: ['SUPER_ADMIN', 'RECEPTIONIST', 'PRINCIPAL', 'VICE_PRINCIPAL'] },
-    { path: '/exams', icon: FileText, label: 'Exams', roles: ['SUPER_ADMIN', 'RECEPTIONIST', 'PRINCIPAL', 'VICE_PRINCIPAL'] },
-    { path: '/inventory', icon: Package, label: 'Inventory', roles: ['SUPER_ADMIN', 'RECEPTIONIST', 'PRINCIPAL', 'VICE_PRINCIPAL'] },
-    { path: '/todos', icon: CheckSquare, label: 'Todo Dashboard', roles: ['SUPER_ADMIN', 'RECEPTIONIST', 'PRINCIPAL', 'VICE_PRINCIPAL'] },
-    { path: '/donations', icon: Gift, label: 'Donations', roles: ['SUPER_ADMIN', 'RECEPTIONIST', 'PRINCIPAL', 'VICE_PRINCIPAL'] },
-    { path: '/expenditures', icon: TrendingUp, label: 'Expenditures', roles: ['SUPER_ADMIN', 'EXPENDITURE_RECEPTIONIST', 'PRINCIPAL', 'VICE_PRINCIPAL'] },
-    { path: '/reports', icon: BarChart3, label: 'Reports', roles: ['SUPER_ADMIN', 'PRINCIPAL', 'VICE_PRINCIPAL'] },
+    { path: '/students', icon: Users, label: 'Students', roles: ['SUPER_ADMIN', 'ADMIN'] },
+    { path: '/classes', icon: Building, label: 'Classes', roles: ['SUPER_ADMIN', 'ADMIN'] },
+    { path: '/teachers', icon: GraduationCap, label: 'Teachers', roles: ['SUPER_ADMIN', 'ADMIN'] },
+    { path: '/staff', icon: HardHat, label: 'Staff', roles: ['SUPER_ADMIN', 'ADMIN'] },
+    { path: '/attendance', icon: CalendarCheck, label: 'Attendance', roles: ['SUPER_ADMIN', 'ADMIN'] },
+    { path: '/finance', icon: DollarSign, label: 'Finance', roles: ['SUPER_ADMIN', 'ADMIN'] },
+    { path: '/exams', icon: FileText, label: 'Exams', roles: ['SUPER_ADMIN', 'ADMIN'] },
+    { path: '/inventory', icon: Package, label: 'Inventory', roles: ['SUPER_ADMIN', 'ADMIN'] },
+    { path: '/todos', icon: CheckSquare, label: 'Todo Dashboard', roles: ['SUPER_ADMIN', 'ADMIN'] },
+    { path: '/donations', icon: Gift, label: 'Donations', roles: ['SUPER_ADMIN', 'ADMIN'] },
+    { path: '/expenditures', icon: TrendingUp, label: 'Expenditures', roles: ['SUPER_ADMIN', 'FINANCE_OFFICER'] },
+    { path: '/reports', icon: BarChart3, label: 'Reports', roles: ['SUPER_ADMIN', 'ADMIN'] },
     { path: '/users', icon: UserCog, label: 'User Management', roles: ['SUPER_ADMIN'] },
   ];
 
@@ -53,8 +53,8 @@ const MainLayout: React.FC = () => {
       {/* Sidebar - Always visible on web, with independent scroll */}
       <aside className="flex w-64 flex-col flex-shrink-0 bg-white shadow-lg border-r border-gray-200">
         <div className="flex h-16 flex-shrink-0 items-center justify-center bg-blue-600 px-4 gap-3">
-          <img src={logo} alt="Sumaya Madrasa Logo" className="h-10 w-10 object-contain brightness-0 invert" />
-          <h1 className="text-xl font-bold text-white tracking-tight">Sumaya Madrasa</h1>
+          <img src={logo} alt="Samaiya Madrasa Logo" className="h-10 w-10 object-contain brightness-0 invert" />
+          <h1 className="text-xl font-bold text-white tracking-tight">Samaiya Madrasa</h1>
         </div>
         
         {/* Independent scroll area for the sidebar content */}

@@ -1,6 +1,6 @@
-# Sumaya Madrasa Management System
+# Samaiya Madrasa Management System
 
-A comprehensive production-grade management system for Sumaya Madrasa with student registration, attendance tracking, fee management, inventory control, and more.
+A comprehensive production-grade management system for Samaiya Madrasa with student registration, attendance tracking, fee management, inventory control, and more.
 
 ## 🚀 Features
 
@@ -238,7 +238,7 @@ After seeding:
 
 ## 🤝 Contributing
 
-This is a private project for Sumaya Madrasa.
+This is a private project for Samaiya Madrasa.
 
 ## 📄 License
 
@@ -246,4 +246,4 @@ Proprietary - All rights reserved
 
 ## 👨‍💻 Developer
 
-Developed for Sumaya Madrasa
+Developed for Samaiya Madrasa

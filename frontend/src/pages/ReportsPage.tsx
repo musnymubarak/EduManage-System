@@ -266,9 +266,9 @@ const ReportPreview: React.FC<ReportPreviewProps> = ({
     <div className="space-y-4">
       <div className="rounded-lg bg-gray-50 p-6">
         <div className="mb-6 border-b pb-4 flex items-center gap-4">
-          <img src={logo} alt="Sumaya Madrasa Logo" className="h-16 w-16 object-contain" />
+          <img src={logo} alt="Samaiya Madrasa Logo" className="h-16 w-16 object-contain" />
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Sumaya Madrasa</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Samaiya Madrasa</h1>
             <p className="text-gray-600">
               {reportType.charAt(0).toUpperCase() + reportType.slice(1)} Report
             </p>

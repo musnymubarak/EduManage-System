@@ -102,10 +102,8 @@ const UsersPage: React.FC = () => {
             >
               <option value="">All Roles</option>
               <option value="SUPER_ADMIN">Super Admin</option>
-              <option value="PRINCIPAL">Principal</option>
-              <option value="VICE_PRINCIPAL">Vice Principal</option>
-              <option value="RECEPTIONIST">Receptionist</option>
-              <option value="EXPENDITURE_RECEPTIONIST">Expenditure Receptionist</option>
+              <option value="ADMIN">Admin</option>
+              <option value="FINANCE_OFFICER">Finance Officer</option>
             </select>
           </div>
         </div>
@@ -324,10 +322,8 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose }) => {
           onChange={handleChange}
           options={[
             { value: 'SUPER_ADMIN', label: 'Super Admin' },
-            { value: 'PRINCIPAL', label: 'Principal' },
-            { value: 'VICE_PRINCIPAL', label: 'Vice Principal' },
-            { value: 'RECEPTIONIST', label: 'Receptionist' },
-            { value: 'EXPENDITURE_RECEPTIONIST', label: 'Expenditure Receptionist' },
+            { value: 'ADMIN', label: 'Admin' },
+            { value: 'FINANCE_OFFICER', label: 'Finance Officer' },
           ]}
           required
         />
@@ -425,10 +421,8 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, onClose, user }) 
           onChange={handleChange}
           options={[
             { value: 'SUPER_ADMIN', label: 'Super Admin' },
-            { value: 'PRINCIPAL', label: 'Principal' },
-            { value: 'VICE_PRINCIPAL', label: 'Vice Principal' },
-            { value: 'RECEPTIONIST', label: 'Receptionist' },
-            { value: 'EXPENDITURE_RECEPTIONIST', label: 'Expenditure Receptionist' },
+            { value: 'ADMIN', label: 'Admin' },
+            { value: 'FINANCE_OFFICER', label: 'Finance Officer' },
           ]}
           required
         />

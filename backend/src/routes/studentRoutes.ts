@@ -9,11 +9,11 @@ const router = Router();
 router.use(authenticateToken);
 
 // Receptionist, Principal, Vice Principal, Super Admin can manage students
-const studentManagers: UserRole[] = ['RECEPTIONIST', 'PRINCIPAL', 'VICE_PRINCIPAL', 'SUPER_ADMIN'];
+const managers: UserRole[] = ['ADMIN', 'SUPER_ADMIN'];
 
 router.post(
   '/',
-  authorize(...studentManagers),
+  authorize(...managers),
   upload.fields([
     { name: 'profilePhoto', maxCount: 1 },
     { name: 'documents', maxCount: 10 }
@@ -23,10 +23,10 @@ router.post(
 router.get('/', studentController.getAllStudents);
 router.get('/class/:classId', studentController.getStudentsByClass);
 router.get('/:id', studentController.getStudentById);
-router.put('/:id', authorize(...studentManagers), studentController.updateStudent);
+router.put('/:id', authorize(...managers), studentController.updateStudent);
 router.post(
   '/:id/upload',
-  authorize(...studentManagers),
+  authorize(...managers),
   upload.single('file'),
   studentController.uploadStudentDocument
 );

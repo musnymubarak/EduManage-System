@@ -15,10 +15,8 @@ datasource db {
 
 enum UserRole {
   SUPER_ADMIN
-  PRINCIPAL
-  VICE_PRINCIPAL
-  RECEPTIONIST
-  EXPENDITURE_RECEPTIONIST
+  ADMIN
+  FINANCE_OFFICER
 }
 
 enum UserStatus {

@@ -7,7 +7,7 @@ const router = Router();
 
 router.use(authenticateToken);
 
-const managers: UserRole[] = ['RECEPTIONIST', 'PRINCIPAL', 'VICE_PRINCIPAL', 'SUPER_ADMIN'];
+const managers: UserRole[] = ['ADMIN', 'SUPER_ADMIN'];
 
 router.post('/students', authorize(...managers), attendanceController.markStudentAttendance);
 router.post('/teachers', authorize(...managers), attendanceController.markTeacherAttendance);

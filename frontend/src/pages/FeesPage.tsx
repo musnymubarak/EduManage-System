@@ -691,7 +691,7 @@ const FeeReceiptModal: React.FC<{ isOpen: boolean; onClose: () => void; fee: any
                         <img src={logo} alt="Logo" className="max-h-full max-w-full object-contain" />
                     </div>
                     <div>
-                        <h1 className="text-4xl font-black tracking-tighter text-gray-900">SUMAYA MADRASA</h1>
+                        <h1 className="text-4xl font-black tracking-tighter text-gray-900">SAMAIYA MADRASA</h1>
                         <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 mt-1">Institutional Financial Record</p>
                     </div>
                 </div>
@@ -774,7 +774,7 @@ const FeeReceiptModal: React.FC<{ isOpen: boolean; onClose: () => void; fee: any
                              <p className="text-sm font-black italic text-blue-900/40">Auth: {fee.collector?.fullName || 'Academic Staff'}</p>
                         </div>
                         <p className="text-xs font-black uppercase tracking-[0.4em] text-gray-900">Authorized Signature</p>
-                        <p className="text-[10px] text-gray-500 mt-1 uppercase font-bold tracking-widest">Accounting Department — Sumaya Madrasa</p>
+                        <p className="text-[10px] text-gray-500 mt-1 uppercase font-bold tracking-widest">Accounting Department — Samaiya Madrasa</p>
                     </div>
                 </div>
             </div>

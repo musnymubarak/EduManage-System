@@ -64,8 +64,8 @@ export const getAllTodos = async (req: AuthRequest, res: Response): Promise<void
     if (priority) where.priority = priority;
     if (assignedTo) where.assignedTo = assignedTo;
 
-    // Principal and Vice Principal see assigned todos
-    if (req.user!.role === 'PRINCIPAL' || req.user!.role === 'VICE_PRINCIPAL') {
+    // Finance Officers only see their own assigned todos
+    if (req.user!.role === 'FINANCE_OFFICER') {
       where.assignedTo = req.user!.id;
     }
 

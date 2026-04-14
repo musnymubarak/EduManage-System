@@ -7,7 +7,7 @@ const router = Router();
 
 router.use(authenticateToken);
 
-const managers: UserRole[] = ['RECEPTIONIST', 'PRINCIPAL', 'VICE_PRINCIPAL', 'SUPER_ADMIN'];
+const managers: UserRole[] = ['ADMIN', 'SUPER_ADMIN'];
 
 // Classes
 router.get('/classes', commonController.getAllClasses);
@@ -46,7 +46,7 @@ router.get('/donations/report', commonController.getDonationReport);
 // Expenditures - Only Expenditure Receptionist
 router.post(
   '/expenditures',
-  authorize('EXPENDITURE_RECEPTIONIST', 'SUPER_ADMIN'),
+  authorize('FINANCE_OFFICER', 'SUPER_ADMIN'),
   commonController.recordExpenditure
 );
 router.get('/expenditures', commonController.getAllExpenditures);

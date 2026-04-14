@@ -8,8 +8,8 @@ const router = Router();
 router.use(authenticateToken);
 
 // List and Get operations allowed for management roles
-router.get('/', authorize('SUPER_ADMIN', 'RECEPTIONIST', 'PRINCIPAL', 'VICE_PRINCIPAL'), userController.getAllUsers);
-router.get('/:id', authorize('SUPER_ADMIN', 'RECEPTIONIST', 'PRINCIPAL', 'VICE_PRINCIPAL'), userController.getUserById);
+router.get('/', authorize('SUPER_ADMIN', 'ADMIN'), userController.getAllUsers);
+router.get('/:id', authorize('SUPER_ADMIN', 'ADMIN'), userController.getUserById);
 
 // Write operations restricted to SUPER_ADMIN
 router.use(authorize('SUPER_ADMIN'));

@@ -1,6 +1,6 @@
 <!-- 
 
-I used reference name as Sumaya Madrasa just for an example change it into apropriate one 
+I used reference name as Samaiya Madrasa just for an example change it into apropriate one 
 
 -->
 

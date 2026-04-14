@@ -1,7 +1,7 @@
 {
-  "name": "sumaya-madrasa-backend",
+  "name": "samaiya-madrasa-backend",
   "version": "1.0.0",
-  "description": "Backend API for Sumaya Madrasa Management System",
+  "description": "Backend API for Samaiya Madrasa Management System",
   "main": "dist/index.js",
   "scripts": {
     "dev": "nodemon src/index.ts",
@@ -17,7 +17,7 @@
     "management",
     "education"
   ],
-  "author": "Sumaya Madrasa",
+  "author": "Samaiya Madrasa",
   "license": "UNLICENSED",
   "dependencies": {
     "@prisma/client": "^5.9.1",
