@@ -14,9 +14,10 @@ import {
   TrendingUp,
   Gift,
   LogOut,
-  BarChart3,
   Building,
-  Clock
+  Clock,
+  HardHat,
+  BarChart3
 } from 'lucide-react';
 import logo from '../../logo.png';
 
@@ -29,6 +30,7 @@ const MainLayout: React.FC = () => {
     { path: '/students', icon: Users, label: 'Students', roles: ['SUPER_ADMIN', 'RECEPTIONIST', 'PRINCIPAL', 'VICE_PRINCIPAL'] },
     { path: '/classes', icon: Building, label: 'Classes', roles: ['SUPER_ADMIN', 'RECEPTIONIST', 'PRINCIPAL', 'VICE_PRINCIPAL'] },
     { path: '/teachers', icon: GraduationCap, label: 'Teachers', roles: ['SUPER_ADMIN', 'RECEPTIONIST', 'PRINCIPAL', 'VICE_PRINCIPAL'] },
+    { path: '/staff', icon: HardHat, label: 'Staff', roles: ['SUPER_ADMIN', 'RECEPTIONIST', 'PRINCIPAL', 'VICE_PRINCIPAL'] },
     { path: '/attendance', icon: CalendarCheck, label: 'Attendance', roles: ['SUPER_ADMIN', 'RECEPTIONIST', 'PRINCIPAL', 'VICE_PRINCIPAL'] },
     { path: '/finance', icon: DollarSign, label: 'Finance', roles: ['SUPER_ADMIN', 'RECEPTIONIST', 'PRINCIPAL', 'VICE_PRINCIPAL'] },
     { path: '/exams', icon: FileText, label: 'Exams', roles: ['SUPER_ADMIN', 'RECEPTIONIST', 'PRINCIPAL', 'VICE_PRINCIPAL'] },

@@ -94,6 +94,52 @@ export const markTeacherAttendance = async (req: AuthRequest, res: Response): Pr
   }
 };
 
+export const markStaffAttendance = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const { date, attendanceData, attendance } = req.body;
+        const dataToMap = attendanceData || attendance;
+
+        if (!dataToMap || !Array.isArray(dataToMap)) {
+            res.status(400).json({ success: false, error: 'Staff attendance data is missing or invalid' });
+            return;
+        }
+
+        const attendanceRecords = await Promise.all(
+            dataToMap.map(async (record: any) => {
+                return prisma.staffAttendance.upsert({
+                    where: {
+                        staffId_date: {
+                            staffId: record.staffId,
+                            date: new Date(date),
+                        },
+                    },
+                    update: {
+                        status: record.status,
+                        remarks: record.remarks,
+                        markedBy: req.user!.id,
+                    },
+                    create: {
+                        staffId: record.staffId,
+                        date: new Date(date),
+                        status: record.status,
+                        remarks: record.remarks,
+                        markedBy: req.user!.id,
+                    },
+                });
+            })
+        );
+
+        res.status(201).json({
+            success: true,
+            message: 'Staff attendance marked successfully',
+            data: attendanceRecords,
+        });
+    } catch (error) {
+        console.error('Error marking staff attendance:', error);
+        res.status(500).json({ error: 'Failed to mark staff attendance' });
+    }
+};
+
 export const getStudentAttendance = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { classId, startDate, endDate } = req.query;
@@ -131,12 +177,48 @@ export const getStudentAttendance = async (req: AuthRequest, res: Response): Pro
   }
 };
 
+export const getStaffAttendance = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const { date } = req.query;
+
+        const where: any = {};
+        if (date) {
+            const queryDate = new Date(date as string);
+            queryDate.setHours(0, 0, 0, 0);
+            where.date = queryDate;
+        }
+
+        const attendance = await prisma.staffAttendance.findMany({
+            where,
+            include: {
+                staff: {
+                    select: {
+                        id: true,
+                        employeeNumber: true,
+                        fullName: true,
+                        designation: true
+                    },
+                },
+            },
+            orderBy: { date: 'desc' },
+        });
+
+        res.json({
+            success: true,
+            data: attendance,
+            total: attendance.length,
+        });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch staff attendance' });
+    }
+};
+
 export const getAttendanceSummary = async (_req: AuthRequest, res: Response): Promise<void> => {
   try {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const [studentPresent, studentTotal, teacherPresent, teacherTotal] = await Promise.all([
+    const [studentPresent, studentTotal, teacherPresent, teacherTotal, staffPresent, staffTotal] = await Promise.all([
       prisma.studentAttendance.count({
         where: {
           date: today,
@@ -155,6 +237,15 @@ export const getAttendanceSummary = async (_req: AuthRequest, res: Response): Pr
       prisma.teacher.count({
         where: { status: 'ACTIVE' },
       }),
+      prisma.staffAttendance.count({
+          where: {
+              date: today,
+              status: 'PRESENT'
+          }
+      }),
+      prisma.staff.count({
+          where: { status: 'ACTIVE' }
+      })
     ]);
 
     res.json({
@@ -169,6 +260,11 @@ export const getAttendanceSummary = async (_req: AuthRequest, res: Response): Pr
           present: teacherPresent,
           total: teacherTotal,
           percentage: teacherTotal > 0 ? ((teacherPresent / teacherTotal) * 100).toFixed(1) : 0,
+        },
+        staff: {
+            present: staffPresent,
+            total: staffTotal,
+            percentage: staffTotal > 0 ? ((staffPresent / staffTotal) * 100).toFixed(1) : 0,
         },
         date: today,
       },

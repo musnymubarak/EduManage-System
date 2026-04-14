@@ -227,6 +227,135 @@ model TeacherDocument {
 }
 
 // ============================================
+// NON-ACADEMIC STAFF MANAGEMENT
+// ============================================
+
+enum StaffDepartment {
+  ADMINISTRATION
+  SECURITY
+  CLEANING
+  MAINTENANCE
+  KITCHEN
+  TRANSPORT
+  LIBRARY
+  OTHER
+}
+
+enum DutyStatus {
+  ASSIGNED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+model Staff {
+  id                 String          @id @default(uuid())
+  employeeNumber     String          @unique
+  fullName           String
+  nameWithInitials   String
+  dateOfBirth        DateTime
+  gender             Gender
+  nic                String          @unique
+  drivingLicenseNo   String?         @unique
+
+  // Contact Information
+  address            String
+  city               String
+  district           String
+  province           String
+  postalCode         String?
+  mobileNumber       String
+  email              String?
+
+  // Employment Information
+  department         StaffDepartment
+  designation        String          // "Security Guard", "Janitor", etc.
+  employmentType     String          // PERMANENT, CONTRACT, TEMPORARY
+  joinedDate         DateTime        @default(now())
+  basicSalary        Float           @default(0)
+
+  // Documents & Photo
+  profilePhoto       String?
+  documents          StaffDocument[]
+
+  // Status
+  status             String          @default("ACTIVE") // ACTIVE, INACTIVE, RESIGNED, TERMINATED
+
+  // Relations
+  duties             StaffDuty[]
+  attendance         StaffAttendance[]
+  salaryHistory      StaffSalary[]
+
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  @@map("staff")
+}
+
+model StaffSalary {
+  id            String   @id @default(uuid())
+  staffId       String
+  staff         Staff    @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  month         String   // "2024-04"
+  basicSalary   Float
+  allowances    Float    @default(0)
+  deductions    Float    @default(0)
+  netSalary     Float
+  paymentDate   DateTime @default(now())
+  paymentMethod PaymentMethod @default(CASH)
+  receiptNumber String?  @unique
+  remarks       String?
+  paidBy        String   // User ID
+  createdAt     DateTime @default(now())
+
+  @@unique([staffId, month])
+  @@map("staff_salaries")
+}
+
+model StaffDocument {
+  id           String   @id @default(uuid())
+  staffId      String
+  staff        Staff    @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  documentType String
+  fileName     String
+  fileUrl      String
+  uploadedAt   DateTime @default(now())
+
+  @@map("staff_documents")
+}
+
+model StaffDuty {
+  id          String     @id @default(uuid())
+  staffId     String
+  staff       Staff      @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  status      DutyStatus @default(ASSIGNED)
+  assignedDate DateTime  @default(now())
+  dueDate     DateTime?
+  completedAt DateTime?
+  remarks     String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@map("staff_duties")
+}
+
+model StaffAttendance {
+  id        String           @id @default(uuid())
+  staffId   String
+  staff     Staff            @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  date      DateTime
+  status    AttendanceStatus
+  remarks   String?
+  markedBy  String
+  createdAt DateTime         @default(now())
+
+  @@unique([staffId, date])
+  @@map("staff_attendance")
+}
+
+// ============================================
 // CLASS MANAGEMENT
 // ============================================
 

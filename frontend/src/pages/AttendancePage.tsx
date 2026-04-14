@@ -9,7 +9,7 @@ import { Button } from '../components/UI/Button';
 import { formatDate } from '../utils/helpers';
 
 const AttendancePage: React.FC = () => {
-  const [attendanceType, setAttendanceType] = useState<'STUDENT' | 'TEACHER'>('STUDENT');
+  const [attendanceType, setAttendanceType] = useState<'STUDENT' | 'TEACHER' | 'STAFF'>('STUDENT');
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedClassId, setSelectedClassId] = useState('');
   
@@ -36,14 +36,21 @@ const AttendancePage: React.FC = () => {
               onClick={() => setAttendanceType('STUDENT')}
             >
               <Users size={20} className="mr-2" />
-              Student Attendance
+              Student
             </Button>
             <Button
               variant={attendanceType === 'TEACHER' ? 'primary' : 'secondary'}
               onClick={() => setAttendanceType('TEACHER')}
             >
+              <Users size={20} className="mr-2" />
+              Teacher
+            </Button>
+            <Button
+              variant={attendanceType === 'STAFF' ? 'primary' : 'secondary'}
+              onClick={() => setAttendanceType('STAFF')}
+            >
               <Clock size={20} className="mr-2" />
-              Teacher Attendance
+              Staff
             </Button>
           </div>
         </div>
@@ -91,8 +98,10 @@ const AttendancePage: React.FC = () => {
           selectedDate={selectedDate}
           selectedClassId={selectedClassId}
         />
-      ) : (
+      ) : attendanceType === 'TEACHER' ? (
         <TeacherAttendanceMarking selectedDate={selectedDate} />
+      ) : (
+        <StaffAttendanceMarking selectedDate={selectedDate} />
       )}
     </div>
   );
@@ -493,6 +502,164 @@ const TeacherAttendanceMarking: React.FC<TeacherAttendanceMarkingProps> = ({ sel
           <div className="mt-6 flex justify-end">
             <Button onClick={handleSubmit} disabled={markAttendanceMutation.isPending}>
               {markAttendanceMutation.isPending ? 'Saving...' : 'Save Attendance'}
+            </Button>
+          </div>
+        </>
+      )}
+    </Card>
+  );
+};
+
+// Staff Attendance Marking Component
+interface StaffAttendanceMarkingProps {
+  selectedDate: string;
+}
+
+const StaffAttendanceMarking: React.FC<StaffAttendanceMarkingProps> = ({ selectedDate }) => {
+  const [attendanceData, setAttendanceData] = useState<Record<string, string>>({});
+  const queryClient = useQueryClient();
+
+  // Fetch staff
+  const { data: staffData, isLoading } = useQuery({
+    queryKey: ['staff'],
+    queryFn: async () => {
+      const response = await api.get('/staff');
+      return response.data;
+    },
+  });
+
+  const staffList = staffData?.data || [];
+
+  // Fetch attendance for the date
+  const { data: savedAttendanceData } = useQuery({
+    queryKey: ['staffAttendance', selectedDate],
+    queryFn: async () => {
+      const response = await api.get(`/attendance/staff?date=${selectedDate}`);
+      return response.data;
+    },
+    enabled: !!selectedDate,
+  });
+
+  // Initialize attendance data
+  React.useEffect(() => {
+    if (savedAttendanceData?.data) {
+      const data: Record<string, string> = {};
+      savedAttendanceData.data.forEach((record: any) => {
+        data[record.staffId] = record.status;
+      });
+      setAttendanceData(data);
+    }
+  }, [savedAttendanceData]);
+
+  const markAttendanceMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await api.post('/attendance/staff', data);
+      return response.data;
+    },
+    onSuccess: () => {
+      toast.success('Staff attendance marked successfully!');
+      queryClient.invalidateQueries({ queryKey: ['staffAttendance'] });
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.error || 'Failed to mark staff attendance');
+    },
+  });
+
+  const handleStatusChange = (staffId: string, status: string) => {
+    setAttendanceData({ ...attendanceData, [staffId]: status });
+  };
+
+  const handleSubmit = () => {
+    const attendanceRecords = staffList
+      .filter((s: any) => attendanceData[s.id])
+      .map((s: any) => ({
+        staffId: s.id,
+        status: attendanceData[s.id],
+      }));
+
+    if (attendanceRecords.length === 0) {
+      toast.error('Please mark attendance for at least one staff member');
+      return;
+    }
+
+    markAttendanceMutation.mutate({
+      date: selectedDate,
+      attendance: attendanceRecords,
+    });
+  };
+
+  const markAllPresent = () => {
+    const data: Record<string, string> = {};
+    staffList.forEach((s: any) => {
+      data[s.id] = 'PRESENT';
+    });
+    setAttendanceData(data);
+  };
+
+  return (
+    <Card>
+      {isLoading ? (
+        <div className="py-8 text-center text-gray-500">Syncing personnel records...</div>
+      ) : staffList.length === 0 ? (
+        <div className="py-8 text-center text-gray-500">No non-academic staff found in registries.</div>
+      ) : (
+        <>
+          <div className="mb-6 flex items-center justify-between">
+            <h3 className="text-xl font-black text-gray-900 uppercase tracking-tight">
+              Staff Presence - {formatDate(selectedDate)}
+            </h3>
+            <Button variant="secondary" onClick={markAllPresent} className="font-bold border-none bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white">
+              Mark All Present
+            </Button>
+          </div>
+
+          <div className="overflow-x-auto rounded-2xl border border-gray-100">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-5 py-4 text-left text-[10px] font-black uppercase tracking-widest text-gray-400">ID / Persona</th>
+                  <th className="px-5 py-4 text-left text-[10px] font-black uppercase tracking-widest text-gray-400">Dept & Designation</th>
+                  <th className="px-5 py-4 text-center text-[10px] font-black uppercase tracking-widest text-gray-400">Present</th>
+                  <th className="px-5 py-4 text-center text-[10px] font-black uppercase tracking-widest text-gray-400">Absent</th>
+                  <th className="px-5 py-4 text-center text-[10px] font-black uppercase tracking-widest text-gray-400">Late</th>
+                  <th className="px-5 py-4 text-center text-[10px] font-black uppercase tracking-widest text-gray-400">Sick</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {staffList.map((s: any) => (
+                  <tr key={s.id} className="hover:bg-blue-50/10 transition-colors">
+                    <td className="px-5 py-4">
+                      <p className="font-black text-gray-900 uppercase text-xs">{s.fullName}</p>
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">{s.employeeNumber}</p>
+                    </td>
+                    <td className="px-5 py-4">
+                      <p className="text-xs font-black text-gray-900 uppercase">{s.designation}</p>
+                      <p className="text-[10px] font-bold text-blue-500 uppercase tracking-widest">{s.department}</p>
+                    </td>
+                    {['PRESENT', 'ABSENT', 'LATE', 'SICK_LEAVE'].map((status) => (
+                      <td key={status} className="px-5 py-4 text-center">
+                        <input
+                          type="radio"
+                          name={`attendance-${s.id}`}
+                          checked={attendanceData[s.id] === status}
+                          onChange={() => handleStatusChange(s.id, status)}
+                          className={`h-5 w-5 ${
+                            status === 'PRESENT' ? 'text-green-600' :
+                            status === 'ABSENT' ? 'text-red-600' :
+                            status === 'LATE' ? 'text-yellow-500' : 'text-blue-500'
+                          } border-2 focus:ring-offset-2 transition-all cursor-pointer`}
+                        />
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="mt-8 flex justify-end">
+            <Button onClick={handleSubmit} disabled={markAttendanceMutation.isPending} className="bg-blue-600 hover:bg-blue-700 font-black px-10 h-12 shadow-xl shadow-blue-100 uppercase tracking-widest text-xs">
+              {markAttendanceMutation.isPending ? 'Committing Changes...' : 'Authorize Presence Record'}
             </Button>
           </div>
         </>

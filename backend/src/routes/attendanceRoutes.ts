@@ -11,7 +11,10 @@ const managers: UserRole[] = ['RECEPTIONIST', 'PRINCIPAL', 'VICE_PRINCIPAL', 'SU
 
 router.post('/students', authorize(...managers), attendanceController.markStudentAttendance);
 router.post('/teachers', authorize(...managers), attendanceController.markTeacherAttendance);
+router.post('/staff', authorize(...managers), attendanceController.markStaffAttendance);
+
 router.get('/students', attendanceController.getStudentAttendance);
+router.get('/staff', attendanceController.getStaffAttendance);
 router.get('/summary', attendanceController.getAttendanceSummary);
 
 export default router;

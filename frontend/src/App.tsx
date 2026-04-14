@@ -8,10 +8,14 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import StudentsPage from './pages/StudentsPage';
+import StudentProfilePage from './pages/StudentProfilePage';
+import ClassesPage from './pages/ClassesPage';
 import TeachersPage from './pages/TeachersPage';
 import AttendancePage from './pages/AttendancePage';
-import PaymentsPage from './pages/PaymentsPage';
-import FeesPage from './pages/FeesPage';
+import ClassDetailPage from './pages/ClassDetailPage';
+import TeacherProfilePage from './pages/TeacherProfilePage';
+import StaffPage from './pages/StaffPage';
+import StaffProfilePage from './pages/StaffProfilePage';
 import FinancePage from './pages/FinancePage';
 import ExamsPage from './pages/ExamsPage';
 import InventoryPage from './pages/InventoryPage';
@@ -20,10 +24,6 @@ import UsersPage from './pages/UsersPage';
 import ExpenditurePage from './pages/ExpenditurePage';
 import DonationsPage from './pages/DonationsPage';
 import ReportsPage from './pages/ReportsPage';
-import StudentProfilePage from './pages/StudentProfilePage';
-import ClassesPage from './pages/ClassesPage';
-import ClassDetailPage from './pages/ClassDetailPage';
-import TeacherProfilePage from './pages/TeacherProfilePage';
 
 // Layout
 import MainLayout from './components/Layout/MainLayout';
@@ -78,6 +78,8 @@ function App() {
               <Route path="classes/:id" element={<ClassDetailPage />} />
               <Route path="teachers" element={<TeachersPage />} />
               <Route path="teachers/:id" element={<TeacherProfilePage />} />
+              <Route path="staff" element={<StaffPage />} />
+              <Route path="staff/:id" element={<StaffProfilePage />} />
               <Route path="attendance" element={<AttendancePage />} />
               <Route path="finance" element={<FinancePage />} />
               {/* Legacy Redirects */}
