@@ -2,6 +2,7 @@ import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
 import { AppError } from '../middleware/errorHandler';
 import prisma from '../utils/prisma';
+// Refreshed prisma client relation logic
 
 export const getAllFeePayments = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -20,8 +21,17 @@ export const getAllFeePayments = async (req: AuthRequest, res: Response): Promis
     const payments = await prisma.feePayment.findMany({
       where,
       include: {
-        student: true,
+        student: {
+          include: {
+            class: true
+          }
+        },
         partialPayments: true,
+        collector: {
+          select: {
+            fullName: true
+          }
+        }
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -305,3 +315,153 @@ export const getFeeReport = async (req: AuthRequest, res: Response): Promise<voi
     res.status(500).json({ error: 'Failed to generate fee report' });
   }
 };
+
+export const updateFeePayment = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { amount, paidAmount, paymentMethod, remarks, paymentDate } = req.body;
+
+    const currentFee = await prisma.feePayment.findUnique({
+      where: { id },
+    });
+
+    if (!currentFee) {
+      throw new AppError('Fee payment not found', 404);
+    }
+
+    const numAmount = amount !== undefined ? parseFloat(amount) : currentFee.amount;
+    const numPaidAmount = paidAmount !== undefined ? parseFloat(paidAmount) : currentFee.paidAmount;
+    const balance = numAmount - numPaidAmount;
+    const status = balance <= 0 ? 'PAID' : numPaidAmount > 0 ? 'PARTIAL' : 'PENDING';
+
+    const updated = await prisma.feePayment.update({
+      where: { id },
+      data: {
+        amount: numAmount,
+        paidAmount: numPaidAmount,
+        balance,
+        status,
+        paymentMethod: paymentMethod || currentFee.paymentMethod,
+        remarks: remarks !== undefined ? remarks : currentFee.remarks,
+        paymentDate: paymentDate ? new Date(paymentDate) : currentFee.paymentDate,
+      },
+      include: {
+        student: true,
+      }
+    });
+
+    res.json({
+      success: true,
+      message: 'Payment updated successfully',
+      data: updated
+    });
+  } catch (error) {
+    if (error instanceof AppError) {
+      res.status(error.statusCode).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: 'Failed to update payment' });
+    }
+  }
+};
+
+export const getMonthlyFeeStatus = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { month, classId, search, status } = req.query;
+
+    if (!month) {
+      throw new AppError('Month is required (YYYY-MM)', 400);
+    }
+
+    // 1. Get Monthly Fee Amount from Settings
+    const setting = await prisma.systemSetting.findUnique({
+      where: { key: 'monthly_fee_amount' },
+    });
+    const monthlyFeeAmount = parseFloat(setting?.value || '2000');
+
+    // 2. Build Student Filter
+    const studentWhere: any = {
+      status: 'ACTIVE',
+    };
+    if (classId) {
+      studentWhere.classId = classId;
+    }
+    if (search) {
+      studentWhere.OR = [
+        { fullName: { contains: search as string, mode: 'insensitive' } },
+        { admissionNumber: { contains: search as string, mode: 'insensitive' } },
+      ];
+    }
+
+    // 3. Get All Students
+    const students = await prisma.student.findMany({
+      where: studentWhere,
+      include: {
+        class: true,
+      },
+      orderBy: { fullName: 'asc' },
+    });
+
+    // 4. Get Payments for this month
+    const payments = await prisma.feePayment.findMany({
+      where: {
+        feeType: 'MONTHLY',
+        month: month as string,
+      },
+    });
+
+    // 5. Combine and map to check status
+    const data = students.map(student => {
+      const payment = payments.find(p => p.studentId === student.id);
+      
+      let currentStatus = 'PENDING';
+      let paidAmount = 0;
+      let balance = monthlyFeeAmount;
+
+      if (payment) {
+        currentStatus = payment.status;
+        paidAmount = payment.paidAmount;
+        balance = payment.balance;
+      }
+
+      return {
+        studentId: student.id,
+        admissionNumber: student.admissionNumber,
+        fullName: student.fullName,
+        className: student.class?.name || 'Unassigned',
+        month: month,
+        totalAmount: monthlyFeeAmount,
+        paidAmount,
+        balance,
+        paymentStatus: currentStatus,
+        paymentId: payment?.id || null,
+      };
+    });
+
+    // 6. Filter by Status if provided
+    let filteredData = data;
+    if (status && status !== 'ALL') {
+      filteredData = data.filter(item => item.paymentStatus === status);
+    }
+
+    res.json({
+      success: true,
+      data: filteredData,
+      summary: {
+        totalStudents: data.length,
+        paid: data.filter(d => d.paymentStatus === 'PAID').length,
+        partial: data.filter(d => d.paymentStatus === 'PARTIAL').length,
+        pending: data.filter(d => d.paymentStatus === 'PENDING').length,
+        totalExpectedAmount: data.length * monthlyFeeAmount,
+        totalCollectedAmount: data.reduce((sum, d) => sum + d.paidAmount, 0),
+        totalOutstandingAmount: data.reduce((sum, d) => sum + d.balance, 0)
+      }
+    });
+  } catch (error) {
+    if (error instanceof AppError) {
+      res.status(error.statusCode).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: 'Failed to fetch monthly fee status' });
+    }
+  }
+};
+

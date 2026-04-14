@@ -11,8 +11,10 @@ const managers: UserRole[] = ['RECEPTIONIST', 'PRINCIPAL', 'VICE_PRINCIPAL', 'SU
 
 router.get('/payments', feeController.getAllFeePayments);
 router.post('/payments', authorize(...managers), feeController.recordPayment);
+router.put('/payments/:id', authorize(...managers), feeController.updateFeePayment);
 router.post('/partial-payment', authorize(...managers), feeController.recordPartialPayment);
 router.get('/student/:studentId', feeController.getStudentFeeHistory);
+router.get('/monthly-status', feeController.getMonthlyFeeStatus);
 router.get('/pending', feeController.getPendingPayments);
 router.get('/report', feeController.getFeeReport);
 

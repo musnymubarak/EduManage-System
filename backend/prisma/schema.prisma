@@ -45,6 +45,8 @@ model User {
   createdTodos  Todo[]     @relation("CreatedTodos")
   assignedTodos Todo[]     @relation("AssignedTodos")
   authoredHistory TodoHistory[] @relation("HistoryChanger")
+  collectedPayments FeePayment[] @relation("FeeCollector")
+  collectedPartialPayments PartialPayment[] @relation("PartialFeeCollector")
 
   @@map("users")
 }
@@ -369,6 +371,7 @@ model FeePayment {
   partialPayments PartialPayment[]
   
   collectedBy     String        // User ID
+  collector       User          @relation("FeeCollector", fields: [collectedBy], references: [id])
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
@@ -384,6 +387,7 @@ model PartialPayment {
   paymentMethod PaymentMethod
   receiptNumber String?
   collectedBy   String     // User ID
+  collector     User       @relation("PartialFeeCollector", fields: [collectedBy], references: [id])
   remarks       String?
   createdAt     DateTime   @default(now())
 
