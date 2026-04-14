@@ -30,4 +30,8 @@ router.post(
   teacherController.uploadTeacherDocument
 );
 
+// Memos
+router.post('/:id/memos', authorize(...managers), teacherController.addTeacherMemo);
+router.delete('/:id/memos/:memoId', authorize(...managers), teacherController.deleteTeacherMemo);
+
 export default router;

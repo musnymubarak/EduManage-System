@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
 import { 
   ArrowLeft, 
   User, 
@@ -14,8 +15,13 @@ import {
   Clock,
   Mail,
   ExternalLink,
-  Download
+  Download,
+  ClipboardList,
+  Plus,
+  Trash2,
+  X
 } from 'lucide-react';
+import { Input } from '../components/UI/Input';
 import api from '../services/api';
 import { TeacherDetail } from '../types';
 import { Card } from '../components/UI/Card';
@@ -28,7 +34,9 @@ import { formatDate, formatCurrency } from '../utils/helpers';
 const TeacherProfilePage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'overview' | 'schedule' | 'attendance' | 'documents'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'schedule' | 'attendance' | 'documents' | 'memos'>('overview');
+  const [isMemoModalOpen, setIsMemoModalOpen] = useState(false);
+  const queryClient = useQueryClient();
 
   const { data: teacher, isLoading, error } = useQuery<TeacherDetail>({
     queryKey: ['teacher', id],
@@ -37,6 +45,35 @@ const TeacherProfilePage: React.FC = () => {
       return response.data.data;
     },
     enabled: !!id,
+  });
+
+  const addMemoMutation = useMutation({
+    mutationFn: async (data: { title: string; content: string }) => {
+      const response = await api.post(`/teachers/${id}/memos`, data);
+      return response.data;
+    },
+    onSuccess: () => {
+      toast.success('Memo added successfully!');
+      setIsMemoModalOpen(false);
+      queryClient.invalidateQueries({ queryKey: ['teacher', id] });
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.error || 'Failed to add memo');
+    },
+  });
+
+  const deleteMemoMutation = useMutation({
+    mutationFn: async (memoId: string) => {
+      const response = await api.delete(`/teachers/${id}/memos/${memoId}`);
+      return response.data;
+    },
+    onSuccess: () => {
+      toast.success('Memo deleted successfully!');
+      queryClient.invalidateQueries({ queryKey: ['teacher', id] });
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.error || 'Failed to delete memo');
+    },
   });
 
   if (isLoading) {
@@ -57,6 +94,20 @@ const TeacherProfilePage: React.FC = () => {
       </div>
     );
   }
+
+  const handleAddMemo = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const title = formData.get('title') as string;
+    const content = formData.get('content') as string;
+    
+    if (!title || !content) {
+      toast.error('Both title and content are required');
+      return;
+    }
+    
+    addMemoMutation.mutate({ title, content });
+  };
 
   const attendancePercentage = teacher.attendance && teacher.attendance.length > 0
     ? ((teacher.attendance.filter(a => a.status === 'PRESENT').length / teacher.attendance.length) * 100).toFixed(1)
@@ -135,7 +186,8 @@ const TeacherProfilePage: React.FC = () => {
           { id: 'overview', label: 'Overview', icon: User },
           { id: 'schedule', label: 'Schedule & Subjects', icon: Clock },
           { id: 'attendance', label: 'Attendance & Leaves', icon: Calendar },
-          { id: 'documents', label: 'Documents', icon: FileText }
+          { id: 'documents', label: 'Documents', icon: FileText },
+          { id: 'memos', label: 'Internal Memos', icon: ClipboardList }
         ].map((tab) => (
           <button
             key={tab.id}
@@ -386,7 +438,95 @@ const TeacherProfilePage: React.FC = () => {
             </Card>
           </div>
         )}
+
+        {/* Memos Tab */}
+        {activeTab === 'memos' && (
+          <div className="space-y-6">
+            <Card>
+              <div className="flex items-center justify-between border-b pb-4 mb-6">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 bg-orange-100 rounded-lg text-orange-600"><ClipboardList size={20} /></div>
+                  <h3 className="text-lg font-bold text-gray-900">Internal Memos</h3>
+                </div>
+                <Button onClick={() => setIsMemoModalOpen(true)} className="bg-orange-600 hover:bg-orange-700">
+                  <Plus size={18} className="mr-2" /> Issue Memo
+                </Button>
+              </div>
+
+              <div className="space-y-4">
+                {teacher.memos && teacher.memos.length > 0 ? (
+                  teacher.memos.map((memo) => (
+                    <div key={memo.id} className="p-6 rounded-xl border border-gray-200 bg-gray-50/50 relative group">
+                      <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button 
+                          onClick={() => {
+                            if (window.confirm('Delete this memo permanently?')) {
+                              deleteMemoMutation.mutate(memo.id);
+                            }
+                          }}
+                          className="p-2 text-red-500 hover:bg-red-50 rounded-lg"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                      <h4 className="font-bold text-gray-900 text-lg">{memo.title}</h4>
+                      <p className="text-xs text-gray-500 font-medium mb-3">Issued by {memo.createdBy} on {formatDate(memo.date)}</p>
+                      <p className="text-sm text-gray-700 whitespace-pre-wrap">{memo.content}</p>
+                    </div>
+                  ))
+                ) : (
+                  <div className="py-12 text-center text-gray-400 font-medium flex flex-col items-center gap-2">
+                    <ClipboardList size={48} className="text-gray-200" />
+                    No internal memos have been issued for this teacher.
+                  </div>
+                )}
+              </div>
+            </Card>
+          </div>
+        )}
       </div>
+
+      {/* Add Memo Modal */}
+      {isMemoModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <Card className="w-full max-w-md p-0 overflow-hidden">
+            <div className="flex items-center justify-between border-b p-4 bg-gray-50">
+              <h3 className="text-lg font-bold text-gray-900">Issue Internal Memo</h3>
+              <button 
+                onClick={() => setIsMemoModalOpen(false)}
+                className="p-1 text-gray-400 hover:bg-gray-200 hover:text-gray-600 rounded-md"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <form onSubmit={handleAddMemo} className="p-6 space-y-4">
+              <Input 
+                label="Memo/Incident Title" 
+                name="title" 
+                placeholder="e.g., Performance Commendation, Late Warning" 
+                required 
+              />
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-gray-700">Details & Remarks</label>
+                <textarea 
+                  name="content"
+                  rows={4}
+                  required
+                  placeholder="Enter detailed notes here..."
+                  className="w-full rounded-md border border-gray-300 p-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                ></textarea>
+              </div>
+              
+              <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
+                <Button variant="secondary" onClick={() => setIsMemoModalOpen(false)}>Cancel</Button>
+                <Button type="submit" disabled={addMemoMutation.isPending} className="bg-orange-600 hover:bg-orange-700 font-black">
+                  {addMemoMutation.isPending ? 'Logging...' : 'Issue Memo'}
+                </Button>
+              </div>
+            </form>
+          </Card>
+        </div>
+      )}
     </div>
   );
 };

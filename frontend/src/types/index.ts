@@ -115,6 +115,7 @@ export interface TeacherDetail extends Teacher {
   documents: TeacherDocument[];
   attendance: Attendance[];
   schedules: TeacherSchedule[];
+  memos: TeacherMemo[];
 }
 
 export interface TeacherQualification {
@@ -133,6 +134,15 @@ export interface TeacherDocument {
   fileName: string;
   fileUrl: string;
   uploadedAt: string;
+}
+
+export interface TeacherMemo {
+  id: string;
+  teacherId: string;
+  title: string;
+  content: string;
+  date: string;
+  createdBy: string;
 }
 
 export interface TeacherSchedule {

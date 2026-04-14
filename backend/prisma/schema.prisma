@@ -196,6 +196,7 @@ model Teacher {
   // Relations
   attendance         TeacherAttendance[]
   schedules          TeacherSchedule[]
+  memos              TeacherMemo[]
 
   @@map("teachers")
 }
@@ -222,6 +223,18 @@ model TeacherDocument {
   uploadedAt   DateTime @default(now())
 
   @@map("teacher_documents")
+}
+
+model TeacherMemo {
+  id        String   @id @default(uuid())
+  teacherId String
+  teacher   Teacher  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  title     String
+  content   String   @db.Text
+  date      DateTime @default(now())
+  createdBy String
+
+  @@map("teacher_memos")
 }
 
 // ============================================

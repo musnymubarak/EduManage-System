@@ -118,6 +118,7 @@ const StudentAttendanceMarking: React.FC<StudentAttendanceMarkingProps> = ({
   selectedClassId,
 }) => {
   const [attendanceData, setAttendanceData] = useState<Record<string, string>>({});
+  const [remarksData, setRemarksData] = useState<Record<string, string>>({});
   const queryClient = useQueryClient();
 
   // Fetch students
@@ -150,10 +151,13 @@ const StudentAttendanceMarking: React.FC<StudentAttendanceMarkingProps> = ({
   React.useEffect(() => {
     if (savedAttendanceData?.data) {
       const data: Record<string, string> = {};
+      const rData: Record<string, string> = {};
       savedAttendanceData.data.forEach((record: any) => {
         data[record.studentId] = record.status;
+        if (record.remarks) rData[record.studentId] = record.remarks;
       });
       setAttendanceData(data);
+      setRemarksData(rData);
     }
   }, [savedAttendanceData]);
 
@@ -175,6 +179,10 @@ const StudentAttendanceMarking: React.FC<StudentAttendanceMarkingProps> = ({
     setAttendanceData({ ...attendanceData, [studentId]: status });
   };
 
+  const handleRemarksChange = (studentId: string, remarks: string) => {
+    setRemarksData({ ...remarksData, [studentId]: remarks });
+  };
+
   const handleSubmit = () => {
     if (!selectedClassId) {
       toast.error('Please select a class');
@@ -186,6 +194,7 @@ const StudentAttendanceMarking: React.FC<StudentAttendanceMarkingProps> = ({
       .map((student) => ({
         studentId: student.id,
         status: attendanceData[student.id],
+        remarks: remarksData[student.id] || '',
       }));
 
     if (attendanceRecords.length === 0) {
@@ -257,6 +266,9 @@ const StudentAttendanceMarking: React.FC<StudentAttendanceMarkingProps> = ({
                   <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">
                     Sick Leave
                   </th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                    Early Leave Note
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -302,6 +314,15 @@ const StudentAttendanceMarking: React.FC<StudentAttendanceMarkingProps> = ({
                         className="h-4 w-4 text-blue-600"
                       />
                     </td>
+                    <td className="px-4 py-3">
+                      <input
+                        type="text"
+                        value={remarksData[student.id] || ''}
+                        onChange={(e) => handleRemarksChange(student.id, e.target.value)}
+                        placeholder="Reason for leaving early..."
+                        className="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 placeholder-gray-400"
+                      />
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -326,6 +347,7 @@ interface TeacherAttendanceMarkingProps {
 
 const TeacherAttendanceMarking: React.FC<TeacherAttendanceMarkingProps> = ({ selectedDate }) => {
   const [attendanceData, setAttendanceData] = useState<Record<string, string>>({});
+  const [remarksData, setRemarksData] = useState<Record<string, string>>({});
   const queryClient = useQueryClient();
 
   // Fetch teachers
@@ -353,10 +375,13 @@ const TeacherAttendanceMarking: React.FC<TeacherAttendanceMarkingProps> = ({ sel
   React.useEffect(() => {
     if (savedAttendanceData?.data) {
       const data: Record<string, string> = {};
+      const rData: Record<string, string> = {};
       savedAttendanceData.data.forEach((record: any) => {
         data[record.teacherId] = record.status;
+        if (record.remarks) rData[record.teacherId] = record.remarks;
       });
       setAttendanceData(data);
+      setRemarksData(rData);
     }
   }, [savedAttendanceData]);
 
@@ -378,12 +403,17 @@ const TeacherAttendanceMarking: React.FC<TeacherAttendanceMarkingProps> = ({ sel
     setAttendanceData({ ...attendanceData, [teacherId]: status });
   };
 
+  const handleRemarksChange = (teacherId: string, remarks: string) => {
+    setRemarksData({ ...remarksData, [teacherId]: remarks });
+  };
+
   const handleSubmit = () => {
     const attendanceRecords = teachers
       .filter((teacher) => attendanceData[teacher.id])
       .map((teacher) => ({
         teacherId: teacher.id,
         status: attendanceData[teacher.id],
+        remarks: remarksData[teacher.id] || '',
       }));
 
     if (attendanceRecords.length === 0) {
@@ -447,6 +477,9 @@ const TeacherAttendanceMarking: React.FC<TeacherAttendanceMarkingProps> = ({ sel
                   <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">
                     Sick Leave
                   </th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                    Early Leave Note
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -493,6 +526,15 @@ const TeacherAttendanceMarking: React.FC<TeacherAttendanceMarkingProps> = ({ sel
                         className="h-4 w-4 text-blue-600"
                       />
                     </td>
+                    <td className="px-4 py-3">
+                      <input
+                        type="text"
+                        value={remarksData[teacher.id] || ''}
+                        onChange={(e) => handleRemarksChange(teacher.id, e.target.value)}
+                        placeholder="Reason for leaving early..."
+                        className="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 placeholder-gray-400"
+                      />
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -517,6 +559,7 @@ interface StaffAttendanceMarkingProps {
 
 const StaffAttendanceMarking: React.FC<StaffAttendanceMarkingProps> = ({ selectedDate }) => {
   const [attendanceData, setAttendanceData] = useState<Record<string, string>>({});
+  const [remarksData, setRemarksData] = useState<Record<string, string>>({});
   const queryClient = useQueryClient();
 
   // Fetch staff
@@ -544,10 +587,13 @@ const StaffAttendanceMarking: React.FC<StaffAttendanceMarkingProps> = ({ selecte
   React.useEffect(() => {
     if (savedAttendanceData?.data) {
       const data: Record<string, string> = {};
+      const rData: Record<string, string> = {};
       savedAttendanceData.data.forEach((record: any) => {
         data[record.staffId] = record.status;
+        if (record.remarks) rData[record.staffId] = record.remarks;
       });
       setAttendanceData(data);
+      setRemarksData(rData);
     }
   }, [savedAttendanceData]);
 
@@ -569,12 +615,17 @@ const StaffAttendanceMarking: React.FC<StaffAttendanceMarkingProps> = ({ selecte
     setAttendanceData({ ...attendanceData, [staffId]: status });
   };
 
+  const handleRemarksChange = (staffId: string, remarks: string) => {
+    setRemarksData({ ...remarksData, [staffId]: remarks });
+  };
+
   const handleSubmit = () => {
     const attendanceRecords = staffList
       .filter((s: any) => attendanceData[s.id])
       .map((s: any) => ({
         staffId: s.id,
         status: attendanceData[s.id],
+        remarks: remarksData[s.id] || '',
       }));
 
     if (attendanceRecords.length === 0) {
@@ -623,6 +674,7 @@ const StaffAttendanceMarking: React.FC<StaffAttendanceMarkingProps> = ({ selecte
                   <th className="px-5 py-4 text-center text-[10px] font-black uppercase tracking-widest text-gray-400">Absent</th>
                   <th className="px-5 py-4 text-center text-[10px] font-black uppercase tracking-widest text-gray-400">Late</th>
                   <th className="px-5 py-4 text-center text-[10px] font-black uppercase tracking-widest text-gray-400">Sick</th>
+                  <th className="px-5 py-4 text-left text-[10px] font-black uppercase tracking-widest text-gray-400">Early Leave Note</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
@@ -651,6 +703,15 @@ const StaffAttendanceMarking: React.FC<StaffAttendanceMarkingProps> = ({ selecte
                         />
                       </td>
                     ))}
+                    <td className="px-5 py-4">
+                      <input
+                        type="text"
+                        value={remarksData[s.id] || ''}
+                        onChange={(e) => handleRemarksChange(s.id, e.target.value)}
+                        placeholder="Note/Reason..."
+                        className="w-full rounded-lg border-gray-200 bg-white px-3 py-2 text-[11px] font-bold text-gray-700 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 placeholder-gray-300"
+                      />
+                    </td>
                   </tr>
                 ))}
               </tbody>

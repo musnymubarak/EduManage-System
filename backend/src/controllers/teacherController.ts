@@ -193,6 +193,9 @@ export const getTeacherById = async (req: AuthRequest, res: Response): Promise<v
           orderBy: { date: 'desc' },
           take: 30,
         },
+        memos: {
+          orderBy: { date: 'desc' },
+        },
       },
     });
 
@@ -321,5 +324,48 @@ export const uploadTeacherDocument = async (req: AuthRequest, res: Response): Pr
     } else {
       res.status(500).json({ error: 'Failed to upload document' });
     }
+  }
+};
+
+export const addTeacherMemo = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { title, content } = req.body;
+
+    const memo = await prisma.teacherMemo.create({
+      data: {
+        teacherId: id,
+        title,
+        content,
+        createdBy: req.user!.username || 'Admin',
+      },
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Memo added successfully',
+      data: memo,
+    });
+  } catch (error) {
+    console.error('Error adding memo:', error);
+    res.status(500).json({ error: 'Failed to add memo' });
+  }
+};
+
+export const deleteTeacherMemo = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { memoId } = req.params;
+
+    await prisma.teacherMemo.delete({
+      where: { id: memoId },
+    });
+
+    res.json({
+      success: true,
+      message: 'Memo deleted successfully',
+    });
+  } catch (error) {
+    console.error('Error deleting memo:', error);
+    res.status(500).json({ error: 'Failed to delete memo' });
   }
 };
