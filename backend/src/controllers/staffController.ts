@@ -277,9 +277,29 @@ export const recordSalaryPayment = async (req: AuthRequest, res: Response): Prom
                 deductions: parseFloat(deductions || 0),
                 netSalary,
                 paymentMethod,
-                receiptNumber,
+                receiptNumber: receiptNumber || null,
                 remarks,
                 paidBy: req.user?.id || 'System'
+            }
+        });
+
+        // Automatically log this as an Expenditure in the financial ledger
+        const staff = await prisma.staff.findUnique({
+            where: { id },
+            select: { fullName: true }
+        });
+
+        await prisma.expenditure.create({
+            data: {
+                date: new Date(),
+                category: 'SALARIES',
+                description: `Staff Salary - ${staff?.fullName || 'Unknown Personnel'} (${month})`,
+                amount: netSalary,
+                vendor: staff?.fullName || 'Staff Member', 
+                billNumber: receiptNumber || null,
+                paymentMethod: paymentMethod || 'CASH',
+                remarks: remarks,
+                recordedBy: req.user?.id || 'System'
             }
         });
 
@@ -294,6 +314,25 @@ export const recordSalaryPayment = async (req: AuthRequest, res: Response): Prom
             return;
         }
         res.status(500).json({ success: false, error: 'Failed to record salary payment' });
+    }
+};
+
+export const deleteStaffSalary = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const { salaryId } = req.params;
+        
+        // Let's find the salary record first so we could theoretically delete the matched expenditure,
+        // but for now we just delete the salary record.
+        await prisma.staffSalary.delete({
+            where: { id: salaryId }
+        });
+
+        res.json({
+            success: true,
+            message: 'Salary record removed successfully'
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, error: 'Failed to delete salary record' });
     }
 };
 

@@ -33,6 +33,8 @@ router.put(
 );
 
 router.post('/:id/salaries', authorize(...managers), staffController.recordSalaryPayment);
+router.delete('/:id/salaries/:salaryId', authorize(...managers), staffController.deleteStaffSalary);
+
 router.post('/:id/duties', authorize(...managers), staffController.assignStaffDuty);
 router.put('/:id/duties/:dutyId', authorize(...managers), staffController.updateDutyStatus);
 router.delete('/:id/duties/:dutyId', authorize(...managers), staffController.deleteStaffDuty);

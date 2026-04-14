@@ -105,6 +105,20 @@ const StaffProfilePage: React.FC = () => {
         }
     });
 
+    const deleteSalaryMutation = useMutation({
+        mutationFn: async (salaryId: string) => {
+            const response = await api.delete(`/staff/${id}/salaries/${salaryId}`);
+            return response.data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['staff', id] });
+            toast.success('Salary record removed');
+        },
+        onError: () => {
+            toast.error('Failed to remove salary record');
+        }
+    });
+
     const updateStaffMutation = useMutation({
         mutationFn: async (formData: FormData) => {
             const response = await api.put(`/staff/${id}`, formData, {
@@ -430,6 +444,7 @@ const StaffProfilePage: React.FC = () => {
                                         <th className="p-5 text-right text-[10px] font-black uppercase tracking-widest text-gray-400 text-red-600">Deductions</th>
                                         <th className="p-5 text-right text-[10px] font-black uppercase tracking-widest text-gray-400 font-bold">Net Salary</th>
                                         <th className="p-5 text-center text-[10px] font-black uppercase tracking-widest text-gray-400">Audit Trail</th>
+                                        <th className="p-5 text-center text-[10px] font-black uppercase tracking-widest text-gray-400">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-50">
@@ -454,6 +469,21 @@ const StaffProfilePage: React.FC = () => {
                                                 <div className="flex flex-col items-center">
                                                     <p className="text-[10px] font-black text-gray-900 uppercase truncate max-w-[80px]">{history.receiptNumber || '—'}</p>
                                                     <p className="text-[9px] font-bold text-blue-400 italic">Paid by HR</p>
+                                                </div>
+                                            </td>
+                                            <td className="p-5 text-center">
+                                                <div className="flex justify-center">
+                                                    <Button 
+                                                        onClick={() => {
+                                                            if (window.confirm('Are you sure you want to completely remove this salary record?')) {
+                                                                deleteSalaryMutation.mutate(history.id);
+                                                            }
+                                                        }}
+                                                        className="h-8 w-8 p-0 rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white border-red-100 transition-all"
+                                                        title="Remove Salary Record"
+                                                    >
+                                                        <Trash2 size={16} />
+                                                    </Button>
                                                 </div>
                                             </td>
                                         </tr>
