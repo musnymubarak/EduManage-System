@@ -17,6 +17,7 @@ import {
   BarChart3,
   Building
 } from 'lucide-react';
+import logo from '../../logo.png';
 
 const MainLayout: React.FC = () => {
   const { user, logout } = useAuth();
@@ -48,8 +49,9 @@ const MainLayout: React.FC = () => {
     <div className="flex h-screen overflow-hidden bg-gray-100">
       {/* Sidebar - Always visible on web, with independent scroll */}
       <aside className="flex w-64 flex-col flex-shrink-0 bg-white shadow-lg border-r border-gray-200">
-        <div className="flex h-16 flex-shrink-0 items-center justify-center bg-blue-600 px-4">
-          <h1 className="text-xl font-bold text-white">🕌 Sumaya Madrasa</h1>
+        <div className="flex h-16 flex-shrink-0 items-center justify-center bg-blue-600 px-4 gap-3">
+          <img src={logo} alt="Sumaya Madrasa Logo" className="h-10 w-10 object-contain brightness-0 invert" />
+          <h1 className="text-xl font-bold text-white tracking-tight">Sumaya Madrasa</h1>
         </div>
         
         {/* Independent scroll area for the sidebar content */}

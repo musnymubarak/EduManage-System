@@ -173,6 +173,9 @@ export const getTodoHistory = async (req: AuthRequest, res: Response): Promise<v
     const history = await prisma.todoHistory.findMany({
       where,
       include: {
+        changer: {
+          select: { id: true, fullName: true, role: true },
+        },
         todo: {
           include: {
             creator: {
@@ -211,5 +214,58 @@ export const deleteTodo = async (req: AuthRequest, res: Response): Promise<void>
     });
   } catch (error) {
     res.status(500).json({ error: 'Failed to delete todo' });
+  }
+};
+
+export const updateTodo = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { title, description, priority, category, assignedTo } = req.body;
+
+    const oldTodo = await prisma.todo.findUnique({
+      where: { id },
+    });
+
+    if (!oldTodo) {
+      res.status(404).json({ error: 'Todo not found' });
+      return;
+    }
+
+    const todo = await prisma.todo.update({
+      where: { id },
+      data: {
+        title,
+        description,
+        priority,
+        category,
+        assignedTo,
+      },
+      include: {
+        creator: {
+          select: { id: true, fullName: true, role: true },
+        },
+        assignee: {
+          select: { id: true, fullName: true, role: true },
+        },
+      },
+    });
+
+    // Create history entry for general update
+    await prisma.todoHistory.create({
+      data: {
+        todoId: id,
+        action: 'UPDATED',
+        changedBy: req.user!.id,
+      },
+    });
+
+    res.json({
+      success: true,
+      message: 'Todo updated successfully',
+      data: todo,
+    });
+  } catch (error) {
+    console.error('Error updating todo:', error);
+    res.status(500).json({ error: 'Failed to update todo' });
   }
 };

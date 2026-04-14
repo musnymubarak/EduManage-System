@@ -7,6 +7,7 @@ import { Class } from '../types';
 import { Card } from '../components/UI/Card';
 import { Button } from '../components/UI/Button';
 import { formatDate } from '../utils/helpers';
+import logo from '../logo.png';
 
 const ReportsPage: React.FC = () => {
   const [reportType, setReportType] = useState('attendance');
@@ -264,15 +265,18 @@ const ReportPreview: React.FC<ReportPreviewProps> = ({
   return (
     <div className="space-y-4">
       <div className="rounded-lg bg-gray-50 p-6">
-        <div className="mb-6 border-b pb-4">
-          <h1 className="text-2xl font-bold text-gray-900">Sumaya Madrasa</h1>
-          <p className="text-gray-600">
-            {reportType.charAt(0).toUpperCase() + reportType.slice(1)} Report
-          </p>
+        <div className="mb-6 border-b pb-4 flex items-center gap-4">
+          <img src={logo} alt="Sumaya Madrasa Logo" className="h-16 w-16 object-contain" />
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Sumaya Madrasa</h1>
+            <p className="text-gray-600">
+              {reportType.charAt(0).toUpperCase() + reportType.slice(1)} Report
+            </p>
+          </div>
+        </div>
           <p className="text-sm text-gray-500">
             Period: {formatDate(startDate)} to {formatDate(endDate)}
           </p>
-        </div>
 
         {reportType === 'attendance' && classId && (
           <div>

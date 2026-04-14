@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
-import { Plus, Clock, CheckCircle, Circle, AlertTriangle, User, Calendar } from 'lucide-react';
+import { Plus, Clock, CheckCircle, Circle, AlertTriangle, User, Calendar, Edit, Trash2 } from 'lucide-react';
 import api from '../services/api';
 import { Todo, User as UserType } from '../types';
 import { Card } from '../components/UI/Card';
@@ -16,6 +16,7 @@ const TodoPage: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedTodo, setSelectedTodo] = useState<Todo | null>(null);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
 
@@ -32,6 +33,20 @@ const TodoPage: React.FC = () => {
       
       const response = await api.get(`/todos?${params}`);
       return response.data;
+    },
+  });
+
+  const deleteTodoMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const response = await api.delete(`/todos/${id}`);
+      return response.data;
+    },
+    onSuccess: () => {
+      toast.success('Todo deleted successfully');
+      queryClient.invalidateQueries({ queryKey: ['todos'] });
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.error || 'Failed to delete todo');
     },
   });
 
@@ -54,7 +69,7 @@ const TodoPage: React.FC = () => {
       <Card>
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <h2 className="text-2xl font-bold text-gray-900">Todo Management</h2>
-          {user?.role === 'RECEPTIONIST' && (
+          {['RECEPTIONIST', 'SUPER_ADMIN'].includes(user?.role || '') && (
             <Button onClick={() => setIsAddModalOpen(true)}>
               <Plus size={20} className="mr-2" />
               Create Todo
@@ -105,6 +120,15 @@ const TodoPage: React.FC = () => {
             todos={todosByStatus.TODO}
             icon={<Circle className="h-5 w-5 text-gray-500" />}
             onViewHistory={handleViewHistory}
+            onEdit={(todo) => {
+              setSelectedTodo(todo);
+              setIsEditModalOpen(true);
+            }}
+            onDelete={(id) => {
+              if (window.confirm('Are you sure you want to delete this todo?')) {
+                deleteTodoMutation.mutate(id);
+              }
+            }}
           />
           <TodoColumn
             title="In Progress"
@@ -112,6 +136,15 @@ const TodoPage: React.FC = () => {
             todos={todosByStatus.IN_PROGRESS}
             icon={<Clock className="h-5 w-5 text-blue-500" />}
             onViewHistory={handleViewHistory}
+            onEdit={(todo) => {
+              setSelectedTodo(todo);
+              setIsEditModalOpen(true);
+            }}
+            onDelete={(id) => {
+              if (window.confirm('Are you sure you want to delete this todo?')) {
+                deleteTodoMutation.mutate(id);
+              }
+            }}
           />
           <TodoColumn
             title="Done"
@@ -119,6 +152,15 @@ const TodoPage: React.FC = () => {
             todos={todosByStatus.DONE}
             icon={<CheckCircle className="h-5 w-5 text-green-500" />}
             onViewHistory={handleViewHistory}
+            onEdit={(todo) => {
+              setSelectedTodo(todo);
+              setIsEditModalOpen(true);
+            }}
+            onDelete={(id) => {
+              if (window.confirm('Are you sure you want to delete this todo?')) {
+                deleteTodoMutation.mutate(id);
+              }
+            }}
           />
         </div>
       )}
@@ -140,6 +182,18 @@ const TodoPage: React.FC = () => {
           todo={selectedTodo}
         />
       )}
+
+      {/* Edit Todo Modal */}
+      {selectedTodo && (
+        <EditTodoModal
+          isOpen={isEditModalOpen}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setSelectedTodo(null);
+          }}
+          todo={selectedTodo}
+        />
+      )}
     </div>
   );
 };
@@ -151,14 +205,17 @@ interface TodoColumnProps {
   todos: Todo[];
   icon: React.ReactNode;
   onViewHistory: (todo: Todo) => void;
+  onEdit: (todo: Todo) => void;
+  onDelete: (id: string) => void;
 }
 
-const TodoColumn: React.FC<TodoColumnProps> = ({ title, status, todos, icon, onViewHistory }) => {
+const TodoColumn: React.FC<TodoColumnProps> = ({ title, status, todos, icon, onViewHistory, onEdit, onDelete }) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
   // Only Principal and Vice Principal can update status
-  const canUpdateStatus = ['PRINCIPAL', 'VICE_PRINCIPAL'].includes(user?.role || '');
+  const canUpdateStatus = ['PRINCIPAL', 'VICE_PRINCIPAL', 'SUPER_ADMIN'].includes(user?.role || '');
+  const canModifyTodo = ['RECEPTIONIST', 'SUPER_ADMIN'].includes(user?.role || '');
 
   const updateStatusMutation = useMutation({
     mutationFn: async ({ todoId, newStatus }: { todoId: string; newStatus: string }) => {
@@ -214,17 +271,37 @@ const TodoColumn: React.FC<TodoColumnProps> = ({ title, status, todos, icon, onV
                   </div>
                   <p className="mt-1 text-sm text-gray-600 line-clamp-2">{todo.description}</p>
                 </div>
-                <Badge
-                  variant={
-                    todo.priority === 'URGENT'
-                      ? 'danger'
-                      : todo.priority === 'HIGH'
-                      ? 'warning'
-                      : 'default'
-                  }
-                >
-                  {todo.priority}
-                </Badge>
+                <div className="flex flex-col items-end gap-2">
+                  <Badge
+                    variant={
+                      todo.priority === 'URGENT'
+                        ? 'danger'
+                        : todo.priority === 'HIGH'
+                        ? 'warning'
+                        : 'default'
+                    }
+                  >
+                    {todo.priority}
+                  </Badge>
+                  {canModifyTodo && (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => onEdit(todo)}
+                        className="rounded p-1 text-blue-600 hover:bg-blue-50"
+                        title="Edit Todo"
+                      >
+                        <Edit size={16} />
+                      </button>
+                      <button
+                        onClick={() => onDelete(todo.id)}
+                        className="rounded p-1 text-red-600 hover:bg-red-50"
+                        title="Delete Todo"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="mt-3 flex items-center gap-4 text-sm text-gray-500">
@@ -315,7 +392,7 @@ const AddTodoModal: React.FC<AddTodoModalProps> = ({ isOpen, onClose }) => {
 
   const principals =
     usersData?.data?.filter(
-      (u: UserType) => u.role === 'PRINCIPAL' || u.role === 'VICE_PRINCIPAL'
+      (u: UserType) => u.role === 'PRINCIPAL' || u.role === 'VICE_PRINCIPAL' || u.role === 'SUPER_ADMIN'
     ) || [];
 
   const addTodoMutation = useMutation({
@@ -424,6 +501,136 @@ const AddTodoModal: React.FC<AddTodoModalProps> = ({ isOpen, onClose }) => {
   );
 };
 
+// Edit Todo Modal Component
+interface EditTodoModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  todo: Todo;
+}
+
+const EditTodoModal: React.FC<EditTodoModalProps> = ({ isOpen, onClose, todo }) => {
+  const [formData, setFormData] = useState({
+    title: todo.title,
+    description: todo.description,
+    priority: todo.priority,
+    category: todo.category || '',
+    assignedToId: typeof todo.assignedTo === 'object' ? todo.assignedTo?.id : todo.assignedTo || '',
+  });
+
+  const queryClient = useQueryClient();
+
+  const { data: usersData } = useQuery({
+    queryKey: ['principalUsers'],
+    queryFn: async () => {
+      const response = await api.get('/users');
+      return response.data;
+    },
+  });
+
+  const principals =
+    usersData?.data?.filter(
+      (u: UserType) => u.role === 'PRINCIPAL' || u.role === 'VICE_PRINCIPAL' || u.role === 'SUPER_ADMIN'
+    ) || [];
+
+  const updateTodoMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await api.put(`/todos/${todo.id}`, data);
+      return response.data;
+    },
+    onSuccess: () => {
+      toast.success('Todo updated successfully!');
+      queryClient.invalidateQueries({ queryKey: ['todos'] });
+      onClose();
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.error || 'Failed to update todo');
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    updateTodoMutation.mutate(formData);
+  };
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Edit Todo"
+      size="md"
+      footer={
+        <div className="flex justify-end gap-3">
+          <Button variant="secondary" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button onClick={handleSubmit} disabled={updateTodoMutation.isPending}>
+            {updateTodoMutation.isPending ? 'Updating...' : 'Save Changes'}
+          </Button>
+        </div>
+      }
+    >
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <Input
+          label="Title"
+          name="title"
+          value={formData.title}
+          onChange={handleChange}
+          required
+        />
+
+        <TextArea
+          label="Description"
+          name="description"
+          value={formData.description}
+          onChange={handleChange}
+          rows={4}
+          required
+        />
+
+        <Select
+          label="Priority"
+          name="priority"
+          value={formData.priority}
+          onChange={handleChange}
+          options={[
+            { value: 'LOW', label: 'Low' },
+            { value: 'MEDIUM', label: 'Medium' },
+            { value: 'HIGH', label: 'High' },
+            { value: 'URGENT', label: 'Urgent' },
+          ]}
+          required
+        />
+
+        <Input
+          label="Category (Optional)"
+          name="category"
+          value={formData.category}
+          onChange={handleChange}
+          placeholder="e.g. Maintenance, Academic, Administrative"
+        />
+
+        <Select
+          label="Assign To"
+          name="assignedToId"
+          value={formData.assignedToId}
+          onChange={handleChange}
+          options={principals.map((u: UserType) => ({
+            value: u.id,
+            label: `${u.fullName} (${u.role})`,
+          }))}
+          required
+        />
+      </form>
+    </Modal>
+  );
+};
+
 // Todo History Modal Component
 interface TodoHistoryModalProps {
   isOpen: boolean;
@@ -470,13 +677,13 @@ const TodoHistoryModal: React.FC<TodoHistoryModalProps> = ({ isOpen, onClose, to
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-900">
-                      Status changed to: <Badge status={entry.newStatus}>{entry.newStatus}</Badge>
+                      Status changed to: <Badge status={entry.newValue}>{entry.newValue}</Badge>
                     </p>
                     <p className="mt-1 text-sm text-gray-600">
-                      by {entry.changedBy?.fullName || 'System'}
+                      by {entry.changer?.fullName || 'System'}
                     </p>
                   </div>
-                  <span className="text-xs text-gray-500">{formatDate(entry.changedAt)}</span>
+                  <span className="text-xs text-gray-500">{formatDate(entry.timestamp)}</span>
                 </div>
                 {entry.remarks && (
                   <p className="mt-2 text-sm text-gray-600">

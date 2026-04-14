@@ -11,9 +11,9 @@ const managers: UserRole[] = ['RECEPTIONIST', 'PRINCIPAL', 'VICE_PRINCIPAL', 'SU
 
 router.post('/', authorize('RECEPTIONIST', 'SUPER_ADMIN'), todoController.createTodo);
 router.get('/', todoController.getAllTodos);
-router.put('/:id', authorize(...managers), todoController.updateTodoStatus);
+router.put('/:id', authorize('RECEPTIONIST', 'SUPER_ADMIN', 'PRINCIPAL', 'VICE_PRINCIPAL'), todoController.updateTodo);
 router.patch('/:id/status', authorize(...managers), todoController.updateTodoStatus);
 router.get('/:id/history', todoController.getTodoHistory);
-router.delete('/:id', authorize('SUPER_ADMIN'), todoController.deleteTodo);
+router.delete('/:id', authorize('RECEPTIONIST', 'SUPER_ADMIN'), todoController.deleteTodo);
 
 export default router;

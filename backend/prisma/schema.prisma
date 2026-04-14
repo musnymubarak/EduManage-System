@@ -44,6 +44,7 @@ model User {
   // Relations
   createdTodos  Todo[]     @relation("CreatedTodos")
   assignedTodos Todo[]     @relation("AssignedTodos")
+  authoredHistory TodoHistory[] @relation("HistoryChanger")
 
   @@map("users")
 }
@@ -581,6 +582,7 @@ model TodoHistory {
   oldValue  String?
   newValue  String?
   changedBy String     // User ID
+  changer   User       @relation("HistoryChanger", fields: [changedBy], references: [id])
   timestamp DateTime   @default(now())
 
   @@map("todo_history")

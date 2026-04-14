@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import logo from '../logo.png';
 
 const LoginPage: React.FC = () => {
   const [username, setUsername] = useState('');
@@ -28,8 +29,9 @@ const LoginPage: React.FC = () => {
       <div className="w-full max-w-md">
         <div className="rounded-2xl bg-white p-8 shadow-2xl">
           <div className="mb-8 text-center">
-            <h1 className="text-3xl font-bold text-gray-800">
-              🕌 Sumaya Madrasa
+            <h1 className="flex items-center justify-center gap-3 text-3xl font-bold text-gray-800">
+              <img src={logo} alt="Sumaya Madrasa Logo" className="h-20 w-20 object-contain" />
+              Sumaya Madrasa
             </h1>
             <p className="mt-2 text-gray-600">Management System</p>
           </div>
