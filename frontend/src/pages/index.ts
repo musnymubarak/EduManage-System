@@ -8,3 +8,4 @@ export { default as TodoPage } from './TodoPage';
 export { default as UsersPage } from './UsersPage';
 export { default as ExpenditurePage } from './ExpenditurePage';
 export { default as DonationsPage } from './DonationsPage';
+export { default as PaymentsPage } from './PaymentsPage';

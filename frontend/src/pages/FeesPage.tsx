@@ -22,6 +22,8 @@ import { Input, Select } from '../components/UI/Input';
 import { Modal } from '../components/UI/Modal';
 import { Badge } from '../components/UI/Badge';
 import { formatDate, formatCurrency } from '../utils/helpers';
+import GlobalPaymentModal from '../components/Finance/GlobalPaymentModal';
+import GlobalHistoryModal from '../components/Finance/GlobalHistoryModal';
 import logo from '../logo.png'; 
 
 const FeesPage: React.FC = () => {
@@ -35,6 +37,7 @@ const FeesPage: React.FC = () => {
   
   // Modals
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [isGlobalPaymentModalOpen, setIsGlobalPaymentModalOpen] = useState(false);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -136,22 +139,29 @@ const FeesPage: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header Section */}
-      <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">Fee Management</h2>
-          <p className="text-gray-500 mt-1 font-medium flex items-center gap-2">
+      <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between py-2">
+        <div className="flex-1 min-w-0">
+          <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight truncate">Fee Management</h2>
+          <p className="text-gray-500 mt-1 font-medium flex items-center gap-2 truncate">
             <Calendar size={16} className="text-blue-500" />
             Tracking status for <span className="text-blue-600 font-bold">{currentMonthLabel}</span>
           </p>
         </div>
-        <div className="flex gap-3">
-          <Button variant="secondary" onClick={() => setIsHistoryModalOpen(true)} className="shadow-sm">
-            <History size={18} className="mr-2" />
+        <div className="flex flex-row items-center gap-3 shrink-0 flex-nowrap">
+          <Button 
+            variant="secondary" 
+            onClick={() => setIsHistoryModalOpen(true)} 
+            className="shadow-sm h-12 rounded-2xl font-bold border-gray-100 px-6 hover:bg-gray-50 flex items-center gap-2 transition-all whitespace-nowrap"
+          >
+            <History size={18} className="text-gray-400 shrink-0" />
             Full History
           </Button>
-          <Button onClick={() => setIsPaymentModalOpen(true)} className="bg-blue-600 hover:bg-blue-700 shadow-md">
-            <Plus size={20} className="mr-2" />
-            Record Payment
+          <Button 
+            onClick={() => setIsGlobalPaymentModalOpen(true)} 
+            className="bg-blue-600 hover:bg-blue-700 shadow-xl shadow-blue-100 flex items-center gap-2 h-12 px-6 rounded-2xl group transition-all transform hover:scale-105 whitespace-nowrap"
+          >
+            <Plus size={20} className="group-hover:rotate-90 transition-transform duration-300 shrink-0" />
+            <span className="font-black uppercase tracking-widest text-[11px]">Record Student Fee</span>
           </Button>
         </div>
       </div>
@@ -419,6 +429,16 @@ const FeesPage: React.FC = () => {
         onClose={() => setIsHistoryModalOpen(false)}
       />
 
+      {/* Global New Payment Modal */}
+      <GlobalPaymentModal
+        isOpen={isGlobalPaymentModalOpen}
+        onClose={() => {
+          setIsGlobalPaymentModalOpen(false);
+          queryClient.invalidateQueries({ queryKey: ['feesMonthlyStatus'] });
+        }}
+        defaultMonth={selectedMonth}
+      />
+
       {/* Professional Receipt View */}
       {selectedFee && (
         <FeeReceiptModal
@@ -511,8 +531,8 @@ const RecordPaymentModal: React.FC<{ isOpen: boolean; onClose: () => void; stude
           value={formData.paymentMethod}
           onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
           options={[
-            { value: 'CASH', label: 'Vault (Cash)' },
-            { value: 'BANK_TRANSFER', label: 'E-Transfer / Bank' },
+            { value: 'CASH', label: 'Cash' },
+            { value: 'BANK_TRANSFER', label: 'Bank Transfer' },
             { value: 'ONLINE', label: 'Online Gateway' },
           ]}
         />
@@ -643,51 +663,6 @@ const EditPaymentModal: React.FC<{ isOpen: boolean; onClose: () => void; payment
     );
 };
 
-const GlobalHistoryModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
-  const { data: historyData, isLoading } = useQuery({
-    queryKey: ['feesAllHistory'],
-    queryFn: async () => {
-      const response = await api.get('/fees/payments');
-      return response.data;
-    },
-    enabled: isOpen
-  });
-
-  const history = historyData?.data || [];
-
-  return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Consolidated Ledger" size="xl">
-        {isLoading ? <p className="py-20 text-center font-bold animate-pulse text-gray-400 uppercase tracking-widest text-xs">Syncing Ledger...</p> : (
-            <div className="overflow-x-auto rounded-xl border border-gray-100">
-                <table className="w-full text-sm">
-                    <thead>
-                        <tr className="border-b bg-gray-50 text-left">
-                            <th className="p-4 text-[10px] font-black uppercase text-gray-400">Transaction Date</th>
-                            <th className="p-4 text-[10px] font-black uppercase text-gray-400">Receipt No</th>
-                            <th className="p-4 text-[10px] font-black uppercase text-gray-400">Student Identity</th>
-                            <th className="p-4 text-[10px] font-black uppercase text-gray-400">Category</th>
-                            <th className="p-4 text-right text-[10px] font-black uppercase text-gray-400">Amount Collected</th>
-                            <th className="p-4 text-center text-[10px] font-black uppercase text-gray-400">Steward</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-50">
-                        {history.map((h: any) => (
-                            <tr key={h.id} className="hover:bg-gray-50/50">
-                                <td className="p-4 whitespace-nowrap text-gray-500 font-medium">{formatDate(h.paymentDate || h.createdAt)}</td>
-                                <td className="p-4 text-xs font-black text-blue-600 tracking-tighter">{h.receiptNumber || '—'}</td>
-                                <td className="p-4 font-bold text-gray-900 border-l border-gray-50">{h.student?.fullName}</td>
-                                <td className="p-4"><Badge variant="default" className="text-[9px] font-bold py-0.5">{h.feeType}</Badge></td>
-                                <td className="p-4 text-right font-black text-gray-900">{formatCurrency(h.paidAmount)}</td>
-                                <td className="p-4 text-center"><Badge variant="info" className="text-[8px] font-bold">{h.collector?.fullName?.split(' ')[0] || 'System'}</Badge></td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-        )}
-    </Modal>
-  );
-};
 
 const FeeReceiptModal: React.FC<{ isOpen: boolean; onClose: () => void; fee: any }> = ({ isOpen, onClose, fee }) => {
   const handlePrint = () => window.print();

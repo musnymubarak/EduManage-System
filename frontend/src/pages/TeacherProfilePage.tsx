@@ -4,7 +4,6 @@ import { useQuery } from '@tanstack/react-query';
 import { 
   ArrowLeft, 
   User, 
-  BookOpen, 
   Calendar, 
   FileText, 
   Phone, 
@@ -12,17 +11,19 @@ import {
   Award, 
   Briefcase,
   DollarSign,
-  Download,
-  ExternalLink,
   Clock,
-  Mail
+  Mail,
+  ExternalLink,
+  Download
 } from 'lucide-react';
 import api from '../services/api';
 import { TeacherDetail } from '../types';
 import { Card } from '../components/UI/Card';
 import { Button } from '../components/UI/Button';
 import { Badge } from '../components/UI/Badge';
-import { formatDate, formatCurrency, getStatusColor } from '../utils/helpers';
+import { formatDate, formatCurrency } from '../utils/helpers';
+
+
 
 const TeacherProfilePage: React.FC = () => {
   const { id } = useParams<{ id: string }>();

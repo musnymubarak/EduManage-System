@@ -15,7 +15,8 @@ import {
   Gift,
   LogOut,
   BarChart3,
-  Building
+  Building,
+  Clock
 } from 'lucide-react';
 import logo from '../../logo.png';
 
@@ -29,7 +30,7 @@ const MainLayout: React.FC = () => {
     { path: '/classes', icon: Building, label: 'Classes', roles: ['SUPER_ADMIN', 'RECEPTIONIST', 'PRINCIPAL', 'VICE_PRINCIPAL'] },
     { path: '/teachers', icon: GraduationCap, label: 'Teachers', roles: ['SUPER_ADMIN', 'RECEPTIONIST', 'PRINCIPAL', 'VICE_PRINCIPAL'] },
     { path: '/attendance', icon: CalendarCheck, label: 'Attendance', roles: ['SUPER_ADMIN', 'RECEPTIONIST', 'PRINCIPAL', 'VICE_PRINCIPAL'] },
-    { path: '/fees', icon: DollarSign, label: 'Fees', roles: ['SUPER_ADMIN', 'RECEPTIONIST', 'PRINCIPAL', 'VICE_PRINCIPAL'] },
+    { path: '/finance', icon: DollarSign, label: 'Finance', roles: ['SUPER_ADMIN', 'RECEPTIONIST', 'PRINCIPAL', 'VICE_PRINCIPAL'] },
     { path: '/exams', icon: FileText, label: 'Exams', roles: ['SUPER_ADMIN', 'RECEPTIONIST', 'PRINCIPAL', 'VICE_PRINCIPAL'] },
     { path: '/inventory', icon: Package, label: 'Inventory', roles: ['SUPER_ADMIN', 'RECEPTIONIST', 'PRINCIPAL', 'VICE_PRINCIPAL'] },
     { path: '/todos', icon: CheckSquare, label: 'Todo Dashboard', roles: ['SUPER_ADMIN', 'RECEPTIONIST', 'PRINCIPAL', 'VICE_PRINCIPAL'] },

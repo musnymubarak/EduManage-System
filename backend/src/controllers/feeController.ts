@@ -26,17 +26,24 @@ export const getAllFeePayments = async (req: AuthRequest, res: Response): Promis
             class: true
           }
         },
-        partialPayments: true,
-        collector: {
-          select: {
-            fullName: true
-          }
-        }
+        partialPayments: true
       },
       orderBy: { createdAt: 'desc' },
     });
 
-    res.json({ success: true, data: payments });
+    // Manual join for collector to avoid prisma client type mismatch issues
+    const userIds = payments.map(p => p.collectedBy);
+    const users = await prisma.user.findMany({
+      where: { id: { in: userIds } },
+      select: { id: true, fullName: true }
+    });
+
+    const dataWithCollector = payments.map(p => ({
+      ...p,
+      collector: users.find(u => u.id === p.collectedBy) || { fullName: 'Staff' }
+    }));
+
+    res.json({ success: true, data: dataWithCollector });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch fee payments' });
   }

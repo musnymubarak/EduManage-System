@@ -10,7 +10,9 @@ import DashboardPage from './pages/DashboardPage';
 import StudentsPage from './pages/StudentsPage';
 import TeachersPage from './pages/TeachersPage';
 import AttendancePage from './pages/AttendancePage';
+import PaymentsPage from './pages/PaymentsPage';
 import FeesPage from './pages/FeesPage';
+import FinancePage from './pages/FinancePage';
 import ExamsPage from './pages/ExamsPage';
 import InventoryPage from './pages/InventoryPage';
 import TodoPage from './pages/TodoPage';
@@ -77,7 +79,10 @@ function App() {
               <Route path="teachers" element={<TeachersPage />} />
               <Route path="teachers/:id" element={<TeacherProfilePage />} />
               <Route path="attendance" element={<AttendancePage />} />
-              <Route path="fees" element={<FeesPage />} />
+              <Route path="finance" element={<FinancePage />} />
+              {/* Legacy Redirects */}
+              <Route path="fees" element={<Navigate to="/finance" replace />} />
+              <Route path="payments" element={<Navigate to="/finance" replace />} />
               <Route path="exams" element={<ExamsPage />} />
               <Route path="inventory" element={<InventoryPage />} />
               <Route path="todos" element={<TodoPage />} />

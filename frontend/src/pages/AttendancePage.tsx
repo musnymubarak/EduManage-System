@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Calendar, Users, Clock, Check, X, Minus } from 'lucide-react';
+import { Calendar, Users, Clock } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../services/api';
 import { Class, Student, Teacher } from '../types';
 import { Card } from '../components/UI/Card';
 import { Button } from '../components/UI/Button';
-import { Select } from '../components/UI/Input';
 import { formatDate } from '../utils/helpers';
 
 const AttendancePage: React.FC = () => {
@@ -14,8 +13,6 @@ const AttendancePage: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedClassId, setSelectedClassId] = useState('');
   
-  const queryClient = useQueryClient();
-
   // Fetch classes
   const { data: classesData } = useQuery({
     queryKey: ['classes'],

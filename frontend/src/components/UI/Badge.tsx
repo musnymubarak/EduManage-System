@@ -6,9 +6,10 @@ interface BadgeProps {
   variant?: 'success' | 'danger' | 'warning' | 'info' | 'default';
   className?: string;
   status?: string;
+  title?: string;
 }
 
-export const Badge: React.FC<BadgeProps> = ({ children, variant, className, status }) => {
+export const Badge: React.FC<BadgeProps> = ({ children, variant, className, status, title }) => {
   const variants = {
     success: 'bg-green-100 text-green-800',
     danger: 'bg-red-100 text-red-800',
@@ -21,6 +22,7 @@ export const Badge: React.FC<BadgeProps> = ({ children, variant, className, stat
 
   return (
     <span
+      title={title}
       className={cn(
         'inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium',
         badgeClass,
