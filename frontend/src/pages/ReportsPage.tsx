@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
-import { FileText, Download, Calendar, Users, DollarSign, BookOpen, Printer } from 'lucide-react';
+import { FileText, Download, Users, DollarSign, BookOpen, Printer } from 'lucide-react';
 import api from '../services/api';
 import { Class } from '../types';
 import { Card } from '../components/UI/Card';
 import { Button } from '../components/UI/Button';
-import { Select } from '../components/UI/Input';
-import { formatDate, formatCurrency } from '../utils/helpers';
+import { formatDate } from '../utils/helpers';
 
 const ReportsPage: React.FC = () => {
   const [reportType, setReportType] = useState('attendance');
@@ -34,7 +33,6 @@ const ReportsPage: React.FC = () => {
     }
 
     try {
-      let endpoint = '';
       const params = new URLSearchParams();
       params.append('startDate', startDate);
       params.append('endDate', endDate);
@@ -45,20 +43,16 @@ const ReportsPage: React.FC = () => {
             toast.error('Please select a class');
             return;
           }
-          endpoint = `/reports/attendance?${params}&classId=${selectedClass}`;
           break;
         case 'fees':
-          endpoint = `/reports/fees?${params}`;
           break;
         case 'exams':
           if (!term) {
             toast.error('Please select a term');
             return;
           }
-          endpoint = `/reports/exams?${params}&term=${term}`;
           break;
         case 'financial':
-          endpoint = `/reports/financial?${params}`;
           break;
       }
 
@@ -271,7 +265,7 @@ const ReportPreview: React.FC<ReportPreviewProps> = ({
     <div className="space-y-4">
       <div className="rounded-lg bg-gray-50 p-6">
         <div className="mb-6 border-b pb-4">
-          <h1 className="text-2xl font-bold text-gray-900">Buhary Madrasa</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Sumaya Madrasa</h1>
           <p className="text-gray-600">
             {reportType.charAt(0).toUpperCase() + reportType.slice(1)} Report
           </p>

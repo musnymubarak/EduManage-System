@@ -70,7 +70,7 @@ app.listen(PORT, () => {
   console.log(`
 ╔═══════════════════════════════════════════════════════════╗
 ║                                                           ║
-║   🕌 Buhary Madrasa Management System - API Server       ║
+║   🕌 Sumaya Madrasa Management System - API Server       ║
 ║                                                           ║
 ║   🚀 Server is running on port ${PORT}                      ║
 ║   🌍 Environment: ${config.nodeEnv.toUpperCase().padEnd(39)}║

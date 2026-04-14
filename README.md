@@ -1,6 +1,6 @@
-# Buhary Madrasa Management System
+# Sumaya Madrasa Management System
 
-A comprehensive production-grade management system for Buhary Madrasa with student registration, attendance tracking, fee management, inventory control, and more.
+A comprehensive production-grade management system for Sumaya Madrasa with student registration, attendance tracking, fee management, inventory control, and more.
 
 ## 🚀 Features
 
@@ -100,7 +100,7 @@ npm install
 
 Create `.env` file:
 ```env
-DATABASE_URL="postgresql://user:password@localhost:5432/buhary_madrasa"
+DATABASE_URL="postgresql://user:password@localhost:5432/sumaya_madrasa"
 JWT_SECRET="your-secret-key-here"
 JWT_EXPIRES_IN="7d"
 PORT=5000
@@ -238,7 +238,7 @@ After seeding:
 
 ## 🤝 Contributing
 
-This is a private project for Buhary Madrasa.
+This is a private project for Sumaya Madrasa.
 
 ## 📄 License
 
@@ -246,4 +246,4 @@ Proprietary - All rights reserved
 
 ## 👨‍💻 Developer
 
-Developed for Buhary Madrasa
+Developed for Sumaya Madrasa

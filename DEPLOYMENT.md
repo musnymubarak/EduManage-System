@@ -1,4 +1,4 @@
-# Deployment Guide - Buhary Madrasa Management System
+# Deployment Guide - Sumaya Madrasa Management System
 
 ## Backend Deployment
 
@@ -9,7 +9,7 @@
 
 2. **Create PostgreSQL Database**
    - Click "New +" → "PostgreSQL"
-   - Choose a name: `buhary-madrasa-db`
+   - Choose a name: `sumaya-madrasa-db`
    - Select region closest to your users
    - Choose free or paid plan
    - Copy the "Internal Database URL" after creation
@@ -18,7 +18,7 @@
    - Click "New +" → "Web Service"
    - Connect your GitHub repository
    - Configure:
-     - **Name:** buhary-madrasa-api
+     - **Name:** sumaya-madrasa-api
      - **Environment:** Node
      - **Build Command:** `cd backend && npm install && npx prisma generate && npm run build`
      - **Start Command:** `cd backend && npm start`

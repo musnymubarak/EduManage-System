@@ -555,7 +555,7 @@ const FeeReceiptModal: React.FC<FeeReceiptModalProps> = ({ isOpen, onClose, fee 
         {/* Branding Header */}
         <div className="flex justify-between items-start border-b-2 border-gray-100 pb-6 mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-blue-900 leading-none">BUHARY MADRASA</h1>
+            <h1 className="text-2xl font-bold text-blue-900 leading-none">SUMAYA MADRASA</h1>
             <p className="text-sm text-gray-500 mt-2 font-medium uppercase tracking-wider">Official {fee.status === 'PENDING' ? 'Invoice' : 'Payment Receipt'}</p>
           </div>
           <div className="text-right">

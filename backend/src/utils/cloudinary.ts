@@ -38,7 +38,7 @@ export const uploadToCloudinary = async (
   return new Promise((resolve, reject) => {
     const uploadStream = cloudinary.uploader.upload_stream(
       {
-        folder: `buhary-madrasa/${folder}`,
+        folder: `sumaya-madrasa/${folder}`,
         resource_type: 'auto',
       },
       (error, result) => {

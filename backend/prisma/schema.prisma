@@ -1,4 +1,4 @@
-// Prisma schema for Buhary Madrasa Management System
+// Prisma schema for Sumaya Madrasa Management System
 
 generator client {
   provider = "prisma-client-js"

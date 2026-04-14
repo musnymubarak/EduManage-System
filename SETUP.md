@@ -1,6 +1,6 @@
 <!-- 
 
-I used reference name as Buhary Madrasa just for an example change it into apropriate one 
+I used reference name as Sumaya Madrasa just for an example change it into apropriate one 
 
 -->
 
@@ -42,7 +42,7 @@ copy .env.example .env
 #### Example .env configuration:
 
 ```env
-DATABASE_URL="postgresql://postgres:password@localhost:5432/buhary_madrasa"
+DATABASE_URL="postgresql://postgres:password@localhost:5432/sumaya_madrasa"
 DATABASE_URL="postgresql://eduadmin1:eduadmin1@localhost:5432/edumanage_system"
 
 JWT_SECRET="your-super-secret-jwt-key-min-32-chars"
@@ -250,7 +250,7 @@ lsof -ti:5173 | xargs kill -9
 3. Verify database exists:
    ```bash
    psql -U postgres
-   CREATE DATABASE buhary_madrasa;
+   CREATE DATABASE sumaya_madrasa;
    ```
 
 ### Prisma Client Errors

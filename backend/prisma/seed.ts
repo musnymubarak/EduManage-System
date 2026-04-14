@@ -14,7 +14,7 @@ async function main() {
     update: {},
     create: {
       username: 'superadmin',
-      email: 'admin@buharymadrasa.edu',
+      email: 'admin@sumayamadrasa.edu',
       password: hashedPassword,
       role: 'SUPER_ADMIN',
       fullName: 'Super Administrator',

@@ -29,7 +29,7 @@ const LoginPage: React.FC = () => {
         <div className="rounded-2xl bg-white p-8 shadow-2xl">
           <div className="mb-8 text-center">
             <h1 className="text-3xl font-bold text-gray-800">
-              🕌 Buhary Madrasa
+              🕌 Sumaya Madrasa
             </h1>
             <p className="mt-2 text-gray-600">Management System</p>
           </div>
@@ -84,7 +84,7 @@ const LoginPage: React.FC = () => {
         </div>
 
         <div className="mt-6 text-center text-sm text-white">
-          © 2024 Buhary Madrasa. All rights reserved.
+          © 2024 Sumaya Madrasa. All rights reserved.
         </div>
       </div>
     </div>

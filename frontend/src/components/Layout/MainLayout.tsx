@@ -49,7 +49,7 @@ const MainLayout: React.FC = () => {
       {/* Sidebar - Always visible on web, with independent scroll */}
       <aside className="flex w-64 flex-col flex-shrink-0 bg-white shadow-lg border-r border-gray-200">
         <div className="flex h-16 flex-shrink-0 items-center justify-center bg-blue-600 px-4">
-          <h1 className="text-xl font-bold text-white">🕌 Buhary Madrasa</h1>
+          <h1 className="text-xl font-bold text-white">🕌 Sumaya Madrasa</h1>
         </div>
         
         {/* Independent scroll area for the sidebar content */}
