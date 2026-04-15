@@ -36,13 +36,13 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        VITE_API_URL: http://localhost:80/api
+        VITE_API_URL: /api
     container_name: edumanage_frontend
     restart: always
     environment:
-      VITE_API_URL: http://localhost:80/api
+      VITE_API_URL: /api
     ports:
-      - "80:80"
+      - "127.0.0.1:8080:80"
     depends_on:
       - backend
     networks:
