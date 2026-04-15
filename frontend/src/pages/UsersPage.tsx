@@ -19,6 +19,8 @@ const UsersPage: React.FC = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
 
+  const queryClient = useQueryClient();
+
   // Fetch users
   const { data: usersData, isLoading } = useQuery({
     queryKey: ['users', searchQuery, roleFilter],
@@ -454,8 +456,6 @@ interface ChangePasswordModalProps {
 const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen, onClose, user }) => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-
-  const queryClient = useQueryClient();
 
   const changePasswordMutation = useMutation({
     mutationFn: async (password: string) => {

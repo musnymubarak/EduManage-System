@@ -186,7 +186,7 @@ const ClassesPage: React.FC = () => {
             setIsEditModalOpen(false);
             setSelectedClass(null);
           }}
-          onSubmit={(data) => {
+          onSubmit={(_data) => {
             // Update mutation would be here
             toast.error("Update not implemented in this phase");
             setIsEditModalOpen(false);
