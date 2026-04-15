@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
-import { Plus, Search, Heart, Calendar, DollarSign } from 'lucide-react';
+import { Plus, Search, Heart, Calendar } from 'lucide-react';
 import api from '../services/api';
 import { Donation } from '../types';
 import { Card } from '../components/UI/Card';
@@ -17,8 +17,6 @@ const DonationsPage: React.FC = () => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-
-  const queryClient = useQueryClient();
 
   // Fetch donations
   const { data: donationsData, isLoading } = useQuery({

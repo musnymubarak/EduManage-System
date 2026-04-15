@@ -9,14 +9,12 @@ import { Button } from '../components/UI/Button';
 import { Input, Select } from '../components/UI/Input';
 import { Modal } from '../components/UI/Modal';
 import { Badge } from '../components/UI/Badge';
-import { formatDate } from '../utils/helpers';
+
 
 const InventoryPage: React.FC = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<Inventory | null>(null);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
-
-  const queryClient = useQueryClient();
 
   // Fetch inventory items
   const { data: inventoryData, isLoading } = useQuery({
@@ -31,7 +29,6 @@ const InventoryPage: React.FC = () => {
 
   // Separate low stock items
   const lowStockItems = items.filter((item) => item.quantity <= item.minQuantity);
-  const regularItems = items.filter((item) => item.quantity > item.minQuantity);
 
   const handleUpdateQuantity = (item: Inventory) => {
     setSelectedItem(item);

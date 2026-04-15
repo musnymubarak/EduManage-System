@@ -174,7 +174,7 @@ const ClassesPage: React.FC = () => {
       <ClassModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
-        onSubmit={(data) => createMutation.mutate(data)}
+        onSubmit={(classData) => createMutation.mutate(classData)}
         title="Create New Class"
       />
 

@@ -15,7 +15,6 @@ import {
   Gift,
   LogOut,
   Building,
-  Clock,
   HardHat,
   BarChart3
 } from 'lucide-react';
