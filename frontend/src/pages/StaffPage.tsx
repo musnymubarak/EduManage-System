@@ -30,7 +30,7 @@ const StaffPage: React.FC = () => {
             if (searchQuery) params.append('search', searchQuery);
             if (statusFilter) params.append('status', statusFilter);
             if (deptFilter) params.append('department', deptFilter);
-            
+
             const response = await api.get(`/staff?${params}`);
             return response.data;
         },
@@ -61,12 +61,12 @@ const StaffPage: React.FC = () => {
     const handleAddStaff = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
-        
+
         // Append files manually if they exist in state
         if (profilePhoto) {
             formData.append('profilePhoto', profilePhoto);
         }
-        
+
         documents.forEach((doc) => {
             formData.append('documents', doc);
         });
@@ -93,8 +93,8 @@ const StaffPage: React.FC = () => {
                     </p>
                 </div>
                 <div className="flex flex-row items-center gap-3 shrink-0 flex-nowrap">
-                    <Button 
-                        onClick={() => setIsAddModalOpen(true)} 
+                    <Button
+                        onClick={() => setIsAddModalOpen(true)}
                         className="bg-blue-600 hover:bg-blue-700 shadow-xl shadow-blue-100 flex items-center gap-2 h-12 px-6 rounded-2xl group transition-all transform hover:scale-105 whitespace-nowrap"
                     >
                         <Plus size={20} className="group-hover:rotate-90 transition-transform duration-300 shrink-0" />
@@ -134,7 +134,7 @@ const StaffPage: React.FC = () => {
                         />
                     </div>
                     <div className="flex flex-row gap-3">
-                        <select 
+                        <select
                             value={deptFilter}
                             onChange={(e) => setDeptFilter(e.target.value)}
                             className="h-11 px-4 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none min-w-[140px] text-sm font-bold text-gray-600"
@@ -220,9 +220,9 @@ const StaffPage: React.FC = () => {
                                         </td>
                                         <td className="p-5">
                                             <div className="flex items-center justify-center">
-                                                <Button 
+                                                <Button
                                                     onClick={() => navigate(`/staff/${s.id}`)}
-                                                    variant="secondary" 
+                                                    variant="secondary"
                                                     className="h-9 w-9 p-0 rounded-xl bg-gray-50 hover:bg-blue-50 hover:text-blue-600 transition-all shadow-sm border border-gray-100"
                                                 >
                                                     <Eye size={16} />
@@ -242,20 +242,20 @@ const StaffPage: React.FC = () => {
                 <form onSubmit={handleAddStaff} className="space-y-6 max-h-[75vh] overflow-y-auto px-1 custom-scrollbar">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-4">
-                            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 border-b border-blue-100 pb-2">Personal Specifics</h4>
+                            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 border-b border-blue-100 pb-2">Personal Details</h4>
                             <Input label="Full Name" name="fullName" required placeholder="e.g. John Doe" />
                             <Input label="Name with Initials" name="nameWithInitials" required placeholder="e.g. J. Doe" />
                             <div className="grid grid-cols-2 gap-4">
                                 <Input label="Date of Birth" name="dateOfBirth" type="date" required />
-                                <Select 
-                                    label="Gender" 
-                                    name="gender" 
-                                    required 
+                                <Select
+                                    label="Gender"
+                                    name="gender"
+                                    required
                                     options={[
                                         { value: 'MALE', label: 'Male' },
                                         { value: 'FEMALE', label: 'Female' },
                                         { value: 'OTHER', label: 'Other' },
-                                    ]} 
+                                    ]}
                                 />
                             </div>
                             <Input label="NIC / Identification" name="nic" required placeholder="Identification Number" />
@@ -263,12 +263,12 @@ const StaffPage: React.FC = () => {
                         </div>
 
                         <div className="space-y-4">
-                            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 border-b border-blue-100 pb-2">Employment Parameters</h4>
+                            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 border-b border-blue-100 pb-2">Employment Details</h4>
                             <div className="grid grid-cols-2 gap-4">
-                                <Select 
-                                    label="Department" 
-                                    name="department" 
-                                    required 
+                                <Select
+                                    label="Department"
+                                    name="department"
+                                    required
                                     options={[
                                         { value: 'ADMINISTRATION', label: 'Administration' },
                                         { value: 'SECURITY', label: 'Security' },
@@ -278,36 +278,36 @@ const StaffPage: React.FC = () => {
                                         { value: 'TRANSPORT', label: 'Transport' },
                                         { value: 'LIBRARY', label: 'Library' },
                                         { value: 'OTHER', label: 'Other' },
-                                    ]} 
+                                    ]}
                                 />
                                 <Input label="Designation" name="designation" required placeholder="e.g. Head Security" />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
-                                <Select 
-                                    label="Employment Type" 
-                                    name="employmentType" 
-                                    required 
+                                <Select
+                                    label="Employment Type"
+                                    name="employmentType"
+                                    required
                                     options={[
                                         { value: 'PERMANENT', label: 'Permanent' },
                                         { value: 'CONTRACT', label: 'Contract' },
                                         { value: 'TEMPORARY', label: 'Temporary' },
-                                    ]} 
+                                    ]}
                                 />
                                 <Input label="Basic Salary (LKR)" name="basicSalary" type="number" required placeholder="0.00" />
                             </div>
                             <Input label="Joined Date" name="joinedDate" type="date" required />
                             <div className="pt-2">
-                                <SingleImageUpload 
-                                    label="Profile Portrait" 
-                                    value={profilePhoto} 
-                                    onChange={setProfilePhoto} 
+                                <SingleImageUpload
+                                    label="Profile Portrait"
+                                    value={profilePhoto}
+                                    onChange={setProfilePhoto}
                                 />
                             </div>
                         </div>
                     </div>
 
                     <div className="space-y-4">
-                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 border-b border-blue-100 pb-2">Contact Context</h4>
+                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 border-b border-blue-100 pb-2">Contact Details</h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <Input label="Mobile Number" name="mobileNumber" required placeholder="+94 7X XXX XXXX" />
                             <Input label="Email Address (Optional)" name="email" type="email" placeholder="staff@sumayamadrasa.com" />
@@ -322,9 +322,9 @@ const StaffPage: React.FC = () => {
 
                     <div className="space-y-4">
                         <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 border-b border-blue-100 pb-2">Verification Documents</h4>
-                        <FileUpload 
-                            label="Identity / Verification Documents" 
-                            multiple 
+                        <FileUpload
+                            label="Identity / Verification Documents"
+                            multiple
                             value={documents}
                             onChange={setDocuments}
                         />
@@ -333,7 +333,7 @@ const StaffPage: React.FC = () => {
                     <div className="flex justify-end gap-3 pt-4 sticky bottom-0 bg-white pb-2">
                         <Button variant="secondary" onClick={() => setIsAddModalOpen(false)} className="font-bold border-none h-11 px-8">Discard</Button>
                         <Button type="submit" disabled={registerMutation.isPending} className="bg-blue-600 hover:bg-blue-700 font-black px-10 shadow-lg h-11">
-                            {registerMutation.isPending ? 'Processing Registration...' : 'Authorize Registration'}
+                            {registerMutation.isPending ? 'Processing Registration...' : 'Submit'}
                         </Button>
                     </div>
                 </form>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Search, Eye, Award } from 'lucide-react';
+import { Plus, Search, Eye, Award, TrendingUp, Users, BookOpen, UserCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import api from '../services/api';
@@ -38,102 +38,138 @@ const TeachersPage: React.FC = () => {
     navigate(`/teachers/${id}`);
   };
 
+  const stats = [
+    { label: 'Total Teachers', value: teachers.length, icon: Users, color: 'text-blue-600', bg: 'bg-blue-50' },
+    { label: 'Active Faculty', value: teachers.filter((t: any) => t.status === 'ACTIVE').length, icon: UserCheck, color: 'text-green-600', bg: 'bg-green-50' },
+    { label: 'Qualifications', value: teachers.reduce((acc: number, t: any) => acc + (t.qualifications?.length || 0), 0), icon: Award, color: 'text-purple-600', bg: 'bg-purple-50' },
+    { label: 'Academic Staff', value: teachers.length, icon: BookOpen, color: 'text-orange-600', bg: 'bg-orange-50' },
+  ];
+
   return (
     <div className="space-y-6">
       {/* Header */}
-      <Card>
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search by name, employee ID, or contact..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-          </div>
+      <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between py-2">
+        <div className="flex-1 min-w-0">
+          <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight truncate">Teacher Management</h2>
+          <p className="text-gray-500 mt-1 font-medium flex items-center gap-2 truncate">
+            <UserCheck size={16} className="text-blue-500" />
+            Administration of academic faculty and educational personnel
+          </p>
+        </div>
+        <div className="flex flex-row items-center gap-3 shrink-0 flex-nowrap">
+          <Button
+            onClick={() => setIsAddModalOpen(true)}
+            className="bg-blue-600 hover:bg-blue-700 shadow-xl shadow-blue-100 flex items-center gap-2 h-12 px-6 rounded-2xl group transition-all transform hover:scale-105 whitespace-nowrap"
+          >
+            <Plus size={20} className="group-hover:rotate-90 transition-transform duration-300 shrink-0" />
+            <span className="font-black uppercase tracking-widest text-[11px]">Add New Teacher</span>
+          </Button>
+        </div>
+      </div>
 
-          <div className="flex gap-3">
+      {/* Analytics Grid */}
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        {stats.map((stat) => (
+          <Card key={stat.label} className="bg-white border-none shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden group">
+            <div className="p-5 flex items-center gap-4">
+              <div className={`${stat.bg} ${stat.color} p-3 rounded-2xl transition-transform group-hover:scale-110 duration-300`}>
+                <stat.icon size={24} />
+              </div>
+              <div>
+                <p className="text-xs font-black text-gray-400 uppercase tracking-widest">{stat.label}</p>
+                <p className="text-2xl font-black text-gray-900">{stat.value}</p>
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
+
+      {/* Search & Filters */}
+      <Card className="p-4 border-none shadow-md overflow-hidden bg-white/50 backdrop-blur-sm">
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            <input
+              type="text"
+              placeholder="Search by name, employee ID, or contact..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 h-11 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+            />
+          </div>
+          <div className="flex flex-row gap-3">
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="h-11 px-4 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none min-w-[140px] text-sm font-bold text-gray-600"
             >
               <option value="">All Status</option>
               <option value="ACTIVE">Active</option>
               <option value="ON_LEAVE">On Leave</option>
               <option value="INACTIVE">Inactive</option>
             </select>
-
-            <Button onClick={() => setIsAddModalOpen(true)}>
-              <Plus size={20} className="mr-2" />
-              Add Teacher
-            </Button>
           </div>
         </div>
       </Card>
 
       {/* Teachers Table */}
-      <Card>
+      <Card className="border-none shadow-xl overflow-hidden bg-white rounded-3xl">
         {isLoading ? (
-          <div className="py-8 text-center text-gray-500">Loading teachers...</div>
+          <div className="p-10 text-center animate-pulse text-gray-400 font-bold uppercase text-[10px] tracking-[0.2em]">Syncing Faculty Data...</div>
         ) : teachers.length === 0 ? (
-          <div className="py-8 text-center text-gray-500">
-            No teachers found. Click "Add Teacher" to register a new teacher.
-          </div>
+          <div className="p-20 text-center text-gray-400 italic">No teachers found matching the criteria.</div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full text-left">
               <thead>
-                <tr className="border-b bg-gray-50">
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                    Employee ID
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                    Full Name
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                    Designation
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                    Type
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                    Contact
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                    Status
-                  </th>
-                  <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">
-                    Actions
-                  </th>
+                <tr className="bg-gray-50/50 border-b border-gray-100">
+                  <th className="p-5 text-[10px] font-black uppercase tracking-widest text-gray-400">Identity</th>
+                  <th className="p-5 text-[10px] font-black uppercase tracking-widest text-gray-400">Designation & Type</th>
+                  <th className="p-5 text-[10px] font-black uppercase tracking-widest text-gray-400">Contact Info</th>
+                  <th className="p-5 text-[10px] font-black uppercase tracking-widest text-gray-400">Status</th>
+                  <th className="p-5 text-right text-[10px] font-black uppercase tracking-widest text-gray-400 text-center">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y">
+              <tbody className="divide-y divide-gray-50">
                 {teachers.map((teacher: Teacher) => (
-                  <tr key={teacher.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 text-sm font-medium text-gray-900">
-                      {teacher.employeeNumber}
+                  <tr key={teacher.id} className="hover:bg-blue-50/20 transition-colors group">
+                    <td className="p-5">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-xl bg-gray-100 flex items-center justify-center overflow-hidden border border-gray-100 group-hover:border-blue-200 transition-colors">
+                          {teacher.profilePhoto ? (
+                            <img src={teacher.profilePhoto} alt="" className="h-full w-full object-cover" />
+                          ) : <Users size={20} className="text-gray-400" />}
+                        </div>
+                        <div>
+                          <p className="font-black text-gray-900 group-hover:text-blue-600 transition-colors">{teacher.fullName}</p>
+                          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">{teacher.employeeNumber}</p>
+                        </div>
+                      </div>
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-900">{teacher.fullName}</td>
-                    <td className="px-4 py-3 text-sm text-gray-600">{teacher.designation}</td>
-                    <td className="px-4 py-3 text-sm text-gray-600">{teacher.employmentType}</td>
-                    <td className="px-4 py-3 text-sm text-gray-600">{teacher.mobileNumber}</td>
-                    <td className="px-4 py-3">
-                      <Badge status={teacher.status}>{teacher.status}</Badge>
+                    <td className="p-5">
+                      <div className="flex flex-col">
+                        <span className="text-xs font-black text-gray-900 uppercase tracking-tight">{teacher.designation}</span>
+                        <span className="text-[10px] font-bold text-blue-500 uppercase tracking-widest">{teacher.employmentType}</span>
+                      </div>
                     </td>
-                    <td className="px-4 py-3 text-right">
-                      <div className="flex justify-end gap-2">
-                        <button
+                    <td className="p-5">
+                      <p className="font-black text-gray-900 text-xs">{teacher.mobileNumber}</p>
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">{teacher.email}</p>
+                    </td>
+                    <td className="p-5">
+                      <Badge variant={teacher.status === 'ACTIVE' ? 'success' : 'danger'} className="text-[9px] font-black tracking-widest uppercase px-3 py-1">
+                        {teacher.status}
+                      </Badge>
+                    </td>
+                    <td className="p-5">
+                      <div className="flex items-center justify-center">
+                        <Button
                           onClick={() => handleViewTeacher(teacher.id)}
-                          className="rounded p-1 hover:bg-gray-100"
-                          title="View Details"
+                          variant="secondary"
+                          className="h-9 w-9 p-0 rounded-xl bg-gray-50 hover:bg-blue-50 hover:text-blue-600 transition-all shadow-sm border border-gray-100"
                         >
-                          <Eye size={18} className="text-blue-600" />
-                        </button>
+                          <Eye size={16} />
+                        </Button>
                       </div>
                     </td>
                   </tr>
@@ -160,58 +196,17 @@ interface AddTeacherModalProps {
 }
 
 const AddTeacherModal: React.FC<AddTeacherModalProps> = ({ isOpen, onClose }) => {
-  const [formData, setFormData] = useState({
-    fullName: '',
-    nameWithInitials: '',
-    dateOfBirth: '',
-    gender: '',
-    nic: '',
-    mobileNumber: '',
-    email: '',
-    address: '',
-    city: '',
-    district: '',
-    province: '',
-    postalCode: '',
-    designation: '',
-    employmentType: '',
-    joinedDate: '',
-    basicSalary: '',
-  });
-
   const [qualifications, setQualifications] = useState<any[]>([
     { degree: '', institution: '', year: '', fieldOfStudy: '' },
   ]);
 
   const [profilePhoto, setProfilePhoto] = useState<File | null>(null);
   const [documents, setDocuments] = useState<File[]>([]);
-
   const queryClient = useQueryClient();
 
   const addTeacherMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const formDataToSend = new FormData();
-      
-      // Append all form fields
-      Object.keys(data).forEach((key) => {
-        if (key === 'qualifications') {
-          formDataToSend.append(key, JSON.stringify(data[key]));
-        } else if (data[key]) {
-          formDataToSend.append(key, data[key]);
-        }
-      });
-
-      // Append profile photo
-      if (profilePhoto) {
-        formDataToSend.append('profilePhoto', profilePhoto);
-      }
-
-      // Append documents
-      documents.forEach((doc) => {
-        formDataToSend.append('documents', doc);
-      });
-
-      const response = await api.post('/teachers', formDataToSend, {
+    mutationFn: async (formData: FormData) => {
+      const response = await api.post('/teachers', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -222,7 +217,6 @@ const AddTeacherModal: React.FC<AddTeacherModalProps> = ({ isOpen, onClose }) =>
       toast.success('Teacher registered successfully!');
       queryClient.invalidateQueries({ queryKey: ['teachers'] });
       onClose();
-      setFormData({} as any);
       setQualifications([{ degree: '', institution: '', year: '', fieldOfStudy: '' }]);
       setProfilePhoto(null);
       setDocuments([]);
@@ -232,18 +226,23 @@ const AddTeacherModal: React.FC<AddTeacherModalProps> = ({ isOpen, onClose }) =>
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const submitData = {
-      ...formData,
-      basicSalary: parseFloat(formData.basicSalary),
-      qualifications: qualifications.filter(q => q.degree && q.institution),
-    };
-    addTeacherMutation.mutate(submitData);
-  };
+    const formData = new FormData(e.currentTarget);
+    
+    // Add qualifications as JSON string
+    const validQualifications = qualifications.filter(q => q.degree && q.institution);
+    formData.append('qualifications', JSON.stringify(validQualifications));
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    if (profilePhoto) {
+      formData.append('profilePhoto', profilePhoto);
+    }
+
+    documents.forEach((doc) => {
+      formData.append('documents', doc);
+    });
+
+    addTeacherMutation.mutate(formData);
   };
 
   const addQualification = () => {
@@ -256,189 +255,111 @@ const AddTeacherModal: React.FC<AddTeacherModalProps> = ({ isOpen, onClose }) =>
     setQualifications(updated);
   };
 
+  const removeQualification = (index: number) => {
+    if (qualifications.length > 1) {
+      setQualifications(qualifications.filter((_, i) => i !== index));
+    }
+  };
+
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
       title="Register New Teacher"
       size="xl"
-      footer={
-        <div className="flex justify-end gap-3">
-          <Button variant="secondary" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button onClick={handleSubmit} disabled={addTeacherMutation.isPending}>
-            {addTeacherMutation.isPending ? 'Registering...' : 'Register Teacher'}
-          </Button>
-        </div>
-      }
     >
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Personal Information */}
-        <div>
-          <h3 className="mb-4 text-lg font-semibold text-gray-900">Personal Information</h3>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <Input
-              label="Full Name"
-              name="fullName"
-              value={formData.fullName}
-              onChange={handleChange}
-              required
-            />
-            <Input
-              label="Name with Initials"
-              name="nameWithInitials"
-              value={formData.nameWithInitials}
-              onChange={handleChange}
-              required
-            />
-            <Input
-              label="Date of Birth"
-              name="dateOfBirth"
-              type="date"
-              value={formData.dateOfBirth}
-              onChange={handleChange}
-              required
-            />
-            <Select
-              label="Gender"
-              name="gender"
-              value={formData.gender}
-              onChange={handleChange}
-              options={[
-                { value: 'MALE', label: 'Male' },
-                { value: 'FEMALE', label: 'Female' },
-              ]}
-              required
-            />
-            <Input
-              label="NIC"
-              name="nic"
-              value={formData.nic}
-              onChange={handleChange}
-              required
-            />
-            <Input
-              label="Mobile Number"
-              name="mobileNumber"
-              value={formData.mobileNumber}
-              onChange={handleChange}
-              required
-            />
-            <Input
-              label="Email"
-              name="email"
-              type="email"
-              value={formData.email}
-              onChange={handleChange}
-            />
-          </div>
-        </div>
-
-        {/* Contact Information */}
-        <div>
-          <h3 className="mb-4 text-lg font-semibold text-gray-900">Contact Information</h3>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div className="md:col-span-2">
-              <Input
-                label="Address"
-                name="address"
-                value={formData.address}
-                onChange={handleChange}
+      <form onSubmit={handleSubmit} className="space-y-6 max-h-[75vh] overflow-y-auto px-1 custom-scrollbar">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-4">
+            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 border-b border-blue-100 pb-2">Personal Details</h4>
+            <Input label="Full Name" name="fullName" required placeholder="e.g. John Doe" />
+            <Input label="Name with Initials" name="nameWithInitials" required placeholder="e.g. J. Doe" />
+            <div className="grid grid-cols-2 gap-4">
+              <Input label="Date of Birth" name="dateOfBirth" type="date" required />
+              <Select
+                label="Gender"
+                name="gender"
                 required
+                options={[
+                  { value: 'MALE', label: 'Male' },
+                  { value: 'FEMALE', label: 'Female' },
+                ]}
               />
             </div>
-            <Input
-              label="City"
-              name="city"
-              value={formData.city}
-              onChange={handleChange}
-              required
-            />
-            <Input
-              label="District"
-              name="district"
-              value={formData.district}
-              onChange={handleChange}
-              required
-            />
-            <Input
-              label="Province"
-              name="province"
-              value={formData.province}
-              onChange={handleChange}
-              required
-            />
-            <Input
-              label="Postal Code"
-              name="postalCode"
-              value={formData.postalCode}
-              onChange={handleChange}
-            />
+            <Input label="NIC / Identification" name="nic" required placeholder="Identification Number" />
+            <div className="pt-2">
+              <SingleImageUpload
+                label="Profile Portrait"
+                value={profilePhoto}
+                onChange={setProfilePhoto}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 border-b border-blue-100 pb-2">Employment Details</h4>
+            <div className="grid grid-cols-2 gap-4">
+              <Input label="Designation" name="designation" required placeholder="e.g. Senior Teacher" />
+              <Select
+                label="Employment Type"
+                name="employmentType"
+                required
+                options={[
+                  { value: 'FULL_TIME', label: 'Full Time' },
+                  { value: 'PART_TIME', label: 'Part Time' },
+                  { value: 'CONTRACT', label: 'Contract' },
+                ]}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <Input label="Basic Salary (LKR)" name="basicSalary" type="number" required placeholder="0.00" />
+              <Input label="Joined Date" name="joinedDate" type="date" required />
+            </div>
+            
+            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 border-b border-blue-100 pb-2 pt-2">Contact Details</h4>
+            <div className="grid grid-cols-1 gap-4">
+              <Input label="Mobile Number" name="mobileNumber" required placeholder="+94 7X XXX XXXX" />
+              <Input label="Email Address" name="email" type="email" placeholder="teacher@sumayamadrasa.com" />
+            </div>
           </div>
         </div>
 
-        {/* Employment Information */}
-        <div>
-          <h3 className="mb-4 text-lg font-semibold text-gray-900">Employment Information</h3>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <Input
-              label="Designation"
-              name="designation"
-              value={formData.designation}
-              onChange={handleChange}
-              placeholder="e.g. Senior Teacher, Assistant Teacher"
-              required
-            />
-            <Select
-              label="Employment Type"
-              name="employmentType"
-              value={formData.employmentType}
-              onChange={handleChange}
-              options={[
-                { value: 'FULL_TIME', label: 'Full Time' },
-                { value: 'PART_TIME', label: 'Part Time' },
-                { value: 'CONTRACT', label: 'Contract' },
-              ]}
-              required
-            />
-            <Input
-              label="Joined Date"
-              name="joinedDate"
-              type="date"
-              value={formData.joinedDate}
-              onChange={handleChange}
-              required
-            />
-            <Input
-              label="Basic Salary (LKR)"
-              name="basicSalary"
-              type="number"
-              value={formData.basicSalary}
-              onChange={handleChange}
-              required
-            />
+        <div className="space-y-4">
+          <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 border-b border-blue-100 pb-2">Address Details</h4>
+          <Input label="Physical Address" name="address" required placeholder="House No, Street Name..." />
+          <div className="grid grid-cols-3 gap-4">
+            <Input label="City" name="city" required />
+            <Input label="District" name="district" required />
+            <Input label="Province" name="province" required />
           </div>
         </div>
 
-        {/* Qualifications */}
-        <div>
-          <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900">Qualifications</h3>
-            <Button type="button" variant="secondary" onClick={addQualification}>
-              <Award size={16} className="mr-2" />
-              Add Qualification
+        <div className="space-y-4">
+          <div className="flex items-center justify-between border-b border-blue-100 pb-2">
+            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600">Educational Qualifications</h4>
+            <Button type="button" variant="secondary" onClick={addQualification} className="h-7 px-3 text-[10px] font-black uppercase tracking-widest">
+              Add More
             </Button>
           </div>
+          
           <div className="space-y-4">
             {qualifications.map((qual, index) => (
-              <div key={index} className="rounded-lg border p-4">
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div key={index} className="relative p-4 rounded-2xl bg-gray-50/50 border border-gray-100 group">
+                {qualifications.length > 1 && (
+                  <button 
+                    type="button" 
+                    onClick={() => removeQualification(index)}
+                    className="absolute -top-2 -right-2 h-6 w-6 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    ×
+                  </button>
+                )}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Input
-                    label="Degree/Qualification"
+                    label="Degree / Qualification"
                     value={qual.degree}
                     onChange={(e) => updateQualification(index, 'degree', e.target.value)}
-                    placeholder="e.g. Bachelor of Arts"
+                    placeholder="e.g. B.A in Islamic Studies"
                   />
                   <Input
                     label="Institution"
@@ -446,52 +367,42 @@ const AddTeacherModal: React.FC<AddTeacherModalProps> = ({ isOpen, onClose }) =>
                     onChange={(e) => updateQualification(index, 'institution', e.target.value)}
                     placeholder="e.g. University of Colombo"
                   />
-                  <Input
-                    label="Year"
-                    type="number"
-                    value={qual.year}
-                    onChange={(e) => updateQualification(index, 'year', e.target.value)}
-                    placeholder="e.g. 2020"
-                  />
-                  <Input
-                    label="Field of Study"
-                    value={qual.fieldOfStudy}
-                    onChange={(e) => updateQualification(index, 'fieldOfStudy', e.target.value)}
-                    placeholder="e.g. Islamic Studies"
-                  />
+                  <div className="grid grid-cols-2 gap-4">
+                    <Input
+                      label="Year"
+                      type="number"
+                      value={qual.year}
+                      onChange={(e) => updateQualification(index, 'year', e.target.value)}
+                      placeholder="2020"
+                    />
+                    <Input
+                      label="Field of Study"
+                      value={qual.fieldOfStudy}
+                      onChange={(e) => updateQualification(index, 'fieldOfStudy', e.target.value)}
+                      placeholder="General"
+                    />
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Documents and Photo */}
-        <div>
-          <h3 className="mb-4 text-lg font-semibold text-gray-900">Documents & Photo</h3>
-          <div className="space-y-4">
-            <div>
-              <label className="mb-2 block text-sm font-medium text-gray-700">
-                Profile Photo
-              </label>
-              <SingleImageUpload
-                value={profilePhoto}
-                onChange={setProfilePhoto}
-              />
-            </div>
-            <div>
-              <label className="mb-2 block text-sm font-medium text-gray-700">
-                Documents (NIC, Certificates, Degree Copies, etc.)
-              </label>
-              <FileUpload
-                value={documents}
-                onChange={setDocuments}
-                multiple
-                accept="image/*,application/pdf"
-                maxSize={5 * 1024 * 1024}
-                preview
-              />
-            </div>
-          </div>
+        <div className="space-y-4">
+          <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 border-b border-blue-100 pb-2">Verification Documents</h4>
+          <FileUpload
+            label="Identity / Academic Documents"
+            multiple
+            value={documents}
+            onChange={setDocuments}
+          />
+        </div>
+
+        <div className="flex justify-end gap-3 pt-4 sticky bottom-0 bg-white pb-2">
+          <Button variant="secondary" onClick={onClose} className="font-bold border-none h-11 px-8">Discard</Button>
+          <Button type="submit" disabled={addTeacherMutation.isPending} className="bg-blue-600 hover:bg-blue-700 font-black px-10 shadow-lg h-11">
+            {addTeacherMutation.isPending ? 'Processing Registration...' : 'Submit'}
+          </Button>
         </div>
       </form>
     </Modal>
