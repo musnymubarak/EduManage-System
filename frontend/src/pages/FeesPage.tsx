@@ -13,7 +13,8 @@ import {
   Clock,
   History,
   Pencil,
-  Info
+  Info,
+  Settings2
 } from 'lucide-react';
 import api from '../services/api';
 import { Card } from '../components/UI/Card';
@@ -41,6 +42,7 @@ const FeesPage: React.FC = () => {
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isFeeSettingModalOpen, setIsFeeSettingModalOpen] = useState(false);
 
   // Date Handling
   const now = new Date();
@@ -98,6 +100,31 @@ const FeesPage: React.FC = () => {
   });
 
   const studentsStatus = trackerData?.data || [];
+
+  // 3. Mutation to update system setting
+  const updateSettingMutation = useMutation({
+    mutationFn: async ({ key, value }: { key: string; value: string }) => {
+      const response = await api.post('/settings', { key, value });
+      return response.data;
+    },
+    onSuccess: () => {
+      toast.success('Fee setting updated successfully');
+      queryClient.invalidateQueries({ queryKey: ['feesMonthlyStatus'] });
+      setIsFeeSettingModalOpen(false);
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.error || 'Failed to update setting');
+    },
+  });
+
+  const handleUpdateGlobalFee = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const amount = formData.get('amount') as string;
+    if (amount) {
+      updateSettingMutation.mutate({ key: 'monthly_fee_amount', value: amount });
+    }
+  };
   const summary = trackerData?.summary || { 
       totalStudents: 0, 
       paid: 0, 
@@ -155,6 +182,14 @@ const FeesPage: React.FC = () => {
           >
             <History size={18} className="text-gray-400 shrink-0" />
             Full History
+          </Button>
+          <Button 
+            variant="secondary"
+            onClick={() => setIsFeeSettingModalOpen(true)}
+            className="h-12 px-6 rounded-2xl flex items-center gap-2 bg-amber-50 text-amber-700 hover:bg-amber-100 border-amber-100 shadow-sm transition-all hover:scale-105 whitespace-nowrap"
+          >
+            <Settings2 size={18} className="shrink-0" />
+            <span className="font-black uppercase tracking-widest text-[11px]">Manage Fee</span>
           </Button>
           <Button 
             onClick={() => setIsGlobalPaymentModalOpen(true)} 
@@ -450,6 +485,50 @@ const FeesPage: React.FC = () => {
             fee={selectedFee}
         />
       )}
+      {/* Fee Setting Modal */}
+      <Modal
+        isOpen={isFeeSettingModalOpen}
+        onClose={() => setIsFeeSettingModalOpen(false)}
+        title="Global Monthly Fee Setting"
+        size="sm"
+      >
+        <form onSubmit={handleUpdateGlobalFee} className="space-y-6">
+          <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100">
+            <div className="flex gap-3">
+              <Info className="text-amber-600 shrink-0" size={20} />
+              <div>
+                <p className="text-xs font-bold text-amber-800 leading-relaxed">
+                  Updating this value will affect all <span className="font-black text-amber-900 underline">FUTURE</span> payments and students who have <span className="font-black text-amber-900 underline">NOT YET PAID</span> for this month.
+                </p>
+                <p className="text-[10px] text-amber-600 mt-2 italic">
+                  Note: The system now snapshots the fee at the time of payment. Students who already paid at the old rate will remain marked as PAID.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <Input 
+            label="Monthly Fee Amount (LKR)" 
+            name="amount" 
+            type="number" 
+            step="0.01" 
+            required 
+            defaultValue={summary?.monthlyFeePerStudent || '2000'}
+            placeholder="e.g. 2500" 
+          />
+
+          <div className="flex justify-end gap-3 pt-2">
+            <Button type="button" variant="secondary" onClick={() => setIsFeeSettingModalOpen(false)}>Cancel</Button>
+            <Button 
+              type="submit" 
+              disabled={updateSettingMutation.isPending}
+              className="bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-100 font-black uppercase tracking-widest text-[11px] px-8 h-12 rounded-xl"
+            >
+              {updateSettingMutation.isPending ? 'Updating...' : 'Update Fee Amount'}
+            </Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 };

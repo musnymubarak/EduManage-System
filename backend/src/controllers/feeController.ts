@@ -420,9 +420,13 @@ export const getMonthlyFeeStatus = async (req: AuthRequest, res: Response): Prom
     const data = students.map(student => {
       const payment = payments.find(p => p.studentId === student.id);
       
+      // Use the fee amount from the payment record if it exists (snapshot),
+      // otherwise use the current global fee for unpaid students
+      const effectiveAmount = payment ? payment.amount : monthlyFeeAmount;
+      
       let currentStatus = 'PENDING';
       let paidAmount = 0;
-      let balance = monthlyFeeAmount;
+      let balance = effectiveAmount;
 
       if (payment) {
         currentStatus = payment.status;
@@ -436,7 +440,7 @@ export const getMonthlyFeeStatus = async (req: AuthRequest, res: Response): Prom
         fullName: student.fullName,
         className: student.class?.name || 'Unassigned',
         month: month,
-        totalAmount: monthlyFeeAmount,
+        totalAmount: effectiveAmount,
         paidAmount,
         balance,
         paymentStatus: currentStatus,
@@ -458,7 +462,7 @@ export const getMonthlyFeeStatus = async (req: AuthRequest, res: Response): Prom
         paid: data.filter(d => d.paymentStatus === 'PAID').length,
         partial: data.filter(d => d.paymentStatus === 'PARTIAL').length,
         pending: data.filter(d => d.paymentStatus === 'PENDING').length,
-        totalExpectedAmount: data.length * monthlyFeeAmount,
+        totalExpectedAmount: data.reduce((sum, d) => sum + d.totalAmount, 0),
         totalCollectedAmount: data.reduce((sum, d) => sum + d.paidAmount, 0),
         totalOutstandingAmount: data.reduce((sum, d) => sum + d.balance, 0)
       }

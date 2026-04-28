@@ -52,4 +52,7 @@ router.post(
 router.get('/expenditures', commonController.getAllExpenditures);
 router.get('/expenditures/report', commonController.getExpenditureReport);
 
+// Settings
+router.post('/settings', authorize(...managers), commonController.updateSystemSetting);
+
 export default router;

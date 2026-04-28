@@ -667,3 +667,19 @@ export const getExpenditureReport = async (req: AuthRequest, res: Response): Pro
     res.status(500).json({ error: 'Failed to generate expenditure report' });
   }
 };
+// System Settings
+export const updateSystemSetting = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { key, value } = req.body;
+
+    const setting = await prisma.systemSetting.upsert({
+      where: { key },
+      update: { value },
+      create: { key, value },
+    });
+
+    res.json({ success: true, data: setting });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update system setting' });
+  }
+};
