@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Search, Eye, HardHat, TrendingUp, Users, Building2, Briefcase } from 'lucide-react';
+import { Plus, Search, Eye, HardHat, TrendingUp, Users, Building2, Briefcase, Pencil } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import api from '../services/api';
@@ -16,10 +16,8 @@ const StaffPage: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState('');
     const [deptFilter, setDeptFilter] = useState('');
-    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-    const [profilePhoto, setProfilePhoto] = useState<File | null>(null);
-    const [documents, setDocuments] = useState<File[]>([]);
-    const queryClient = useQueryClient();
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingStaff, setEditingStaff] = useState<any | null>(null);
     const navigate = useNavigate();
 
     // Fetch staff
@@ -38,41 +36,7 @@ const StaffPage: React.FC = () => {
 
     const staff = staffData?.data || [];
 
-    // Registration mutation
-    const registerMutation = useMutation({
-        mutationFn: async (formData: FormData) => {
-            const response = await api.post('/staff', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' },
-            });
-            return response.data;
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['staff'] });
-            toast.success('Staff member registered successfully');
-            setIsAddModalOpen(false);
-            setProfilePhoto(null);
-            setDocuments([]);
-        },
-        onError: (error: any) => {
-            toast.error(error.response?.data?.error || 'Failed to register staff');
-        },
-    });
 
-    const handleAddStaff = (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        const formData = new FormData(e.currentTarget);
-
-        // Append files manually if they exist in state
-        if (profilePhoto) {
-            formData.append('profilePhoto', profilePhoto);
-        }
-
-        documents.forEach((doc) => {
-            formData.append('documents', doc);
-        });
-
-        registerMutation.mutate(formData);
-    };
 
     const stats = [
         { label: 'Total Personnel', value: staff.length, icon: Users, color: 'text-blue-600', bg: 'bg-blue-50' },
@@ -94,11 +58,14 @@ const StaffPage: React.FC = () => {
                 </div>
                 <div className="flex flex-row items-center gap-3 shrink-0 flex-nowrap">
                     <Button
-                        onClick={() => setIsAddModalOpen(true)}
+                        onClick={() => {
+                            setEditingStaff(null);
+                            setIsModalOpen(true);
+                        }}
                         className="bg-blue-600 hover:bg-blue-700 shadow-xl shadow-blue-100 flex items-center gap-2 h-12 px-6 rounded-2xl group transition-all transform hover:scale-105 whitespace-nowrap"
                     >
                         <Plus size={20} className="group-hover:rotate-90 transition-transform duration-300 shrink-0" />
-                        <span className="font-black uppercase tracking-widest text-[11px]">Add New Personnel</span>
+                        <span className="font-black uppercase tracking-widest text-[11px]">Register New Staff</span>
                     </Button>
                 </div>
             </div>
@@ -172,7 +139,7 @@ const StaffPage: React.FC = () => {
                                 <th className="p-5 text-[10px] font-black uppercase tracking-widest text-gray-400">Remuneration</th>
                                 <th className="p-5 text-[10px] font-black uppercase tracking-widest text-gray-400">Joined Date</th>
                                 <th className="p-5 text-[10px] font-black uppercase tracking-widest text-gray-400">Status</th>
-                                <th className="p-5 text-right text-[10px] font-black uppercase tracking-widest text-gray-400 text-center">Actions</th>
+                                <th className="p-5 text-[10px] font-black uppercase tracking-widest text-gray-400 text-center w-[1%] whitespace-nowrap">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-50">
@@ -218,14 +185,24 @@ const StaffPage: React.FC = () => {
                                                 {s.status}
                                             </Badge>
                                         </td>
-                                        <td className="p-5">
-                                            <div className="flex items-center justify-center">
+                                        <td className="p-5 text-center w-[1%] whitespace-nowrap">
+                                            <div className="flex items-center justify-center gap-2">
                                                 <Button
                                                     onClick={() => navigate(`/staff/${s.id}`)}
                                                     variant="secondary"
                                                     className="h-9 w-9 p-0 rounded-xl bg-gray-50 hover:bg-blue-50 hover:text-blue-600 transition-all shadow-sm border border-gray-100"
                                                 >
                                                     <Eye size={16} />
+                                                </Button>
+                                                <Button
+                                                    onClick={() => {
+                                                        setEditingStaff(s);
+                                                        setIsModalOpen(true);
+                                                    }}
+                                                    variant="secondary"
+                                                    className="h-9 w-9 p-0 rounded-xl bg-gray-50 hover:bg-amber-50 hover:text-amber-600 transition-all shadow-sm border border-gray-100"
+                                                >
+                                                    <Pencil size={16} />
                                                 </Button>
                                             </div>
                                         </td>
@@ -237,108 +214,171 @@ const StaffPage: React.FC = () => {
                 </div>
             </Card>
 
-            {/* Registration Modal */}
-            <Modal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} title="Register New Staff Member" size="xl">
-                <form onSubmit={handleAddStaff} className="space-y-6 max-h-[75vh] overflow-y-auto px-1 custom-scrollbar">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-4">
-                            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 border-b border-blue-100 pb-2">Personal Details</h4>
-                            <Input label="Full Name" name="fullName" required placeholder="e.g. John Doe" />
-                            <Input label="Name with Initials" name="nameWithInitials" required placeholder="e.g. J. Doe" />
-                            <div className="grid grid-cols-2 gap-4">
-                                <Input label="Date of Birth" name="dateOfBirth" type="date" required />
-                                <Select
-                                    label="Gender"
-                                    name="gender"
-                                    required
-                                    options={[
-                                        { value: 'MALE', label: 'Male' },
-                                        { value: 'FEMALE', label: 'Female' },
-                                        { value: 'OTHER', label: 'Other' },
-                                    ]}
-                                />
-                            </div>
-                            <Input label="NIC / Identification" name="nic" required placeholder="Identification Number" />
-                            <Input label="Driving License No (Optional)" name="drivingLicenseNo" placeholder="Optional DL Number" />
-                        </div>
-
-                        <div className="space-y-4">
-                            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 border-b border-blue-100 pb-2">Employment Details</h4>
-                            <div className="grid grid-cols-2 gap-4">
-                                <Select
-                                    label="Department"
-                                    name="department"
-                                    required
-                                    options={[
-                                        { value: 'ADMINISTRATION', label: 'Administration' },
-                                        { value: 'SECURITY', label: 'Security' },
-                                        { value: 'CLEANING', label: 'Cleaning' },
-                                        { value: 'MAINTENANCE', label: 'Maintenance' },
-                                        { value: 'KITCHEN', label: 'Kitchen' },
-                                        { value: 'TRANSPORT', label: 'Transport' },
-                                        { value: 'LIBRARY', label: 'Library' },
-                                        { value: 'OTHER', label: 'Other' },
-                                    ]}
-                                />
-                                <Input label="Designation" name="designation" required placeholder="e.g. Head Security" />
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <Select
-                                    label="Employment Type"
-                                    name="employmentType"
-                                    required
-                                    options={[
-                                        { value: 'PERMANENT', label: 'Permanent' },
-                                        { value: 'CONTRACT', label: 'Contract' },
-                                        { value: 'TEMPORARY', label: 'Temporary' },
-                                    ]}
-                                />
-                                <Input label="Basic Salary (LKR)" name="basicSalary" type="number" required placeholder="0.00" />
-                            </div>
-                            <Input label="Joined Date" name="joinedDate" type="date" required />
-                            <div className="pt-2">
-                                <SingleImageUpload
-                                    label="Profile Portrait"
-                                    value={profilePhoto}
-                                    onChange={setProfilePhoto}
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="space-y-4">
-                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 border-b border-blue-100 pb-2">Contact Details</h4>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <Input label="Mobile Number" name="mobileNumber" required placeholder="+94 7X XXX XXXX" />
-                            <Input label="Email Address (Optional)" name="email" type="email" placeholder="staff@sumayamadrasa.com" />
-                        </div>
-                        <Input label="Physical Address" name="address" required placeholder="House No, Street Name..." />
-                        <div className="grid grid-cols-3 gap-4">
-                            <Input label="City" name="city" required />
-                            <Input label="District" name="district" required />
-                            <Input label="Province" name="province" required />
-                        </div>
-                    </div>
-
-                    <div className="space-y-4">
-                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 border-b border-blue-100 pb-2">Verification Documents</h4>
-                        <FileUpload
-                            label="Identity / Verification Documents"
-                            multiple
-                            value={documents}
-                            onChange={setDocuments}
-                        />
-                    </div>
-
-                    <div className="flex justify-end gap-3 pt-4 sticky bottom-0 bg-white pb-2">
-                        <Button variant="secondary" onClick={() => setIsAddModalOpen(false)} className="font-bold border-none h-11 px-8">Discard</Button>
-                        <Button type="submit" disabled={registerMutation.isPending} className="bg-blue-600 hover:bg-blue-700 font-black px-10 shadow-lg h-11">
-                            {registerMutation.isPending ? 'Processing Registration...' : 'Submit'}
-                        </Button>
-                    </div>
-                </form>
-            </Modal>
+            <StaffModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                initialData={editingStaff}
+            />
         </div>
+    );
+};
+
+interface StaffModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    initialData?: any | null;
+}
+
+const StaffModal: React.FC<StaffModalProps> = ({ isOpen, onClose, initialData }) => {
+    const [profilePhoto, setProfilePhoto] = useState<File | null>(null);
+    const [documents, setDocuments] = useState<File[]>([]);
+    const queryClient = useQueryClient();
+
+    const staffMutation = useMutation({
+        mutationFn: async (formData: FormData) => {
+            if (initialData) {
+                const response = await api.put(`/staff/${initialData.id}`, formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                });
+                return response.data;
+            } else {
+                const response = await api.post('/staff', formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                });
+                return response.data;
+            }
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['staff'] });
+            toast.success(initialData ? 'Staff record updated successfully' : 'Staff member registered successfully');
+            onClose();
+            setProfilePhoto(null);
+            setDocuments([]);
+        },
+        onError: (error: any) => {
+            toast.error(error.response?.data?.error || `Failed to ${initialData ? 'update' : 'register'} staff`);
+        },
+    });
+
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        const formData = new FormData(e.currentTarget);
+        if (profilePhoto) formData.append('profilePhoto', profilePhoto);
+        documents.forEach((doc) => formData.append('documents', doc));
+        staffMutation.mutate(formData);
+    };
+
+    return (
+        <Modal isOpen={isOpen} onClose={onClose} title={initialData ? 'Update Staff Record' : 'Register New Staff Member'} size="xl">
+            <form onSubmit={handleSubmit} className="space-y-6 max-h-[75vh] overflow-y-auto px-1 custom-scrollbar">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 border-b border-blue-100 pb-2">Personal Details</h4>
+                        <Input label="Full Name" name="fullName" required defaultValue={initialData?.fullName} placeholder="e.g. John Doe" />
+                        <Input label="Name with Initials" name="nameWithInitials" required defaultValue={initialData?.nameWithInitials} placeholder="e.g. J. Doe" />
+                        <div className="grid grid-cols-2 gap-4">
+                            <Input label="Date of Birth" name="dateOfBirth" type="date" required defaultValue={initialData?.dateOfBirth?.split('T')[0]} />
+                            <Select
+                                label="Gender"
+                                name="gender"
+                                required
+                                defaultValue={initialData?.gender}
+                                options={[
+                                    { value: 'MALE', label: 'Male' },
+                                    { value: 'FEMALE', label: 'Female' },
+                                ]}
+                            />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <Input label="NIC" name="nic" required defaultValue={initialData?.nic} placeholder="NIC Number" />
+                            <Input label="Driving License" name="drivingLicenseNo" defaultValue={initialData?.drivingLicenseNo} placeholder="Optional" />
+                        </div>
+                        <div className="pt-2">
+                            <SingleImageUpload
+                                label="Profile Portrait"
+                                value={profilePhoto}
+                                onChange={setProfilePhoto}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="space-y-4">
+                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 border-b border-blue-100 pb-2">Employment Details</h4>
+                        <div className="grid grid-cols-2 gap-4">
+                            <Select
+                                label="Department"
+                                name="department"
+                                required
+                                defaultValue={initialData?.department}
+                                options={[
+                                    { value: 'ADMINISTRATION', label: 'Administration' },
+                                    { value: 'ACADEMIC_SUPPORT', label: 'Academic Support' },
+                                    { value: 'MAINTENANCE', label: 'Maintenance' },
+                                    { value: 'SECURITY', label: 'Security' },
+                                    { value: 'TRANSPORT', label: 'Transport' },
+                                ]}
+                            />
+                            <Input label="Designation" name="designation" required defaultValue={initialData?.designation} placeholder="e.g. Accountant" />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <Select
+                                label="Employment"
+                                name="employmentType"
+                                required
+                                defaultValue={initialData?.employmentType}
+                                options={[
+                                    { value: 'FULL_TIME', label: 'Full Time' },
+                                    { value: 'PART_TIME', label: 'Part Time' },
+                                    { value: 'CONTRACT', label: 'Contract' },
+                                ]}
+                            />
+                            <Input label="Basic Salary (LKR)" name="basicSalary" type="number" required defaultValue={initialData?.basicSalary} placeholder="0.00" />
+                        </div>
+                        <Input label="Joined Date" name="joinedDate" type="date" required defaultValue={initialData?.joinedDate?.split('T')[0]} />
+                        
+                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 border-b border-blue-100 pb-2 pt-2">Contact Details</h4>
+                        <div className="grid grid-cols-2 gap-4">
+                            <Input label="Mobile" name="mobileNumber" required defaultValue={initialData?.mobileNumber} placeholder="+94 7X XXX XXXX" />
+                            <Input label="Email" name="email" type="email" defaultValue={initialData?.email} placeholder="staff@sumayamadrasa.com" />
+                        </div>
+                    </div>
+                </div>
+
+                <div className="space-y-4">
+                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 border-b border-blue-100 pb-2">Address Details</h4>
+                    <Input label="Physical Address" name="address" required defaultValue={initialData?.address} placeholder="House No, Street Name..." />
+                    <div className="grid grid-cols-2 gap-4">
+                        <Input label="City" name="city" required defaultValue={initialData?.city} />
+                        <Input label="District" name="district" required defaultValue={initialData?.district} />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <Input label="Province" name="province" required defaultValue={initialData?.province} />
+                        <Input label="Postal Code" name="postalCode" defaultValue={initialData?.postalCode} />
+                    </div>
+                </div>
+
+                <div className="space-y-4">
+                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 border-b border-blue-100 pb-2">Verification Documents</h4>
+                    <FileUpload
+                        label="Identity / Verification Documents"
+                        multiple
+                        value={documents}
+                        onChange={setDocuments}
+                    />
+                </div>
+
+                <div className="flex justify-end gap-3 pt-4 sticky bottom-0 bg-white pb-2">
+                    <Button variant="secondary" type="button" onClick={onClose} className="font-bold border-none h-11 px-8">Discard</Button>
+                    <Button 
+                        type="submit" 
+                        disabled={staffMutation.isPending} 
+                        className="bg-blue-600 hover:bg-blue-700 shadow-xl shadow-blue-100 px-10 h-11 rounded-xl font-black uppercase tracking-widest text-[11px]"
+                    >
+                        {staffMutation.isPending ? 'Processing...' : (initialData ? 'Update Record' : 'Confirm Registration')}
+                    </Button>
+                </div>
+            </form>
+        </Modal>
     );
 };
 

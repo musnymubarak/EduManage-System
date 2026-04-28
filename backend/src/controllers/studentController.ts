@@ -18,7 +18,8 @@ export const registerStudent = async (req: AuthRequest, res: Response): Promise<
       admissionDate, previousSchool, guardianName, guardianRelationship,
       guardianNIC, guardianPhone, guardianAddress, guardianOccupation,
       guardianEmail, emergencyContactName, emergencyContactPhone,
-      emergencyRelationship, medicalConditions, allergies, status
+      emergencyRelationship, medicalConditions, allergies, status,
+      indexNumber
     } = studentData;
 
     if (!fullName || !nameWithInitials || !gender || !studentData.dateOfBirth || !classId) {
@@ -77,6 +78,7 @@ export const registerStudent = async (req: AuthRequest, res: Response): Promise<
     const student = await prisma.student.create({
       data: {
         admissionNumber,
+        indexNumber,
         fullName,
         nameWithInitials,
         dateOfBirth: dob,
@@ -379,5 +381,41 @@ export const deleteStudent = async (req: AuthRequest, res: Response): Promise<vo
     });
   } catch (error) {
     res.status(500).json({ error: 'Failed to delete student' });
+  }
+};
+
+export const markStudentAsLeft = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { leavingReason, leavingReasonOther } = req.body;
+
+    const validReasons = ['GRADUATED', 'LEFT_FOR_ANOTHER_SCHOOL', 'SUSPENDED', 'DISMISSED_EXPELLED', 'OTHER'];
+    if (!validReasons.includes(leavingReason)) {
+      res.status(400).json({ success: false, error: 'Invalid leaving reason provided' });
+      return;
+    }
+
+    if (leavingReason === 'OTHER' && !leavingReasonOther) {
+      res.status(400).json({ success: false, error: 'Please specify the reason' });
+      return;
+    }
+
+    await prisma.student.update({
+      where: { id },
+      data: {
+        status: 'INACTIVE',
+        leavingDate: new Date(),
+        leavingReason,
+        leavingReasonOther: leavingReason === 'OTHER' ? leavingReasonOther : null,
+      },
+    });
+
+    res.json({
+      success: true,
+      message: 'Student marked as left successfully',
+    });
+  } catch (error) {
+    console.error('Error marking student as left:', error);
+    res.status(500).json({ success: false, error: 'Failed to mark student as left' });
   }
 };

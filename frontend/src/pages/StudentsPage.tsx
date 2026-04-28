@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Search, Eye, GraduationCap, TrendingUp, Users, BookOpen, School } from 'lucide-react';
+import { Plus, Search, Eye, GraduationCap, TrendingUp, Users, BookOpen, School, Pencil } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../services/api';
 import { Student, Class } from '../types';
@@ -17,15 +17,18 @@ const StudentsPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedClass, setSelectedClass] = useState('');
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState('ACTIVE');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingStudent, setEditingStudent] = useState<Student | null>(null);
 
   // Fetch students
   const { data: studentsData, isLoading } = useQuery({
-    queryKey: ['students', searchQuery, selectedClass],
+    queryKey: ['students', searchQuery, selectedClass, statusFilter],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (searchQuery) params.append('search', searchQuery);
       if (selectedClass) params.append('classId', selectedClass);
+      if (statusFilter && statusFilter !== 'ALL') params.append('status', statusFilter);
       
       const response = await api.get(`/students?${params}`);
       return response.data;
@@ -68,7 +71,10 @@ const StudentsPage: React.FC = () => {
         </div>
         <div className="flex flex-row items-center gap-3 shrink-0 flex-nowrap">
           <Button
-            onClick={() => setIsAddModalOpen(true)}
+            onClick={() => {
+              setEditingStudent(null);
+              setIsModalOpen(true);
+            }}
             className="bg-blue-600 hover:bg-blue-700 shadow-xl shadow-blue-100 flex items-center gap-2 h-12 px-6 rounded-2xl group transition-all transform hover:scale-105 whitespace-nowrap"
           >
             <Plus size={20} className="group-hover:rotate-90 transition-transform duration-300 shrink-0" />
@@ -104,7 +110,7 @@ const StudentsPage: React.FC = () => {
               placeholder="Search by name, admission number, or NIC..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 h-11 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+              className="w-full pl-10 pr-4 h-11 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm font-bold text-gray-700"
             />
           </div>
           <div className="flex flex-row gap-3">
@@ -119,6 +125,15 @@ const StudentsPage: React.FC = () => {
                   {cls.name}
                 </option>
               ))}
+            </select>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="h-11 px-4 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none min-w-[140px] text-sm font-bold text-gray-600"
+            >
+              <option value="ALL">All Status</option>
+              <option value="ACTIVE">Active</option>
+              <option value="INACTIVE">Inactive</option>
             </select>
           </div>
         </div>
@@ -139,7 +154,7 @@ const StudentsPage: React.FC = () => {
                   <th className="p-5 text-[10px] font-black uppercase tracking-widest text-gray-400">Academic Details</th>
                   <th className="p-5 text-[10px] font-black uppercase tracking-widest text-gray-400">Guardian & Contact</th>
                   <th className="p-5 text-[10px] font-black uppercase tracking-widest text-gray-400">Status</th>
-                  <th className="p-5 text-right text-[10px] font-black uppercase tracking-widest text-gray-400 text-center">Actions</th>
+                  <th className="p-5 text-[10px] font-black uppercase tracking-widest text-gray-400 text-center w-[1%] whitespace-nowrap">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
@@ -173,14 +188,24 @@ const StudentsPage: React.FC = () => {
                         {student.status}
                       </Badge>
                     </td>
-                    <td className="p-5">
-                      <div className="flex items-center justify-center">
+                    <td className="p-5 text-center w-[1%] whitespace-nowrap">
+                      <div className="flex items-center justify-center gap-2">
                         <Button
                           onClick={() => handleViewStudent(student)}
                           variant="secondary"
                           className="h-9 w-9 p-0 rounded-xl bg-gray-50 hover:bg-blue-50 hover:text-blue-600 transition-all shadow-sm border border-gray-100"
                         >
                           <Eye size={16} />
+                        </Button>
+                        <Button
+                          onClick={() => {
+                            setEditingStudent(student);
+                            setIsModalOpen(true);
+                          }}
+                          variant="secondary"
+                          className="h-9 w-9 p-0 rounded-xl bg-gray-50 hover:bg-amber-50 hover:text-amber-600 transition-all shadow-sm border border-gray-100"
+                        >
+                          <Pencil size={16} />
                         </Button>
                       </div>
                     </td>
@@ -192,46 +217,53 @@ const StudentsPage: React.FC = () => {
         )}
       </Card>
 
-      {/* Add Student Modal */}
-      <AddStudentModal
-        isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
+      {/* Student Modal */}
+      <StudentModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
         classes={classes}
+        initialData={editingStudent}
       />
     </div>
   );
 };
 
-// Add Student Modal Component
-interface AddStudentModalProps {
+// Student Modal Component
+interface StudentModalProps {
   isOpen: boolean;
   onClose: () => void;
   classes: Class[];
+  initialData?: Student | null;
 }
 
-const AddStudentModal: React.FC<AddStudentModalProps> = ({ isOpen, onClose, classes }) => {
+const StudentModal: React.FC<StudentModalProps> = ({ isOpen, onClose, classes, initialData }) => {
   const [profilePhoto, setProfilePhoto] = useState<File | null>(null);
   const [documents, setDocuments] = useState<File[]>([]);
   const queryClient = useQueryClient();
 
-  const addStudentMutation = useMutation({
+  const studentMutation = useMutation({
     mutationFn: async (formData: FormData) => {
-      const response = await api.post('/students', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-      return response.data;
+      if (initialData) {
+        const response = await api.put(`/students/${initialData.id}`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        return response.data;
+      } else {
+        const response = await api.post('/students', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        return response.data;
+      }
     },
     onSuccess: () => {
-      toast.success('Student registered successfully!');
+      toast.success(initialData ? 'Student updated successfully!' : 'Student registered successfully!');
       queryClient.invalidateQueries({ queryKey: ['students'] });
       onClose();
       setProfilePhoto(null);
       setDocuments([]);
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.error || 'Failed to register student');
+      toast.error(error.response?.data?.error || `Failed to ${initialData ? 'update' : 'register'} student`);
     },
   });
 
@@ -247,28 +279,29 @@ const AddStudentModal: React.FC<AddStudentModalProps> = ({ isOpen, onClose, clas
       formData.append('documents', doc);
     });
 
-    addStudentMutation.mutate(formData);
+    studentMutation.mutate(formData);
   };
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Register New Student"
+      title={initialData ? 'Update Student Record' : 'Register New Student'}
       size="xl"
     >
       <form onSubmit={handleSubmit} className="space-y-6 max-h-[75vh] overflow-y-auto px-1 custom-scrollbar">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-4">
             <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 border-b border-blue-100 pb-2">Personal Information</h4>
-            <Input label="Full Name" name="fullName" required placeholder="e.g. John Doe" />
-            <Input label="Name with Initials" name="nameWithInitials" required placeholder="e.g. J. Doe" />
+            <Input label="Full Name" name="fullName" required defaultValue={initialData?.fullName} placeholder="e.g. John Doe" />
+            <Input label="Name with Initials" name="nameWithInitials" required defaultValue={initialData?.nameWithInitials} placeholder="e.g. J. Doe" />
             <div className="grid grid-cols-2 gap-4">
-              <Input label="Date of Birth" name="dateOfBirth" type="date" required />
+              <Input label="Date of Birth" name="dateOfBirth" type="date" required defaultValue={initialData?.dateOfBirth?.split('T')[0]} />
               <Select
                 label="Gender"
                 name="gender"
                 required
+                defaultValue={initialData?.gender}
                 options={[
                   { value: 'MALE', label: 'Male' },
                   { value: 'FEMALE', label: 'Female' },
@@ -279,6 +312,7 @@ const AddStudentModal: React.FC<AddStudentModalProps> = ({ isOpen, onClose, clas
               <Select
                 label="Blood Group"
                 name="bloodGroup"
+                defaultValue={initialData?.bloodGroup}
                 options={[
                   { value: 'A_POSITIVE', label: 'A+' },
                   { value: 'A_NEGATIVE', label: 'A-' },
@@ -290,33 +324,37 @@ const AddStudentModal: React.FC<AddStudentModalProps> = ({ isOpen, onClose, clas
                   { value: 'AB_NEGATIVE', label: 'AB-' },
                 ]}
               />
-              <Input label="Religion" name="religion" required placeholder="e.g. Islam" />
+              <Input label="Religion" name="religion" required defaultValue={initialData?.religion} placeholder="e.g. Islam" />
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <Input label="Ethnicity" name="ethnicity" required placeholder="e.g. Sinhalese" />
-              <Input label="Nationality" name="nationality" defaultValue="Sri Lankan" required />
+              <Input label="Ethnicity" name="ethnicity" required defaultValue={initialData?.ethnicity} placeholder="e.g. Sinhalese" />
+              <Input label="Nationality" name="nationality" defaultValue={initialData?.nationality || "Sri Lankan"} required />
             </div>
-            <Input label="NIC / Identification" name="nic" placeholder="Optional for minors" />
-            <Input label="Birth Certificate No." name="birthCertificateNo" placeholder="BC Number" />
+            <Input label="NIC / Identification" name="nic" defaultValue={initialData?.nic} placeholder="Optional for minors" />
+            <Input label="Birth Certificate No." name="birthCertificateNo" defaultValue={initialData?.birthCertificateNo} placeholder="BC Number" />
           </div>
 
           <div className="space-y-4">
             <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 border-b border-blue-100 pb-2">Academic & Contact</h4>
-            <Select
-              label="Assigned Class"
-              name="classId"
-              required
-              options={classes.map((cls) => ({ value: cls.id, label: cls.name }))}
-            />
-            <Input label="Mobile Number" name="mobileNumber" placeholder="+94 7X XXX XXXX" />
-            <Input label="Physical Address" name="address" required placeholder="House No, Street Name..." />
             <div className="grid grid-cols-2 gap-4">
-              <Input label="City" name="city" required />
-              <Input label="District" name="district" required />
+              <Input label="Index Number" name="indexNumber" defaultValue={initialData?.indexNumber} placeholder="e.g. IDX-001" />
+              <Select
+                label="Assigned Class"
+                name="classId"
+                required
+                defaultValue={initialData?.classId}
+                options={classes.map((cls) => ({ value: cls.id, label: cls.name }))}
+              />
+            </div>
+            <Input label="Mobile Number" name="mobileNumber" defaultValue={initialData?.mobileNumber} placeholder="+94 7X XXX XXXX" />
+            <Input label="Physical Address" name="address" required defaultValue={initialData?.address} placeholder="House No, Street Name..." />
+            <div className="grid grid-cols-2 gap-4">
+              <Input label="City" name="city" required defaultValue={initialData?.city} />
+              <Input label="District" name="district" required defaultValue={initialData?.district} />
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <Input label="Province" name="province" required />
-              <Input label="Postal Code" name="postalCode" />
+              <Input label="Province" name="province" required defaultValue={initialData?.province} />
+              <Input label="Postal Code" name="postalCode" defaultValue={initialData?.postalCode} />
             </div>
             <div className="pt-2">
               <SingleImageUpload
@@ -331,24 +369,24 @@ const AddStudentModal: React.FC<AddStudentModalProps> = ({ isOpen, onClose, clas
         <div className="space-y-4">
           <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 border-b border-blue-100 pb-2">Guardian Information</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input label="Guardian Name" name="guardianName" required placeholder="Full name of guardian" />
-            <Input label="Relationship" name="guardianRelationship" required placeholder="e.g. Father, Mother" />
+            <Input label="Guardian Name" name="guardianName" required defaultValue={initialData?.guardianName} placeholder="Full name of guardian" />
+            <Input label="Relationship" name="guardianRelationship" required defaultValue={initialData?.guardianRelationship} placeholder="e.g. Father, Mother" />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input label="Guardian NIC" name="guardianNIC" required placeholder="NIC Number" />
-            <Input label="Guardian Phone" name="guardianPhone" required placeholder="+94 7X XXX XXXX" />
+            <Input label="Guardian NIC" name="guardianNIC" required defaultValue={initialData?.guardianNIC} placeholder="NIC Number" />
+            <Input label="Guardian Phone" name="guardianPhone" required defaultValue={initialData?.guardianPhone} placeholder="+94 7X XXX XXXX" />
           </div>
-          <Input label="Guardian Occupation" name="guardianOccupation" placeholder="e.g. Engineer, Teacher" />
-          <Input label="Guardian Address" name="guardianAddress" placeholder="If different from student's address" />
+          <Input label="Guardian Occupation" name="guardianOccupation" defaultValue={initialData?.guardianOccupation} placeholder="e.g. Engineer, Teacher" />
+          <Input label="Guardian Address" name="guardianAddress" defaultValue={initialData?.guardianAddress} placeholder="If different from student's address" />
         </div>
 
         <div className="space-y-4">
           <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 border-b border-blue-100 pb-2">Emergency Contact</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input label="Emergency Contact Name" name="emergencyContactName" required />
-            <Input label="Emergency Contact Phone" name="emergencyContactPhone" required />
+            <Input label="Emergency Contact Name" name="emergencyContactName" required defaultValue={initialData?.emergencyContactName} />
+            <Input label="Emergency Contact Phone" name="emergencyContactPhone" required defaultValue={initialData?.emergencyContactPhone} />
           </div>
-          <Input label="Relationship" name="emergencyRelationship" required placeholder="e.g. Uncle, Aunt" />
+          <Input label="Relationship" name="emergencyRelationship" required defaultValue={initialData?.emergencyRelationship} placeholder="e.g. Uncle, Aunt" />
         </div>
 
         <div className="space-y-4">
@@ -362,9 +400,13 @@ const AddStudentModal: React.FC<AddStudentModalProps> = ({ isOpen, onClose, clas
         </div>
 
         <div className="flex justify-end gap-3 pt-4 sticky bottom-0 bg-white pb-2">
-          <Button variant="secondary" onClick={onClose} className="font-bold border-none h-11 px-8">Discard</Button>
-          <Button type="submit" disabled={addStudentMutation.isPending} className="bg-blue-600 hover:bg-blue-700 font-black px-10 shadow-lg h-11">
-            {addStudentMutation.isPending ? 'Processing Registration...' : 'Submit'}
+          <Button variant="secondary" type="button" onClick={onClose} className="font-bold border-none h-11 px-8">Discard</Button>
+          <Button 
+            type="submit" 
+            disabled={studentMutation.isPending} 
+            className="bg-blue-600 hover:bg-blue-700 shadow-xl shadow-blue-100 px-10 h-11 rounded-xl font-black uppercase tracking-widest text-[11px]"
+          >
+            {studentMutation.isPending ? 'Processing...' : (initialData ? 'Update Student' : 'Confirm Registration')}
           </Button>
         </div>
       </form>

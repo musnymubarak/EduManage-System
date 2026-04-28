@@ -24,6 +24,7 @@ router.get('/', studentController.getAllStudents);
 router.get('/class/:classId', studentController.getStudentsByClass);
 router.get('/:id', studentController.getStudentById);
 router.put('/:id', authorize(...managers), studentController.updateStudent);
+router.put('/:id/leave', authorize(...managers), studentController.markStudentAsLeft);
 router.post(
   '/:id/upload',
   authorize(...managers),

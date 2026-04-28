@@ -73,6 +73,7 @@ enum BloodGroup {
 model Student {
   id                    String       @id @default(uuid())
   admissionNumber       String       @unique
+  indexNumber           String?      @unique
   fullName              String
   nameWithInitials      String
   dateOfBirth           DateTime
@@ -124,6 +125,9 @@ model Student {
   
   // Status
   status                String       @default("ACTIVE") // ACTIVE, INACTIVE, GRADUATED, TRANSFERRED
+  leavingDate           DateTime?
+  leavingReason         String?      // GRADUATED, LEFT_FOR_ANOTHER_SCHOOL, SUSPENDED, DISMISSED_EXPELLED, OTHER
+  leavingReasonOther    String?      // Free-text reason when leavingReason = "OTHER"
   
   // Timestamps
   createdAt             DateTime     @default(now())

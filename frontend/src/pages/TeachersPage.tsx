@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Search, Eye, Award, TrendingUp, Users, BookOpen, UserCheck } from 'lucide-react';
+import { Plus, Search, Eye, GraduationCap, Users, BookOpen, Pencil, UserCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import api from '../services/api';
@@ -16,7 +16,8 @@ import { SingleImageUpload, FileUpload } from '../components/UI/FileUpload';
 const TeachersPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingTeacher, setEditingTeacher] = useState<any | null>(null);
   const navigate = useNavigate();
 
   // Fetch teachers
@@ -41,7 +42,7 @@ const TeachersPage: React.FC = () => {
   const stats = [
     { label: 'Total Teachers', value: teachers.length, icon: Users, color: 'text-blue-600', bg: 'bg-blue-50' },
     { label: 'Active Faculty', value: teachers.filter((t: any) => t.status === 'ACTIVE').length, icon: UserCheck, color: 'text-green-600', bg: 'bg-green-50' },
-    { label: 'Qualifications', value: teachers.reduce((acc: number, t: any) => acc + (t.qualifications?.length || 0), 0), icon: Award, color: 'text-purple-600', bg: 'bg-purple-50' },
+    { label: 'Qualifications', value: teachers.reduce((acc: number, t: any) => acc + (t.qualifications?.length || 0), 0), icon: GraduationCap, color: 'text-purple-600', bg: 'bg-purple-50' },
     { label: 'Academic Staff', value: teachers.length, icon: BookOpen, color: 'text-orange-600', bg: 'bg-orange-50' },
   ];
 
@@ -58,11 +59,14 @@ const TeachersPage: React.FC = () => {
         </div>
         <div className="flex flex-row items-center gap-3 shrink-0 flex-nowrap">
           <Button
-            onClick={() => setIsAddModalOpen(true)}
+            onClick={() => {
+              setEditingTeacher(null);
+              setIsModalOpen(true);
+            }}
             className="bg-blue-600 hover:bg-blue-700 shadow-xl shadow-blue-100 flex items-center gap-2 h-12 px-6 rounded-2xl group transition-all transform hover:scale-105 whitespace-nowrap"
           >
             <Plus size={20} className="group-hover:rotate-90 transition-transform duration-300 shrink-0" />
-            <span className="font-black uppercase tracking-widest text-[11px]">Add New Teacher</span>
+            <span className="font-black uppercase tracking-widest text-[11px]">Register New Teacher</span>
           </Button>
         </div>
       </div>
@@ -94,7 +98,7 @@ const TeachersPage: React.FC = () => {
               placeholder="Search by name, employee ID, or contact..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 h-11 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+              className="w-full pl-10 pr-4 h-11 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm font-bold text-gray-700"
             />
           </div>
           <div className="flex flex-row gap-3">
@@ -127,7 +131,7 @@ const TeachersPage: React.FC = () => {
                   <th className="p-5 text-[10px] font-black uppercase tracking-widest text-gray-400">Designation & Type</th>
                   <th className="p-5 text-[10px] font-black uppercase tracking-widest text-gray-400">Contact Info</th>
                   <th className="p-5 text-[10px] font-black uppercase tracking-widest text-gray-400">Status</th>
-                  <th className="p-5 text-right text-[10px] font-black uppercase tracking-widest text-gray-400 text-center">Actions</th>
+                  <th className="p-5 text-[10px] font-black uppercase tracking-widest text-gray-400 text-center w-[1%] whitespace-nowrap">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
@@ -161,14 +165,24 @@ const TeachersPage: React.FC = () => {
                         {teacher.status}
                       </Badge>
                     </td>
-                    <td className="p-5">
-                      <div className="flex items-center justify-center">
+                    <td className="p-5 text-center w-[1%] whitespace-nowrap">
+                      <div className="flex items-center justify-center gap-2">
                         <Button
                           onClick={() => handleViewTeacher(teacher.id)}
                           variant="secondary"
                           className="h-9 w-9 p-0 rounded-xl bg-gray-50 hover:bg-blue-50 hover:text-blue-600 transition-all shadow-sm border border-gray-100"
                         >
                           <Eye size={16} />
+                        </Button>
+                        <Button
+                          onClick={() => {
+                            setEditingTeacher(teacher);
+                            setIsModalOpen(true);
+                          }}
+                          variant="secondary"
+                          className="h-9 w-9 p-0 rounded-xl bg-gray-50 hover:bg-amber-50 hover:text-amber-600 transition-all shadow-sm border border-gray-100"
+                        >
+                          <Pencil size={16} />
                         </Button>
                       </div>
                     </td>
@@ -180,41 +194,56 @@ const TeachersPage: React.FC = () => {
         )}
       </Card>
 
-      {/* Add Teacher Modal */}
-      <AddTeacherModal
-        isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
+      {/* Teacher Modal */}
+      <TeacherModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        initialData={editingTeacher}
       />
     </div>
   );
 };
 
-// Add Teacher Modal Component
-interface AddTeacherModalProps {
+// Teacher Modal Component
+interface TeacherModalProps {
   isOpen: boolean;
   onClose: () => void;
+  initialData?: any | null;
 }
 
-const AddTeacherModal: React.FC<AddTeacherModalProps> = ({ isOpen, onClose }) => {
+const TeacherModal: React.FC<TeacherModalProps> = ({ isOpen, onClose, initialData }) => {
   const [qualifications, setQualifications] = useState<any[]>([
     { degree: '', institution: '', year: '', fieldOfStudy: '' },
   ]);
+
+  useEffect(() => {
+    if (initialData?.qualifications) {
+      setQualifications(initialData.qualifications);
+    } else {
+      setQualifications([{ degree: '', institution: '', year: '', fieldOfStudy: '' }]);
+    }
+  }, [initialData]);
 
   const [profilePhoto, setProfilePhoto] = useState<File | null>(null);
   const [documents, setDocuments] = useState<File[]>([]);
   const queryClient = useQueryClient();
 
-  const addTeacherMutation = useMutation({
+  const teacherMutation = useMutation({
     mutationFn: async (formData: FormData) => {
-      const response = await api.post('/teachers', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-      return response.data;
+      if (initialData) {
+        const response = await api.put(`/teachers/${initialData.id}`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        return response.data;
+      } else {
+        const response = await api.post('/teachers', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        return response.data;
+      }
     },
     onSuccess: () => {
-      toast.success('Teacher registered successfully!');
+      toast.success(initialData ? 'Teacher updated successfully!' : 'Teacher registered successfully!');
       queryClient.invalidateQueries({ queryKey: ['teachers'] });
       onClose();
       setQualifications([{ degree: '', institution: '', year: '', fieldOfStudy: '' }]);
@@ -222,7 +251,7 @@ const AddTeacherModal: React.FC<AddTeacherModalProps> = ({ isOpen, onClose }) =>
       setDocuments([]);
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.error || 'Failed to register teacher');
+      toast.error(error.response?.data?.error || `Failed to ${initialData ? 'update' : 'register'} teacher`);
     },
   });
 
@@ -242,7 +271,7 @@ const AddTeacherModal: React.FC<AddTeacherModalProps> = ({ isOpen, onClose }) =>
       formData.append('documents', doc);
     });
 
-    addTeacherMutation.mutate(formData);
+    teacherMutation.mutate(formData);
   };
 
   const addQualification = () => {
@@ -265,28 +294,29 @@ const AddTeacherModal: React.FC<AddTeacherModalProps> = ({ isOpen, onClose }) =>
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Register New Teacher"
+      title={initialData ? 'Update Teacher Record' : 'Register New Teacher'}
       size="xl"
     >
       <form onSubmit={handleSubmit} className="space-y-6 max-h-[75vh] overflow-y-auto px-1 custom-scrollbar">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-4">
             <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 border-b border-blue-100 pb-2">Personal Details</h4>
-            <Input label="Full Name" name="fullName" required placeholder="e.g. John Doe" />
-            <Input label="Name with Initials" name="nameWithInitials" required placeholder="e.g. J. Doe" />
+            <Input label="Full Name" name="fullName" required defaultValue={initialData?.fullName} placeholder="e.g. John Doe" />
+            <Input label="Name with Initials" name="nameWithInitials" required defaultValue={initialData?.nameWithInitials} placeholder="e.g. J. Doe" />
             <div className="grid grid-cols-2 gap-4">
-              <Input label="Date of Birth" name="dateOfBirth" type="date" required />
+              <Input label="Date of Birth" name="dateOfBirth" type="date" required defaultValue={initialData?.dateOfBirth?.split('T')[0]} />
               <Select
                 label="Gender"
                 name="gender"
                 required
+                defaultValue={initialData?.gender}
                 options={[
                   { value: 'MALE', label: 'Male' },
                   { value: 'FEMALE', label: 'Female' },
                 ]}
               />
             </div>
-            <Input label="NIC / Identification" name="nic" required placeholder="Identification Number" />
+            <Input label="NIC / Identification" name="nic" required defaultValue={initialData?.nic} placeholder="Identification Number" />
             <div className="pt-2">
               <SingleImageUpload
                 label="Profile Portrait"
@@ -299,11 +329,12 @@ const AddTeacherModal: React.FC<AddTeacherModalProps> = ({ isOpen, onClose }) =>
           <div className="space-y-4">
             <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 border-b border-blue-100 pb-2">Employment Details</h4>
             <div className="grid grid-cols-2 gap-4">
-              <Input label="Designation" name="designation" required placeholder="e.g. Senior Teacher" />
+              <Input label="Designation" name="designation" required defaultValue={initialData?.designation} placeholder="e.g. Senior Teacher" />
               <Select
                 label="Employment Type"
                 name="employmentType"
                 required
+                defaultValue={initialData?.employmentType}
                 options={[
                   { value: 'FULL_TIME', label: 'Full Time' },
                   { value: 'PART_TIME', label: 'Part Time' },
@@ -312,25 +343,25 @@ const AddTeacherModal: React.FC<AddTeacherModalProps> = ({ isOpen, onClose }) =>
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <Input label="Basic Salary (LKR)" name="basicSalary" type="number" required placeholder="0.00" />
-              <Input label="Joined Date" name="joinedDate" type="date" required />
+              <Input label="Basic Salary (LKR)" name="basicSalary" type="number" required defaultValue={initialData?.basicSalary} placeholder="0.00" />
+              <Input label="Joined Date" name="joinedDate" type="date" required defaultValue={initialData?.joinedDate?.split('T')[0]} />
             </div>
             
             <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 border-b border-blue-100 pb-2 pt-2">Contact Details</h4>
             <div className="grid grid-cols-1 gap-4">
-              <Input label="Mobile Number" name="mobileNumber" required placeholder="+94 7X XXX XXXX" />
-              <Input label="Email Address" name="email" type="email" placeholder="teacher@sumayamadrasa.com" />
+              <Input label="Mobile Number" name="mobileNumber" required defaultValue={initialData?.mobileNumber} placeholder="+94 7X XXX XXXX" />
+              <Input label="Email Address" name="email" type="email" defaultValue={initialData?.email} placeholder="teacher@sumayamadrasa.com" />
             </div>
           </div>
         </div>
 
         <div className="space-y-4">
           <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 border-b border-blue-100 pb-2">Address Details</h4>
-          <Input label="Physical Address" name="address" required placeholder="House No, Street Name..." />
+          <Input label="Physical Address" name="address" required defaultValue={initialData?.address} placeholder="House No, Street Name..." />
           <div className="grid grid-cols-3 gap-4">
-            <Input label="City" name="city" required />
-            <Input label="District" name="district" required />
-            <Input label="Province" name="province" required />
+            <Input label="City" name="city" required defaultValue={initialData?.city} />
+            <Input label="District" name="district" required defaultValue={initialData?.district} />
+            <Input label="Province" name="province" required defaultValue={initialData?.province} />
           </div>
         </div>
 
@@ -399,9 +430,13 @@ const AddTeacherModal: React.FC<AddTeacherModalProps> = ({ isOpen, onClose }) =>
         </div>
 
         <div className="flex justify-end gap-3 pt-4 sticky bottom-0 bg-white pb-2">
-          <Button variant="secondary" onClick={onClose} className="font-bold border-none h-11 px-8">Discard</Button>
-          <Button type="submit" disabled={addTeacherMutation.isPending} className="bg-blue-600 hover:bg-blue-700 font-black px-10 shadow-lg h-11">
-            {addTeacherMutation.isPending ? 'Processing Registration...' : 'Submit'}
+          <Button variant="secondary" type="button" onClick={onClose} className="font-bold border-none h-11 px-8">Discard</Button>
+          <Button 
+            type="submit" 
+            disabled={teacherMutation.isPending} 
+            className="bg-blue-600 hover:bg-blue-700 shadow-xl shadow-blue-100 px-10 h-11 rounded-xl font-black uppercase tracking-widest text-[11px]"
+          >
+            {teacherMutation.isPending ? 'Processing...' : (initialData ? 'Update Teacher' : 'Confirm Registration')}
           </Button>
         </div>
       </form>

@@ -20,6 +20,7 @@ export type UserRole =
 export interface Student {
   id: string;
   admissionNumber: string;
+  indexNumber?: string;
   fullName: string;
   nameWithInitials: string;
   dateOfBirth: string;
@@ -56,6 +57,9 @@ export interface Student {
   allergies?: string;
   status: string;
   profilePhoto?: string;
+  leavingDate?: string;
+  leavingReason?: string;
+  leavingReasonOther?: string;
 }
 
 export interface StudentDetail extends Student {

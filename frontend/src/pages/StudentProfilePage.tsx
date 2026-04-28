@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   ArrowLeft, 
   User, 
@@ -15,19 +15,25 @@ import {
   Stethoscope,
   Download,
   ExternalLink,
-  GraduationCap
+  GraduationCap,
+  AlertTriangle,
+  LogOut
 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import api from '../services/api';
-import { StudentDetail } from '../types';
+import { Student, StudentDetail } from '../types';
 import { Card } from '../components/UI/Card';
 import { Button } from '../components/UI/Button';
 import { Badge } from '../components/UI/Badge';
+import { Modal } from '../components/UI/Modal';
 import { formatDate, formatCurrency, getStatusColor } from '../utils/helpers';
 
 const StudentProfilePage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'overview' | 'academics' | 'fees' | 'attendance' | 'documents'>('overview');
+  const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
+  const queryClient = useQueryClient();
 
   const { data: student, isLoading, error } = useQuery<StudentDetail>({
     queryKey: ['student', id],
@@ -76,10 +82,36 @@ const StudentProfilePage: React.FC = () => {
         </div>
       </div>
 
+      {/* Leaving Status Banner */}
+      {student.status === 'INACTIVE' && student.leavingReason && (
+        <Card className="bg-red-50 border-2 border-red-100 p-6 rounded-3xl">
+          <div className="flex items-start gap-4">
+            <div className="p-3 bg-red-100 rounded-2xl text-red-600">
+              <LogOut size={24} />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-black text-red-900 uppercase tracking-tight">Student has left the institution</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
+                <div>
+                  <p className="text-[10px] font-black text-red-400 uppercase tracking-widest">Leaving Date</p>
+                  <p className="text-sm font-bold text-red-800">{formatDate(student.leavingDate || '')}</p>
+                </div>
+                <div className="md:col-span-2">
+                  <p className="text-[10px] font-black text-red-400 uppercase tracking-widest">Reason for Leaving</p>
+                  <p className="text-sm font-bold text-red-800">
+                    {student.leavingReason === 'OTHER' ? student.leavingReasonOther : student.leavingReason?.replace(/_/g, ' ')}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
+
       {/* Profile Header Card */}
       <Card className="overflow-hidden border-none shadow-xl bg-gradient-to-br from-white to-blue-50/30">
         <div className="p-8">
-          <div className="flex flex-col md:flex-row gap-8 items-start">
+          <div className="flex flex-col md:flex-row gap-8 items-center">
             <div className="relative">
               <div className="h-32 w-32 overflow-hidden rounded-2xl bg-blue-100 border-4 border-white shadow-md">
                 {student.profilePhoto ? (
@@ -95,16 +127,28 @@ const StudentProfilePage: React.FC = () => {
                 )}
               </div>
               <div className="absolute -bottom-2 -right-2">
-                <Badge variant={student.status === 'ACTIVE' ? 'success' : 'default'}>
+                <Badge variant={student.status === 'ACTIVE' ? 'success' : 'danger'}>
                   {student.status}
                 </Badge>
               </div>
             </div>
 
             <div className="flex-1 space-y-4">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">{student.fullName}</h1>
-                <p className="text-gray-500 font-medium">Admission No: <span className="text-blue-600 font-bold">{student.admissionNumber}</span></p>
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-900">{student.fullName}</h1>
+                  <p className="text-gray-500 font-medium">Admission No: <span className="text-blue-600 font-bold">{student.admissionNumber}</span></p>
+                </div>
+                {student.status === 'ACTIVE' && (
+                  <Button 
+                    variant="secondary" 
+                    onClick={() => setIsLeaveModalOpen(true)}
+                    className="bg-red-50 text-red-600 border-red-100 hover:bg-red-600 hover:text-white font-black uppercase tracking-widest text-[10px] h-10 px-4 rounded-xl transition-all"
+                  >
+                    <LogOut size={16} className="mr-2" />
+                    Mark as Left
+                  </Button>
+                )}
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
@@ -438,7 +482,117 @@ const StudentProfilePage: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Leave Confirmation Modal */}
+      <MarkAsLeftModal 
+        isOpen={isLeaveModalOpen} 
+        onClose={() => setIsLeaveModalOpen(false)} 
+        student={student} 
+        onSuccess={() => {
+          setIsLeaveModalOpen(false);
+          queryClient.invalidateQueries({ queryKey: ['student', id] });
+        }}
+      />
     </div>
+  );
+};
+
+// Mark as Left Modal Component
+const MarkAsLeftModal: React.FC<{ 
+  isOpen: boolean; 
+  onClose: () => void; 
+  student: Student;
+  onSuccess: () => void;
+}> = ({ isOpen, onClose, student, onSuccess }) => {
+  const [leavingReason, setLeavingReason] = useState('');
+  const [leavingReasonOther, setLeavingReasonOther] = useState('');
+
+  const leaveMutation = useMutation({
+    mutationFn: async () => {
+      const response = await api.put(`/students/${student.id}/leave`, {
+        leavingReason,
+        leavingReasonOther
+      });
+      return response.data;
+    },
+    onSuccess: () => {
+      toast.success('Student marked as left successfully');
+      onSuccess();
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.error || 'Action failed');
+    }
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!leavingReason) {
+      toast.error('Please select a reason');
+      return;
+    }
+    if (leavingReason === 'OTHER' && !leavingReasonOther) {
+      toast.error('Please specify the reason');
+      return;
+    }
+    leaveMutation.mutate();
+  };
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title="Final Termination / Leaving Record" size="md">
+      <div className="space-y-6">
+        <div className="bg-red-50 p-5 rounded-2xl border border-red-100 flex gap-4">
+          <AlertTriangle className="text-red-500 shrink-0" size={24} />
+          <div>
+            <p className="text-xs font-black text-red-900 uppercase tracking-tight">Warning: Irreversible Action</p>
+            <p className="text-xs text-red-700 mt-1">This will mark <b>{student.fullName}</b> as INACTIVE. They will be immediately excluded from all fee calculations and academic trackers.</p>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div>
+            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1.5 block">Primary Reason for Leaving</label>
+            <select
+              value={leavingReason}
+              onChange={(e) => setLeavingReason(e.target.value)}
+              className="w-full h-12 px-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 outline-none text-sm font-bold"
+              required
+            >
+              <option value="">Select reason...</option>
+              <option value="GRADUATED">Graduated</option>
+              <option value="LEFT_FOR_ANOTHER_SCHOOL">Left to join another school</option>
+              <option value="SUSPENDED">Suspended</option>
+              <option value="DISMISSED_EXPELLED">Dismissed or Expelled</option>
+              <option value="OTHER">Other Reason</option>
+            </select>
+          </div>
+
+          {leavingReason === 'OTHER' && (
+            <div>
+              <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1.5 block">Specify Detailed Reason</label>
+              <textarea
+                value={leavingReasonOther}
+                onChange={(e) => setLeavingReasonOther(e.target.value)}
+                className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 outline-none text-sm font-bold"
+                placeholder="Please provide details..."
+                rows={3}
+                required
+              />
+            </div>
+          )}
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-50">
+            <Button variant="secondary" onClick={onClose} className="font-bold border-none hover:bg-gray-100">Cancel</Button>
+            <Button 
+              type="submit" 
+              disabled={leaveMutation.isPending} 
+              className="bg-red-600 hover:bg-red-700 shadow-xl shadow-red-100 px-8 h-12 rounded-xl font-black uppercase tracking-widest text-[11px]"
+            >
+              {leaveMutation.isPending ? 'Processing...' : 'Confirm Leaving'}
+            </Button>
+          </div>
+        </form>
+      </div>
+    </Modal>
   );
 };
 
