@@ -10,7 +10,7 @@ import { Input, Select } from '../components/UI/Input';
 import { Modal } from '../components/UI/Modal';
 import { Badge } from '../components/UI/Badge';
 import { SingleImageUpload, FileUpload } from '../components/UI/FileUpload';
-import { formatDate, formatCurrency } from '../utils/helpers';
+import { formatDate, formatCurrency, getFileUrl } from '../utils/helpers';
 
 const StaffPage: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState('');
@@ -181,7 +181,7 @@ const StaffPage: React.FC = () => {
                                             <div className="flex items-center gap-3">
                                                 <div className="h-10 w-10 rounded-xl bg-gray-100 flex items-center justify-center overflow-hidden border border-gray-100 group-hover:border-blue-200 transition-colors">
                                                     {s.profilePhoto ? (
-                                                        <img src={s.profilePhoto} alt="" className="h-full w-full object-cover" />
+                                                        <img src={getFileUrl(s.profilePhoto)} alt="" className="h-full w-full object-cover" />
                                                     ) : <Users size={20} className="text-gray-400" />}
                                                 </div>
                                                 <div>

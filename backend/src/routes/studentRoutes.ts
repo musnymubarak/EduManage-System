@@ -23,7 +23,15 @@ router.post(
 router.get('/', studentController.getAllStudents);
 router.get('/class/:classId', studentController.getStudentsByClass);
 router.get('/:id', studentController.getStudentById);
-router.put('/:id', authorize(...managers), studentController.updateStudent);
+router.put(
+  '/:id', 
+  authorize(...managers), 
+  upload.fields([
+    { name: 'profilePhoto', maxCount: 1 },
+    { name: 'documents', maxCount: 10 }
+  ]),
+  studentController.updateStudent
+);
 router.put('/:id/leave', authorize(...managers), studentController.markStudentAsLeft);
 router.post(
   '/:id/upload',

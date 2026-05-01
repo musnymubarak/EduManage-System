@@ -28,7 +28,7 @@ import { Badge } from '../components/UI/Badge';
 import { Input, Select, TextArea } from '../components/UI/Input';
 import { Modal } from '../components/UI/Modal';
 import { SingleImageUpload, FileUpload } from '../components/UI/FileUpload';
-import { formatDate, formatCurrency } from '../utils/helpers';
+import { formatDate, formatCurrency, getFileUrl } from '../utils/helpers';
 
 import toast from 'react-hot-toast';
 
@@ -192,7 +192,7 @@ const StaffProfilePage: React.FC = () => {
                         <div className="relative group">
                             <div className="h-40 w-40 rounded-3xl bg-gray-100 flex items-center justify-center overflow-hidden border-4 border-white shadow-2xl relative z-10">
                                 {staff.profilePhoto ? (
-                                    <img src={staff.profilePhoto} alt="" className="h-full w-full object-cover" />
+                                    <img src={getFileUrl(staff.profilePhoto)} alt="" className="h-full w-full object-cover" />
                                 ) : <User size={80} className="text-gray-300" />}
                             </div>
                             <div className="absolute -bottom-2 -right-2 h-12 w-12 bg-white rounded-2xl shadow-lg flex items-center justify-center z-20 border border-gray-100">

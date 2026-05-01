@@ -27,7 +27,7 @@ import { TeacherDetail } from '../types';
 import { Card } from '../components/UI/Card';
 import { Button } from '../components/UI/Button';
 import { Badge } from '../components/UI/Badge';
-import { formatDate, formatCurrency } from '../utils/helpers';
+import { formatDate, formatCurrency, getFileUrl } from '../utils/helpers';
 
 
 
@@ -133,7 +133,7 @@ const TeacherProfilePage: React.FC = () => {
               <div className="h-32 w-32 overflow-hidden rounded-2xl bg-blue-100 border-4 border-white shadow-md">
                 {teacher.profilePhoto ? (
                   <img 
-                    src={teacher.profilePhoto} 
+                    src={getFileUrl(teacher.profilePhoto)} 
                     alt={teacher.fullName} 
                     className="h-full w-full object-cover"
                   />

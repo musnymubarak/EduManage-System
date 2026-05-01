@@ -220,6 +220,7 @@ export const updateTeacher = async (req: AuthRequest, res: Response): Promise<vo
   try {
     const { id } = req.params;
     const { qualifications, ...updateData } = req.body;
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] };
 
     // Convert date strings to Date objects
     if (updateData.dateOfBirth) {
@@ -232,6 +233,19 @@ export const updateTeacher = async (req: AuthRequest, res: Response): Promise<vo
     // Parse numeric fields
     if (updateData.basicSalary) {
       updateData.basicSalary = parseFloat(updateData.basicSalary);
+    }
+
+    // Handle Profile Photo Upload
+    if (files && files['profilePhoto'] && files['profilePhoto'][0]) {
+      const currentTeacher = await prisma.teacher.findUnique({ where: { id } });
+      if (currentTeacher?.profilePhoto) {
+        try {
+          await deleteFromCloudinary(currentTeacher.profilePhoto);
+        } catch (e) {
+          console.error('Failed to delete old profile photo:', e);
+        }
+      }
+      updateData.profilePhoto = await uploadToCloudinary(files['profilePhoto'][0], 'teachers/profiles');
     }
 
     const teacher = await prisma.teacher.update({

@@ -1,4 +1,5 @@
 import dotenv from 'dotenv';
+import path from 'path';
 
 dotenv.config();
 
@@ -36,6 +37,9 @@ export const config = {
   cors: {
     origin: process.env.FRONTEND_URL || 'http://localhost:5173',
   },
+
+  // Uploads
+  uploadsDir: process.env.UPLOADS_DIR || path.join(process.cwd(), 'uploads'),
 };
 
 export default config;

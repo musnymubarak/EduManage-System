@@ -28,7 +28,7 @@ import { Card } from '../components/UI/Card';
 import { Button } from '../components/UI/Button';
 import { Badge } from '../components/UI/Badge';
 import { Modal } from '../components/UI/Modal';
-import { formatDate, formatCurrency, getStatusColor } from '../utils/helpers';
+import { formatDate, formatCurrency, getStatusColor, getFileUrl } from '../utils/helpers';
 import StudentMedicalHistoryTab from '../components/Student/StudentMedicalHistoryTab';
 
 const StudentProfilePage: React.FC = () => {
@@ -118,7 +118,7 @@ const StudentProfilePage: React.FC = () => {
               <div className="h-32 w-32 overflow-hidden rounded-2xl bg-blue-100 border-4 border-white shadow-md">
                 {student.profilePhoto ? (
                   <img 
-                    src={student.profilePhoto} 
+                    src={getFileUrl(student.profilePhoto)} 
                     alt={student.fullName} 
                     className="h-full w-full object-cover"
                   />

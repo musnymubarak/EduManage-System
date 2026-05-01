@@ -268,25 +268,30 @@ export const getStudentById = async (req: AuthRequest, res: Response): Promise<v
 export const updateStudent = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const updateData = req.body;
+    const updateData = { ...req.body };
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] };
 
     // Convert date strings to Date objects if present
     if (updateData.dateOfBirth) {
-      const dob = new Date(updateData.dateOfBirth);
-      if (isNaN(dob.getTime())) {
-        res.status(400).json({ success: false, error: 'Invalid date of birth provided' });
-        return;
-      }
-      updateData.dateOfBirth = dob;
+      updateData.dateOfBirth = new Date(updateData.dateOfBirth);
     }
 
     if (updateData.admissionDate) {
-      const admDate = new Date(updateData.admissionDate);
-      if (isNaN(admDate.getTime())) {
-        res.status(400).json({ success: false, error: 'Invalid admission date provided' });
-        return;
+      updateData.admissionDate = new Date(updateData.admissionDate);
+    }
+
+    // Handle Profile Photo Upload if present
+    if (files && files['profilePhoto'] && files['profilePhoto'][0]) {
+      // Get current student to possibly delete old photo
+      const currentStudent = await prisma.student.findUnique({ where: { id } });
+      if (currentStudent?.profilePhoto) {
+        try {
+          await deleteFromCloudinary(currentStudent.profilePhoto);
+        } catch (e) {
+          console.error('Failed to delete old profile photo:', e);
+        }
       }
-      updateData.admissionDate = admDate;
+      updateData.profilePhoto = await uploadToCloudinary(files['profilePhoto'][0], 'students/profiles');
     }
 
     const student = await prisma.student.update({
@@ -296,6 +301,22 @@ export const updateStudent = async (req: AuthRequest, res: Response): Promise<vo
         class: true,
       },
     });
+
+    // Handle Documents Upload if present
+    if (files && files['documents']) {
+      const documentUploadPromises = files['documents'].map(async (file) => {
+        const fileUrl = await uploadToCloudinary(file, 'students/documents');
+        return prisma.studentDocument.create({
+          data: {
+            studentId: id,
+            documentType: 'OTHER',
+            fileName: file.originalname,
+            fileUrl,
+          },
+        });
+      });
+      await Promise.all(documentUploadPromises);
+    }
 
     res.json({
       success: true,

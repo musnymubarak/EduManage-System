@@ -45,3 +45,13 @@ export function getStatusColor(status: string): string {
   };
   return colors[status] || 'bg-gray-100 text-gray-800';
 }
+
+export function getFileUrl(path: string | null | undefined): string {
+  if (!path) return '';
+  if (path.startsWith('http')) return path;
+  
+  const apiBase = (import.meta as any).env.VITE_API_URL || 'http://localhost:5000/api';
+  const serverBase = apiBase.replace('/api', '');
+  
+  return `${serverBase}${path.startsWith('/') ? '' : '/'}${path}`;
+}

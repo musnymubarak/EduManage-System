@@ -11,6 +11,7 @@ import { Input, Select } from '../components/UI/Input';
 import { Modal } from '../components/UI/Modal';
 import { Badge } from '../components/UI/Badge';
 import { SingleImageUpload, FileUpload } from '../components/UI/FileUpload';
+import { getFileUrl } from '../utils/helpers';
 
 
 const StudentsPage: React.FC = () => {
@@ -188,7 +189,7 @@ const StudentsPage: React.FC = () => {
                       <div className="flex items-center gap-3">
                         <div className="h-10 w-10 rounded-xl bg-gray-100 flex items-center justify-center overflow-hidden border border-gray-100 group-hover:border-blue-200 transition-colors">
                           {student.profilePhoto ? (
-                            <img src={student.profilePhoto} alt="" className="h-full w-full object-cover" />
+                            <img src={getFileUrl(student.profilePhoto)} alt="" className="h-full w-full object-cover" />
                           ) : <Users size={20} className="text-gray-400" />}
                         </div>
                         <div>
