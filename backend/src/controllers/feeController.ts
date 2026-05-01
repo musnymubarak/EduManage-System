@@ -241,6 +241,137 @@ export const getStudentFeeHistory = async (req: AuthRequest, res: Response): Pro
   }
 };
 
+// Full month-by-month fee ledger for a specific student (includes missing months)
+export const getStudentFeeLedger = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { studentId } = req.params;
+
+    // 1. Get student details
+    const student = await prisma.student.findUnique({
+      where: { id: studentId },
+      include: { class: true },
+    });
+
+    if (!student) {
+      throw new AppError('Student not found', 404);
+    }
+
+    // 2. Get fee setting
+    const setting = await prisma.systemSetting.findUnique({
+      where: { key: 'monthly_fee_amount' },
+    });
+    const monthlyFeeAmount = parseFloat(setting?.value || '13000');
+
+    // 3. Get all monthly payments for this student
+    const monthlyPayments = await prisma.feePayment.findMany({
+      where: { studentId, feeType: 'MONTHLY' },
+      orderBy: { month: 'asc' },
+    });
+
+    // 4. Get all other (non-monthly) payments
+    const otherPayments = await prisma.feePayment.findMany({
+      where: { studentId, feeType: { not: 'MONTHLY' } },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    // 5. Build month-by-month ledger from admission to current month
+    const now = new Date();
+    const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const admissionMonth = `${student.admissionDate.getFullYear()}-${String(student.admissionDate.getMonth() + 1).padStart(2, '0')}`;
+
+    // Generate all months from admission to current
+    const allMonths: string[] = [];
+    const [sy, sm] = admissionMonth.split('-').map(Number);
+    const [ey, em] = currentMonth.split('-').map(Number);
+    let y = sy, m = sm;
+    while (y < ey || (y === ey && m <= em)) {
+      allMonths.push(`${y}-${String(m).padStart(2, '0')}`);
+      m++;
+      if (m > 12) { m = 1; y++; }
+    }
+
+    // Map payment records by month
+    const paymentMap = new Map(monthlyPayments.map(p => [p.month, p]));
+
+    const monthlyLedger = allMonths.map(monthStr => {
+      const payment = paymentMap.get(monthStr);
+      
+      if (payment) {
+        return {
+          month: monthStr,
+          expectedAmount: payment.amount,
+          paidAmount: payment.paidAmount,
+          balance: payment.balance,
+          status: payment.status,
+          paymentDate: payment.paymentDate,
+          receiptNumber: payment.receiptNumber,
+          paymentMethod: payment.paymentMethod,
+          paymentId: payment.id,
+        };
+      } else {
+        return {
+          month: monthStr,
+          expectedAmount: monthlyFeeAmount,
+          paidAmount: 0,
+          balance: monthlyFeeAmount,
+          status: 'MISSING',
+          paymentDate: null,
+          receiptNumber: null,
+          paymentMethod: null,
+          paymentId: null,
+        };
+      }
+    });
+
+    // 6. Calculate summary
+    const totalExpected = monthlyLedger.reduce((sum, m) => sum + m.expectedAmount, 0);
+    const totalPaid = monthlyLedger.reduce((sum, m) => sum + m.paidAmount, 0);
+    const totalBalance = monthlyLedger.reduce((sum, m) => sum + m.balance, 0);
+    const paidMonths = monthlyLedger.filter(m => m.status === 'PAID').length;
+    const missingMonths = monthlyLedger.filter(m => m.status === 'MISSING').length;
+    const partialMonths = monthlyLedger.filter(m => m.status === 'PARTIAL').length;
+
+    // Other fees summary
+    const otherFeesPaid = otherPayments.reduce((sum, p) => sum + p.paidAmount, 0);
+    const otherFeesBalance = otherPayments.reduce((sum, p) => sum + p.balance, 0);
+
+    res.json({
+      success: true,
+      data: {
+        student: {
+          id: student.id,
+          fullName: student.fullName,
+          admissionNumber: student.admissionNumber,
+          className: student.class?.name || 'Unassigned',
+          admissionDate: student.admissionDate,
+        },
+        monthlyFeeAmount,
+        monthlyLedger,
+        otherPayments,
+        summary: {
+          totalMonths: allMonths.length,
+          paidMonths,
+          missingMonths,
+          partialMonths,
+          totalExpected,
+          totalPaid,
+          totalBalance,
+          otherFeesPaid,
+          otherFeesBalance,
+          grandTotalOwed: totalBalance + otherFeesBalance,
+        }
+      }
+    });
+  } catch (error) {
+    if (error instanceof AppError) {
+      res.status(error.statusCode).json({ error: error.message });
+    } else {
+      console.error('Error fetching student fee ledger:', error);
+      res.status(500).json({ error: 'Failed to fetch student fee ledger' });
+    }
+  }
+};
+
 export const getPendingPayments = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { classId } = req.query;
@@ -408,31 +539,69 @@ export const getMonthlyFeeStatus = async (req: AuthRequest, res: Response): Prom
       orderBy: { fullName: 'asc' },
     });
 
-    // 4. Get Payments for this month
-    const payments = await prisma.feePayment.findMany({
+    const studentIds = students.map(s => s.id);
+
+    // 4. Get current month payments (single indexed query)
+    const currentMonthPayments = await prisma.feePayment.findMany({
       where: {
+        studentId: { in: studentIds },
         feeType: 'MONTHLY',
         month: month as string,
       },
     });
 
-    // 5. Combine and map to check status
+    // 5. Get previous months arrears via DB aggregation (O(1) query instead of O(students×months) loop)
+    // Groups by studentId: counts how many month records exist and sums remaining balances
+    const prevAggs = await prisma.feePayment.groupBy({
+      by: ['studentId'],
+      where: {
+        studentId: { in: studentIds },
+        feeType: 'MONTHLY',
+        month: { lt: month as string },  // YYYY-MM lexicographic comparison works correctly
+      },
+      _count: { id: true },
+      _sum: { balance: true },
+    });
+
+    // Build a lookup map for O(1) access
+    const prevAggsMap = new Map(prevAggs.map(a => [a.studentId, a]));
+
+    // 6. Helper: count months between two YYYY-MM strings (exclusive of end)
+    const countMonthsBetween = (startStr: string, endStr: string): number => {
+      const [sy, sm] = startStr.split('-').map(Number);
+      const [ey, em] = endStr.split('-').map(Number);
+      return (ey - sy) * 12 + (em - sm);
+    };
+
+    // 7. Combine: O(n) in-memory pass
     const data = students.map(student => {
-      const payment = payments.find(p => p.studentId === student.id);
+      // --- Current month ---
+      const currentMonthPayment = currentMonthPayments.find(p => p.studentId === student.id);
       
-      // Use the fee amount from the payment record if it exists (snapshot),
-      // otherwise use the current global fee for unpaid students
-      const effectiveAmount = payment ? payment.amount : monthlyFeeAmount;
-      
+      const effectiveAmount = currentMonthPayment ? currentMonthPayment.amount : monthlyFeeAmount;
       let currentStatus = 'PENDING';
       let paidAmount = 0;
-      let balance = effectiveAmount;
+      let currentBalance = effectiveAmount;
 
-      if (payment) {
-        currentStatus = payment.status;
-        paidAmount = payment.paidAmount;
-        balance = payment.balance;
+      if (currentMonthPayment) {
+        currentStatus = currentMonthPayment.status;
+        paidAmount = currentMonthPayment.paidAmount;
+        currentBalance = currentMonthPayment.balance;
       }
+
+      // --- Previous arrears (DB-aggregated) ---
+      const admissionMonth = `${student.admissionDate.getFullYear()}-${String(student.admissionDate.getMonth() + 1).padStart(2, '0')}`;
+      const expectedMonthCount = Math.max(0, countMonthsBetween(admissionMonth, month as string));
+      
+      const agg = prevAggsMap.get(student.id);
+      const recordCount = agg?._count?.id || 0;
+      const partialBalanceSum = agg?._sum?.balance || 0;  // Sum of remaining balances from partial/pending records (PAID records contribute 0)
+
+      // Missing months = months with no record at all (fully unpaid)
+      const missingMonths = Math.max(0, expectedMonthCount - recordCount);
+      
+      // Total arrears = fully missing months × current fee + leftover balances from partial payments
+      const previousArrears = (missingMonths * monthlyFeeAmount) + partialBalanceSum;
 
       return {
         studentId: student.id,
@@ -442,13 +611,15 @@ export const getMonthlyFeeStatus = async (req: AuthRequest, res: Response): Prom
         month: month,
         totalAmount: effectiveAmount,
         paidAmount,
-        balance,
+        balance: currentBalance,
         paymentStatus: currentStatus,
-        paymentId: payment?.id || null,
+        paymentId: currentMonthPayment?.id || null,
+        previousArrears,
+        totalOutstanding: currentBalance + previousArrears,
       };
     });
 
-    // 6. Filter by Status if provided
+    // 7. Filter by Status if provided
     let filteredData = data;
     if (status && status !== 'ALL') {
       filteredData = data.filter(item => item.paymentStatus === status);
@@ -464,7 +635,9 @@ export const getMonthlyFeeStatus = async (req: AuthRequest, res: Response): Prom
         pending: data.filter(d => d.paymentStatus === 'PENDING').length,
         totalExpectedAmount: data.reduce((sum, d) => sum + d.totalAmount, 0),
         totalCollectedAmount: data.reduce((sum, d) => sum + d.paidAmount, 0),
-        totalOutstandingAmount: data.reduce((sum, d) => sum + d.balance, 0)
+        totalOutstandingAmount: data.reduce((sum, d) => sum + d.balance, 0),
+        totalArrears: data.reduce((sum, d) => sum + d.previousArrears, 0),
+        grandTotalOutstanding: data.reduce((sum, d) => sum + d.totalOutstanding, 0)
       }
     });
   } catch (error) {

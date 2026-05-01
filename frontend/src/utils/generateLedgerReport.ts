@@ -65,7 +65,7 @@ export function generateLedgerReportPDF(
       formatCurrency(totalCollected)
     ]],
     theme: 'grid',
-    headStyles: { fillGray: 200, textColor: 0, fontStyle: 'bold' },
+    headStyles: { fillColor: [220, 220, 220], textColor: 0, fontStyle: 'bold' },
     styles: { halign: 'center' }
   });
 

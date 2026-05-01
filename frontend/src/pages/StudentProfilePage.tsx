@@ -17,7 +17,9 @@ import {
   ExternalLink,
   GraduationCap,
   AlertTriangle,
-  LogOut
+  LogOut,
+  DollarSign,
+  Clock
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../services/api';
@@ -67,8 +69,7 @@ const StudentProfilePage: React.FC = () => {
     ? ((student.attendance.filter(a => a.status === 'PRESENT').length / student.attendance.length) * 100).toFixed(1)
     : '0';
 
-  const totalPaid = student.feePayments ? student.feePayments.reduce((acc, curr) => acc + curr.paidAmount, 0) : 0;
-  const totalBalance = student.feePayments ? student.feePayments.reduce((acc, curr) => acc + curr.balance, 0) : 0;
+
 
   return (
     <div className="space-y-6 pb-12">
@@ -337,56 +338,7 @@ const StudentProfilePage: React.FC = () => {
         )}
 
         {activeTab === 'fees' && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              <StatCard label="Total Paid" value={formatCurrency(totalPaid)} icon={CreditCard} color="green" />
-              <StatCard label="Outstanding Balance" value={formatCurrency(totalBalance)} icon={ShieldAlert} color="red" />
-              <StatCard label="Last Payment" value={student.feePayments && student.feePayments[0] ? formatDate(student.feePayments[0].paymentDate || '') : 'None'} icon={Calendar} color="blue" />
-            </div>
-
-            <Card className="overflow-hidden">
-               <div className="border-b bg-gray-50 px-6 py-4">
-                <h3 className="font-bold text-gray-900">Fee Payment History</h3>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left">
-                  <thead>
-                    <tr className="bg-gray-50/50 text-xs font-bold uppercase tracking-wider text-gray-500">
-                      <th className="px-6 py-4">Fee Type / Month</th>
-                      <th className="px-6 py-4">Amount</th>
-                      <th className="px-6 py-4">Paid</th>
-                      <th className="px-6 py-4">Balance</th>
-                      <th className="px-6 py-4">Status</th>
-                      <th className="px-6 py-4">Receipt No</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {student.feePayments && student.feePayments.length > 0 ? student.feePayments.map((payment) => (
-                      <tr key={payment.id} className="hover:bg-gray-50/80 transition-colors text-sm">
-                        <td className="px-6 py-4">
-                          <div className="font-bold text-gray-900">{payment.feeType.replace('_', ' ')}</div>
-                          <div className="text-xs text-gray-400">{payment.month || 'Other'}</div>
-                        </td>
-                        <td className="px-6 py-4 font-medium text-gray-600">{formatCurrency(payment.amount)}</td>
-                        <td className="px-6 py-4 font-bold text-green-600">{formatCurrency(payment.paidAmount)}</td>
-                        <td className="px-6 py-4 font-bold text-red-600">{formatCurrency(payment.balance)}</td>
-                        <td className="px-6 py-4">
-                          <Badge variant={payment.status === 'PAID' ? 'success' : payment.status === 'PENDING' ? 'danger' : 'warning'}>
-                            {payment.status.replace('_', ' ')}
-                          </Badge>
-                        </td>
-                        <td className="px-6 py-4 text-gray-500">#{payment.receiptNumber || 'N/A'}</td>
-                      </tr>
-                    )) : (
-                      <tr>
-                        <td colSpan={6} className="py-12 text-center text-gray-400 font-medium">No fee payment records found.</td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </Card>
-          </div>
+          <StudentFeeLedger studentId={id!} />
         )}
 
         {activeTab === 'attendance' && (
@@ -641,6 +593,193 @@ const calculateAverageMark = (marks: any[]) => {
 const calculateMaxMark = (marks: any[]) => {
   if (marks.length === 0) return 0;
   return Math.max(...marks.map(m => m.marksObtained));
+};
+
+// Student Fee Ledger Component (month-by-month breakdown)
+const StudentFeeLedger: React.FC<{ studentId: string }> = ({ studentId }) => {
+  const { data: ledgerData, isLoading } = useQuery({
+    queryKey: ['studentFeeLedger', studentId],
+    queryFn: async () => {
+      const response = await api.get(`/fees/student/${studentId}/ledger`);
+      return response.data.data;
+    },
+    enabled: !!studentId,
+  });
+
+  if (isLoading) {
+    return (
+      <div className="py-16 text-center">
+        <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-blue-100 border-t-blue-600"></div>
+        <p className="text-gray-400 mt-4 font-bold text-xs uppercase tracking-widest">Loading fee ledger...</p>
+      </div>
+    );
+  }
+
+  if (!ledgerData) {
+    return <div className="py-16 text-center text-gray-400">Could not load fee data.</div>;
+  }
+
+  const { monthlyLedger, otherPayments, summary } = ledgerData;
+
+  const months = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+
+  const formatMonthLabel = (m: string) => {
+    const [year, month] = m.split('-').map(Number);
+    return `${months[month - 1]} ${year}`;
+  };
+
+  const getStatusStyle = (status: string) => {
+    switch (status) {
+      case 'PAID': return 'bg-green-100 text-green-700 border-green-200';
+      case 'PARTIAL': return 'bg-amber-100 text-amber-700 border-amber-200';
+      case 'PENDING': return 'bg-orange-100 text-orange-700 border-orange-200';
+      case 'MISSING': return 'bg-red-100 text-red-700 border-red-200';
+      default: return 'bg-gray-100 text-gray-700 border-gray-200';
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Summary Stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard label="Total Expected" value={formatCurrency(summary.totalExpected)} icon={DollarSign} color="blue" />
+        <StatCard label="Total Paid" value={formatCurrency(summary.totalPaid)} icon={CreditCard} color="green" />
+        <StatCard label="Total Owed" value={formatCurrency(summary.grandTotalOwed)} icon={ShieldAlert} color="red" />
+        <StatCard label="Months Covered" value={`${summary.paidMonths}/${summary.totalMonths}`} icon={Calendar} color="orange" />
+      </div>
+
+      {/* Arrears Alert */}
+      {summary.missingMonths > 0 && (
+        <Card className="bg-red-50 border-2 border-red-100 p-5 rounded-2xl">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="text-red-500 shrink-0 mt-0.5" size={20} />
+            <div>
+              <p className="text-sm font-black text-red-900">
+                {summary.missingMonths} month{summary.missingMonths > 1 ? 's' : ''} with no payment record
+              </p>
+              <p className="text-xs text-red-600 mt-1">
+                Missing months are shown as "MISSING" below. Total arrears from missing months: <strong>{formatCurrency(summary.totalBalance)}</strong>
+              </p>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {/* Monthly Ledger Table */}
+      <Card className="overflow-hidden border-none shadow-xl rounded-2xl">
+        <div className="border-b bg-gray-50 px-6 py-4 flex items-center justify-between">
+          <h3 className="font-black text-gray-900 uppercase tracking-tight text-sm">Month-by-Month Fee Ledger</h3>
+          <div className="flex items-center gap-2 text-xs text-gray-400">
+            <Clock size={14} />
+            <span>{summary.totalMonths} months since admission</span>
+          </div>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead>
+              <tr className="bg-gray-50/50 text-[10px] font-black uppercase tracking-widest text-gray-400">
+                <th className="px-6 py-4">Month</th>
+                <th className="px-6 py-4 text-right">Expected</th>
+                <th className="px-6 py-4 text-right">Paid</th>
+                <th className="px-6 py-4 text-right">Balance</th>
+                <th className="px-6 py-4 text-center">Status</th>
+                <th className="px-6 py-4">Receipt</th>
+                <th className="px-6 py-4">Method</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {monthlyLedger.slice().reverse().map((entry: any) => (
+                <tr key={entry.month} className={`hover:bg-gray-50/50 transition-colors text-sm ${entry.status === 'MISSING' ? 'bg-red-50/30' : ''}`}>
+                  <td className="px-6 py-4">
+                    <p className="font-bold text-gray-900">{formatMonthLabel(entry.month)}</p>
+                  </td>
+                  <td className="px-6 py-4 text-right font-medium text-gray-600">{formatCurrency(entry.expectedAmount)}</td>
+                  <td className="px-6 py-4 text-right font-bold text-green-600">{formatCurrency(entry.paidAmount)}</td>
+                  <td className={`px-6 py-4 text-right font-bold ${entry.balance > 0 ? 'text-red-600' : 'text-gray-400'}`}>
+                    {formatCurrency(entry.balance)}
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    <span className={`inline-block px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border ${getStatusStyle(entry.status)}`}>
+                      {entry.status === 'MISSING' ? 'NOT PAID' : entry.status}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-xs font-mono text-blue-600">{entry.receiptNumber || '—'}</td>
+                  <td className="px-6 py-4 text-xs text-gray-500">{entry.paymentMethod || '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+            <tfoot className="bg-gray-50 border-t-2 border-gray-200">
+              <tr className="font-black text-sm">
+                <td className="px-6 py-4 uppercase tracking-widest text-gray-500 text-xs">Total</td>
+                <td className="px-6 py-4 text-right text-gray-900">{formatCurrency(summary.totalExpected)}</td>
+                <td className="px-6 py-4 text-right text-green-600">{formatCurrency(summary.totalPaid)}</td>
+                <td className="px-6 py-4 text-right text-red-600">{formatCurrency(summary.totalBalance)}</td>
+                <td colSpan={3}></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </Card>
+
+      {/* Other Fees */}
+      {otherPayments && otherPayments.length > 0 && (
+        <Card className="overflow-hidden border-none shadow-lg rounded-2xl">
+          <div className="border-b bg-gray-50 px-6 py-4">
+            <h3 className="font-black text-gray-900 uppercase tracking-tight text-sm">Other Fees (Admission, Exam, etc.)</h3>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="bg-gray-50/50 text-[10px] font-black uppercase tracking-widest text-gray-400">
+                  <th className="px-6 py-4">Type</th>
+                  <th className="px-6 py-4 text-right">Amount</th>
+                  <th className="px-6 py-4 text-right">Paid</th>
+                  <th className="px-6 py-4 text-right">Balance</th>
+                  <th className="px-6 py-4 text-center">Status</th>
+                  <th className="px-6 py-4">Receipt</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {otherPayments.map((p: any) => (
+                  <tr key={p.id} className="hover:bg-gray-50/50 transition-colors text-sm">
+                    <td className="px-6 py-4 font-bold text-gray-900">{p.feeType.replace('_', ' ')}</td>
+                    <td className="px-6 py-4 text-right font-medium text-gray-600">{formatCurrency(p.amount)}</td>
+                    <td className="px-6 py-4 text-right font-bold text-green-600">{formatCurrency(p.paidAmount)}</td>
+                    <td className="px-6 py-4 text-right font-bold text-red-600">{formatCurrency(p.balance)}</td>
+                    <td className="px-6 py-4 text-center">
+                      <Badge variant={p.status === 'PAID' ? 'success' : p.status === 'PENDING' ? 'danger' : 'warning'}>
+                        {p.status}
+                      </Badge>
+                    </td>
+                    <td className="px-6 py-4 text-xs font-mono text-blue-600">{p.receiptNumber || '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      )}
+
+      {/* Grand Total */}
+      <Card className="bg-gradient-to-br from-gray-900 to-gray-800 text-white p-6 rounded-2xl border-none">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs font-black uppercase tracking-widest text-gray-400">Grand Total Outstanding</p>
+            <p className="text-3xl font-black mt-1">{formatCurrency(summary.grandTotalOwed)}</p>
+            <p className="text-xs text-gray-400 mt-2">
+              Monthly: {formatCurrency(summary.totalBalance)} + Other: {formatCurrency(summary.otherFeesBalance)}
+            </p>
+          </div>
+          <div className="bg-white/10 p-4 rounded-2xl">
+            <DollarSign size={32} className="text-white/60" />
+          </div>
+        </div>
+      </Card>
+    </div>
+  );
 };
 
 export default StudentProfilePage;

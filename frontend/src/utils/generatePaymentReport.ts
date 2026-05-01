@@ -1,6 +1,6 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { formatCurrency, formatDate } from './helpers';
+import { formatCurrency } from './helpers';
 
 interface StudentFeeStatus {
   studentId: string;
@@ -12,6 +12,8 @@ interface StudentFeeStatus {
   paidAmount: number;
   balance: number;
   paymentStatus: string;
+  previousArrears: number;
+  totalOutstanding: number;
 }
 
 interface FeeSummary {
@@ -22,6 +24,8 @@ interface FeeSummary {
   totalExpectedAmount: number;
   totalCollectedAmount: number;
   totalOutstandingAmount: number;
+  totalArrears: number;
+  grandTotalOutstanding: number;
 }
 
 interface ReportFilters {
@@ -35,7 +39,7 @@ export function generatePaymentReportPDF(
   summary: FeeSummary,
   filters: ReportFilters
 ) {
-  const doc = new jsPDF();
+  const doc = new jsPDF('landscape'); // Switching to landscape for more columns
   const pageWidth = doc.internal.pageSize.width;
 
   // Header
@@ -45,7 +49,7 @@ export function generatePaymentReportPDF(
   
   doc.setFontSize(14);
   doc.setFont('helvetica', 'normal');
-  doc.text('Monthly Fee Collection Report', pageWidth / 2, 28, { align: 'center' });
+  doc.text('Monthly Fee Collection Report (Cumulative)', pageWidth / 2, 28, { align: 'center' });
   
   doc.setFontSize(10);
   doc.setTextColor(100);
@@ -65,23 +69,24 @@ export function generatePaymentReportPDF(
   // Summary Table
   autoTable(doc, {
     startY: 55,
-    head: [['Total Students', 'Total Expected', 'Total Collected', 'Outstanding', 'Collection Rate']],
+    head: [['Students', 'Current Expected', 'Current Collected', 'Current Bal.', 'Prev. Arrears', 'GRAND TOTAL OWED']],
     body: [[
       summary.totalStudents.toString(),
       formatCurrency(summary.totalExpectedAmount),
       formatCurrency(summary.totalCollectedAmount),
       formatCurrency(summary.totalOutstandingAmount),
-      `${summary.totalExpectedAmount > 0 ? Math.round((summary.totalCollectedAmount / summary.totalExpectedAmount) * 100) : 0}%`
+      formatCurrency(summary.totalArrears),
+      formatCurrency(summary.grandTotalOutstanding)
     ]],
     theme: 'grid',
-    headStyles: { fillGray: 200, textColor: 0, fontStyle: 'bold' },
+    headStyles: { fillColor: [220, 220, 220], textColor: 0, fontStyle: 'bold' },
     styles: { halign: 'center' }
   });
 
   // Student Details Table
   autoTable(doc, {
     startY: (doc as any).lastAutoTable.finalY + 10,
-    head: [['#', 'Student Name', 'Adm. No', 'Class', 'Fee Amount', 'Paid', 'Balance', 'Status']],
+    head: [['#', 'Student Name', 'Adm. No', 'Class', 'Monthly Fee', 'Paid', 'Bal.', 'Arrears', 'TOTAL OWED', 'Status']],
     body: students.map((s, index) => [
       (index + 1).toString(),
       s.fullName,
@@ -90,13 +95,19 @@ export function generatePaymentReportPDF(
       formatCurrency(s.totalAmount),
       formatCurrency(s.paidAmount),
       formatCurrency(s.balance),
+      formatCurrency(s.previousArrears),
+      formatCurrency(s.totalOutstanding),
       s.paymentStatus
     ]),
     headStyles: { fillColor: [63, 81, 181], textColor: 255 },
     alternateRowStyles: { fillColor: [245, 245, 245] },
     margin: { top: 10 },
+    columnStyles: {
+      7: { fontStyle: 'bold', textColor: [198, 40, 40] }, // Arrears in Red
+      8: { fontStyle: 'bold', textColor: [63, 81, 181] }   // Total Owed in Blue
+    },
     didParseCell: (data) => {
-      if (data.section === 'body' && data.column.index === 7) {
+      if (data.section === 'body' && data.column.index === 9) {
         const status = data.cell.raw as string;
         if (status === 'PAID') data.cell.styles.textColor = [46, 125, 50]; // Green
         if (status === 'PARTIAL') data.cell.styles.textColor = [239, 108, 0]; // Orange

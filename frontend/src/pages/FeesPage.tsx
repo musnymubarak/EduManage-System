@@ -8,9 +8,9 @@ import {
   AlertCircle, 
   FileText, 
   Printer, 
-  Calendar,
   CheckCircle2,
-  Clock,
+  TrendingUp,
+  Calendar,
   History,
   Pencil,
   Info,
@@ -133,7 +133,9 @@ const FeesPage: React.FC = () => {
       pending: 0,
       totalExpectedAmount: 0,
       totalCollectedAmount: 0,
-      totalOutstandingAmount: 0
+      totalOutstandingAmount: 0,
+      totalArrears: 0,
+      grandTotalOutstanding: 0
   };
 
   // --- Handlers ---
@@ -259,24 +261,15 @@ const FeesPage: React.FC = () => {
           </div>
         </Card>
 
-        <Card className="bg-gradient-to-br from-orange-50 to-white border-none shadow-lg transform transition-transform hover:scale-[1.02]">
+        <Card className="bg-gradient-to-br from-purple-50 to-white border-none shadow-lg transform transition-transform hover:scale-[1.02]">
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-orange-500">Collection Rate</p>
-              <h3 className="text-2xl font-black text-gray-900 mt-1">
-                {summary.totalExpectedAmount > 0 
-                  ? Math.round((summary.totalCollectedAmount / summary.totalExpectedAmount) * 100)
-                  : 0}%
-              </h3>
-              <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2 overflow-hidden shadow-inner">
-                <div 
-                    className="bg-orange-500 h-1.5 rounded-full transition-all duration-500" 
-                    style={{ width: `${summary.totalExpectedAmount > 0 ? (summary.totalCollectedAmount/summary.totalExpectedAmount)*100 : 0}%` }}
-                ></div>
-              </div>
+              <p className="text-xs font-bold uppercase tracking-widest text-purple-500">Grand Total Owed</p>
+              <h3 className="text-2xl font-black text-gray-900 mt-1">{formatCurrency(summary.grandTotalOutstanding || summary.totalOutstandingAmount)}</h3>
+              <p className="text-xs text-gray-400 mt-1">Incl. {formatCurrency(summary.totalArrears || 0)} Arrears</p>
             </div>
-            <div className="bg-orange-100 p-3 rounded-2xl text-orange-600 shadow-inner">
-              <Clock size={24} />
+            <div className="bg-purple-100 p-3 rounded-2xl text-purple-600 shadow-inner">
+              <TrendingUp size={24} />
             </div>
           </div>
         </Card>
@@ -362,7 +355,9 @@ const FeesPage: React.FC = () => {
                   <th className="px-8 py-5 text-xs font-black uppercase tracking-widest text-gray-400">Student Identity</th>
                   <th className="px-6 py-5 text-xs font-black uppercase tracking-widest text-gray-400">Class</th>
                   <th className="px-6 py-5 text-right text-xs font-black uppercase tracking-widest text-gray-400">Monthly Fee</th>
-                  <th className="px-6 py-5 text-right text-xs font-black uppercase tracking-widest text-gray-400">Amount Paid</th>
+                  <th className="px-6 py-5 text-right text-xs font-black uppercase tracking-widest text-gray-400">Paid</th>
+                  <th className="px-6 py-5 text-right text-xs font-black uppercase tracking-widest text-red-400 bg-red-50/30">Arrears</th>
+                  <th className="px-6 py-5 text-right text-xs font-black uppercase tracking-widest text-blue-600 bg-blue-50/30">Total Owed</th>
                   <th className="px-6 py-5 text-center text-xs font-black uppercase tracking-widest text-gray-400">Status</th>
                   <th className="px-8 py-5 text-right text-xs font-black uppercase tracking-widest text-gray-400">Control</th>
                 </tr>
@@ -389,6 +384,12 @@ const FeesPage: React.FC = () => {
                     </td>
                     <td className="px-6 py-5 text-right font-black text-green-600 text-sm">
                       {formatCurrency(row.paidAmount)}
+                    </td>
+                    <td className="px-6 py-5 text-right font-black text-red-500 text-sm bg-red-50/20">
+                      {formatCurrency(row.previousArrears)}
+                    </td>
+                    <td className="px-6 py-5 text-right font-black text-blue-700 text-base bg-blue-50/20">
+                      {formatCurrency(row.totalOutstanding)}
                     </td>
                     <td className="px-6 py-5 text-center">
                       <Badge
