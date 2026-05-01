@@ -14,7 +14,7 @@ export const registerStudent = async (req: AuthRequest, res: Response): Promise<
     const {
       fullName, nameWithInitials, gender, bloodGroup, religion, ethnicity,
       nationality, nic, birthCertificateNo, address, city, district,
-      province, postalCode, mobileNumber, homePhone, email, classId,
+      province, postalCode, gnDivision, dsDivision, mobileNumber, homePhone, email, classId,
       admissionDate, previousSchool, guardianName, guardianRelationship,
       guardianNIC, guardianPhone, guardianAddress, guardianOccupation,
       guardianEmail, emergencyContactName, emergencyContactPhone,
@@ -101,6 +101,8 @@ export const registerStudent = async (req: AuthRequest, res: Response): Promise<
         district,
         province,
         postalCode,
+        gnDivision,
+        dsDivision,
         mobileNumber,
         homePhone,
         email,
@@ -124,7 +126,7 @@ export const registerStudent = async (req: AuthRequest, res: Response): Promise<
         documents: {
           create: documentsData,
         },
-      },
+      } as any,
       include: {
         class: true,
         documents: true,
@@ -282,7 +284,7 @@ export const updateStudent = async (req: AuthRequest, res: Response): Promise<vo
       'fullName', 'nameWithInitials', 'dateOfBirth', 'gender', 'bloodGroup',
       'religion', 'ethnicity', 'nationality', 'nic', 'birthCertificateNo',
       'indexNumber', 'classId', 'address', 'city', 'district', 'province',
-      'postalCode', 'mobileNumber', 'homePhone', 'email', 'admissionDate',
+      'postalCode', 'gnDivision', 'dsDivision', 'mobileNumber', 'homePhone', 'email', 'admissionDate',
       'previousSchool', 'guardianName', 'guardianRelationship', 'guardianNIC',
       'guardianPhone', 'guardianAddress', 'guardianOccupation', 'guardianEmail',
       'emergencyContactName', 'emergencyContactPhone', 'emergencyRelationship',
@@ -348,7 +350,7 @@ export const updateStudent = async (req: AuthRequest, res: Response): Promise<vo
 
     const student = await prisma.student.update({
       where: { id },
-      data: updateData,
+      data: updateData as any,
       include: {
         class: true,
       },

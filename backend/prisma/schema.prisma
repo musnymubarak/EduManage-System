@@ -91,6 +91,8 @@ model Student {
   district              String
   province              String
   postalCode            String?
+  gnDivision            String?
+  dsDivision            String?
   mobileNumber          String?
   homePhone             String?
   email                 String?
@@ -226,6 +228,8 @@ model Teacher {
   district           String
   province           String
   postalCode         String?
+  gnDivision         String?
+  dsDivision         String?
   mobileNumber       String
   email              String?
   
@@ -333,6 +337,8 @@ model Staff {
   district           String
   province           String
   postalCode         String?
+  gnDivision         String?
+  dsDivision         String?
   mobileNumber       String
   email              String?
 

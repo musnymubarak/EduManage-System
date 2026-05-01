@@ -66,6 +66,8 @@ export const registerTeacher = async (req: AuthRequest, res: Response): Promise<
         district: restData.district,
         province: restData.province,
         postalCode: restData.postalCode,
+        gnDivision: restData.gnDivision,
+        dsDivision: restData.dsDivision,
         mobileNumber: restData.mobileNumber,
         email: restData.email,
         joinedDate: joinedDate,
@@ -77,7 +79,7 @@ export const registerTeacher = async (req: AuthRequest, res: Response): Promise<
         qualifications: {
           create: mappedQualifications,
         },
-      },
+      } as any,
       include: {
         qualifications: true,
       },
@@ -225,7 +227,7 @@ export const updateTeacher = async (req: AuthRequest, res: Response): Promise<vo
     const allowedFields = [
       'fullName', 'nameWithInitials', 'dateOfBirth', 'gender', 'nic',
       'address', 'city', 'district', 'province', 'postalCode',
-      'mobileNumber', 'email', 'joinedDate', 'designation',
+      'gnDivision', 'dsDivision', 'mobileNumber', 'email', 'joinedDate', 'designation',
       'employmentType', 'basicSalary', 'specialization', 'experience', 'status'
     ];
 
@@ -282,7 +284,7 @@ export const updateTeacher = async (req: AuthRequest, res: Response): Promise<vo
 
     const teacher = await prisma.teacher.update({
       where: { id },
-      data: updateData,
+      data: updateData as any,
       include: {
         qualifications: true,
       },

@@ -36,6 +36,8 @@ export interface Student {
   district: string;
   province: string;
   postalCode?: string;
+  gnDivision?: string;
+  dsDivision?: string;
   mobileNumber?: string;
   homePhone?: string;
   email?: string;
@@ -142,6 +144,8 @@ export interface Teacher {
   district: string;
   province: string;
   postalCode?: string;
+  gnDivision?: string;
+  dsDivision?: string;
   mobileNumber: string;
   email?: string;
   joinedDate: string;
@@ -152,6 +156,49 @@ export interface Teacher {
   status: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface Staff {
+  id: string;
+  employeeNumber: string;
+  fullName: string;
+  nameWithInitials: string;
+  dateOfBirth: string;
+  gender: 'MALE' | 'FEMALE' | 'OTHER';
+  nic: string;
+  drivingLicenseNo?: string;
+  address: string;
+  city: string;
+  district: string;
+  province: string;
+  postalCode?: string;
+  gnDivision?: string;
+  dsDivision?: string;
+  mobileNumber: string;
+  email?: string;
+  department: string;
+  designation: string;
+  employmentType: string;
+  joinedDate: string;
+  basicSalary: number;
+  profilePhoto?: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface StaffDetail extends Staff {
+  documents: StaffDocument[];
+  attendance: Attendance[];
+}
+
+export interface StaffDocument {
+  id: string;
+  staffId: string;
+  documentType: string;
+  fileName: string;
+  fileUrl: string;
+  uploadedAt: string;
 }
 
 export interface TeacherDetail extends Teacher {

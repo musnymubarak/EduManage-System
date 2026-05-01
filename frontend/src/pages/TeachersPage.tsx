@@ -393,6 +393,10 @@ const TeacherModal: React.FC<TeacherModalProps> = ({ isOpen, onClose, initialDat
             <Input label="District" name="district" required defaultValue={initialData?.district} />
             <Input label="Province" name="province" required defaultValue={initialData?.province} />
           </div>
+          <div className="grid grid-cols-2 gap-4">
+            <Input label="G.N Division & Number" name="gnDivision" defaultValue={initialData?.gnDivision} placeholder="e.g. 123A, Kelaniya" />
+            <Input label="D.S Division" name="dsDivision" defaultValue={initialData?.dsDivision} placeholder="e.g. Kelaniya" />
+          </div>
         </div>
 
         <div className="space-y-4">
