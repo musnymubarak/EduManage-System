@@ -18,6 +18,7 @@ const StudentsPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedClass, setSelectedClass] = useState('');
   const [statusFilter, setStatusFilter] = useState('ACTIVE');
+  const [sortBy, setSortBy] = useState<'admission_asc' | 'admission_desc' | 'name_asc' | 'name_desc'>('admission_asc');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
 
@@ -44,8 +45,17 @@ const StudentsPage: React.FC = () => {
     },
   });
 
-  const students = studentsData?.data || [];
+  const students: Student[] = studentsData?.data || [];
   const classes: Class[] = classesData?.data || [];
+
+  // Apply sorting
+  const sortedStudents = [...students].sort((a, b) => {
+    if (sortBy === 'admission_asc') return a.admissionNumber.localeCompare(b.admissionNumber, undefined, { numeric: true });
+    if (sortBy === 'admission_desc') return b.admissionNumber.localeCompare(a.admissionNumber, undefined, { numeric: true });
+    if (sortBy === 'name_asc') return a.fullName.localeCompare(b.fullName);
+    if (sortBy === 'name_desc') return b.fullName.localeCompare(a.fullName);
+    return 0;
+  });
 
   const handleViewStudent = (student: Student) => {
     navigate(`/students/${student.id}`);
@@ -102,7 +112,7 @@ const StudentsPage: React.FC = () => {
 
       {/* Search & Filters */}
       <Card className="p-4 border-none shadow-md overflow-hidden bg-white/50 backdrop-blur-sm">
-        <div className="flex flex-col md:flex-row gap-4">
+        <div className="flex flex-col lg:flex-row gap-4">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
             <input
@@ -113,7 +123,21 @@ const StudentsPage: React.FC = () => {
               className="w-full pl-10 pr-4 h-11 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm font-bold text-gray-700"
             />
           </div>
-          <div className="flex flex-row gap-3">
+          <div className="flex flex-wrap md:flex-nowrap gap-3 items-center">
+            <div className="flex items-center gap-2">
+                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest whitespace-nowrap">Sort:</label>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as any)}
+                  className="h-11 px-4 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none min-w-[160px] text-xs font-black uppercase tracking-wider text-gray-600 cursor-pointer"
+                >
+                  <option value="admission_asc">Admission (A-Z)</option>
+                  <option value="admission_desc">Admission (Z-A)</option>
+                  <option value="name_asc">Name (A-Z)</option>
+                  <option value="name_desc">Name (Z-A)</option>
+                </select>
+            </div>
+
             <select
               value={selectedClass}
               onChange={(e) => setSelectedClass(e.target.value)}
@@ -143,7 +167,7 @@ const StudentsPage: React.FC = () => {
       <Card className="border-none shadow-xl overflow-hidden bg-white rounded-3xl">
         {isLoading ? (
           <div className="p-10 text-center animate-pulse text-gray-400 font-bold uppercase text-[10px] tracking-[0.2em]">Syncing Student Records...</div>
-        ) : students.length === 0 ? (
+        ) : sortedStudents.length === 0 ? (
           <div className="p-20 text-center text-gray-400 italic">No students found matching the criteria.</div>
         ) : (
           <div className="overflow-x-auto">
@@ -158,7 +182,7 @@ const StudentsPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {students.map((student: Student) => (
+                {sortedStudents.map((student: Student) => (
                   <tr key={student.id} className="hover:bg-blue-50/20 transition-colors group">
                     <td className="p-5">
                       <div className="flex items-center gap-3">

@@ -18,6 +18,7 @@ const StaffPage: React.FC = () => {
     const [deptFilter, setDeptFilter] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingStaff, setEditingStaff] = useState<any | null>(null);
+    const [sortBy, setSortBy] = useState<'id_asc' | 'id_desc' | 'name_asc' | 'name_desc'>('id_asc');
     const navigate = useNavigate();
 
     // Fetch staff
@@ -35,6 +36,15 @@ const StaffPage: React.FC = () => {
     });
 
     const staff = staffData?.data || [];
+
+    // Apply sorting
+    const sortedStaff = [...staff].sort((a, b) => {
+        if (sortBy === 'id_asc') return a.employeeNumber.localeCompare(b.employeeNumber, undefined, { numeric: true });
+        if (sortBy === 'id_desc') return b.employeeNumber.localeCompare(a.employeeNumber, undefined, { numeric: true });
+        if (sortBy === 'name_asc') return a.fullName.localeCompare(b.fullName);
+        if (sortBy === 'name_desc') return b.fullName.localeCompare(a.fullName);
+        return 0;
+    });
 
 
 
@@ -89,7 +99,7 @@ const StaffPage: React.FC = () => {
 
             {/* Search & Filters */}
             <Card className="p-4 border-none shadow-md overflow-hidden bg-white/50 backdrop-blur-sm">
-                <div className="flex flex-col md:flex-row gap-4">
+                <div className="flex flex-col lg:flex-row gap-4">
                     <div className="flex-1 relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                         <input
@@ -97,10 +107,23 @@ const StaffPage: React.FC = () => {
                             placeholder="Search by name, ID, or NIC..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-10 pr-4 h-11 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                            className="w-full pl-10 pr-4 h-11 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm font-bold text-gray-700"
                         />
                     </div>
-                    <div className="flex flex-row gap-3">
+                    <div className="flex flex-wrap md:flex-nowrap gap-3 items-center">
+                        <div className="flex items-center gap-2">
+                            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest whitespace-nowrap">Sort:</label>
+                            <select
+                                value={sortBy}
+                                onChange={(e) => setSortBy(e.target.value as any)}
+                                className="h-11 px-4 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none min-w-[160px] text-xs font-black uppercase tracking-wider text-gray-600 cursor-pointer"
+                            >
+                                <option value="id_asc">Staff ID (A-Z)</option>
+                                <option value="id_desc">Staff ID (Z-A)</option>
+                                <option value="name_asc">Name (A-Z)</option>
+                                <option value="name_desc">Name (Z-A)</option>
+                            </select>
+                        </div>
                         <select
                             value={deptFilter}
                             onChange={(e) => setDeptFilter(e.target.value)}
@@ -147,12 +170,12 @@ const StaffPage: React.FC = () => {
                                 <tr>
                                     <td colSpan={6} className="p-10 text-center animate-pulse text-gray-400 font-bold uppercase text-[10px] tracking-[0.2em]">Syncing Personnel Data...</td>
                                 </tr>
-                            ) : staff.length === 0 ? (
+                            ) : sortedStaff.length === 0 ? (
                                 <tr>
                                     <td colSpan={6} className="p-20 text-center text-gray-400 italic">No personnel found matching the criteria.</td>
                                 </tr>
                             ) : (
-                                staff.map((s: any) => (
+                                sortedStaff.map((s: any) => (
                                     <tr key={s.id} className="hover:bg-blue-50/20 transition-colors group">
                                         <td className="p-5">
                                             <div className="flex items-center gap-3">

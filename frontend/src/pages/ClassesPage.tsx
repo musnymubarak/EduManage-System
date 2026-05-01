@@ -18,6 +18,7 @@ const ClassesPage: React.FC = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedClass, setSelectedClass] = useState<Class | null>(null);
+  const [sortBy, setSortBy] = useState<'grade_asc' | 'grade_desc' | 'name_asc' | 'name_desc'>('grade_asc');
 
   // Fetch classes
   const { data: classesData, isLoading } = useQuery({
@@ -41,6 +42,20 @@ const ClassesPage: React.FC = () => {
     },
   });
 
+  // Update Class Mutation
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) => api.put(`/classes/${id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['classes'] });
+      toast.success('Class updated successfully');
+      setIsEditModalOpen(false);
+      setSelectedClass(null);
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.error || 'Failed to update class');
+    },
+  });
+
   // Delete Class Mutation
   const deleteMutation = useMutation({
     mutationFn: (id: string) => api.delete(`/classes/${id}`),
@@ -54,10 +69,20 @@ const ClassesPage: React.FC = () => {
   });
 
   const classes: Class[] = classesData?.data || [];
-  const filteredClasses = classes.filter(c => 
-    c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    c.academicYear.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  
+  // Apply filtering and then sorting
+  const filteredClasses = [...classes]
+    .filter(c => 
+      c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      c.academicYear.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    .sort((a, b) => {
+      if (sortBy === 'grade_asc') return a.grade - b.grade || a.name.localeCompare(b.name);
+      if (sortBy === 'grade_desc') return b.grade - a.grade || a.name.localeCompare(b.name);
+      if (sortBy === 'name_asc') return a.name.localeCompare(b.name);
+      if (sortBy === 'name_desc') return b.name.localeCompare(a.name);
+      return 0;
+    });
 
   const handleDelete = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
@@ -87,17 +112,32 @@ const ClassesPage: React.FC = () => {
         </div>
       </Card>
 
-      {/* Filters */}
+      {/* Filters & Sorting */}
       <Card>
-        <div className="relative w-full md:w-96">
-          <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search classes by name or year..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-          />
+        <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+          <div className="relative w-full md:w-96">
+            <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search classes..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full rounded-xl border border-gray-200 py-2.5 pl-10 pr-4 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm shadow-sm"
+            />
+          </div>
+          <div className="flex items-center gap-3 w-full md:w-auto">
+            <label className="text-xs font-black uppercase text-gray-400 tracking-widest whitespace-nowrap">Sort By:</label>
+            <select 
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as any)}
+              className="rounded-xl border border-gray-200 py-2 px-4 text-sm font-bold text-gray-700 bg-gray-50 focus:border-blue-500 focus:outline-none transition-all cursor-pointer shadow-sm min-w-[180px]"
+            >
+              <option value="grade_asc">Grade (Low to High)</option>
+              <option value="grade_desc">Grade (High to Low)</option>
+              <option value="name_asc">Name (A-Z)</option>
+              <option value="name_desc">Name (Z-A)</option>
+            </select>
+          </div>
         </div>
       </Card>
 
@@ -186,10 +226,8 @@ const ClassesPage: React.FC = () => {
             setIsEditModalOpen(false);
             setSelectedClass(null);
           }}
-          onSubmit={(_data) => {
-            // Update mutation would be here
-            toast.error("Update not implemented in this phase");
-            setIsEditModalOpen(false);
+          onSubmit={(data) => {
+            updateMutation.mutate({ id: selectedClass.id, data });
           }}
           initialData={selectedClass}
           title="Edit Class"

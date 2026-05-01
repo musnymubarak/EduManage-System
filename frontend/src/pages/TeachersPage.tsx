@@ -16,6 +16,7 @@ import { SingleImageUpload, FileUpload } from '../components/UI/FileUpload';
 const TeachersPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [sortBy, setSortBy] = useState<'id_asc' | 'id_desc' | 'name_asc' | 'name_desc'>('id_asc');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTeacher, setEditingTeacher] = useState<any | null>(null);
   const navigate = useNavigate();
@@ -33,7 +34,16 @@ const TeachersPage: React.FC = () => {
     },
   });
 
-  const teachers = teachersData?.data || [];
+  const teachers: Teacher[] = teachersData?.data || [];
+
+  // Apply sorting
+  const sortedTeachers = [...teachers].sort((a, b) => {
+    if (sortBy === 'id_asc') return a.employeeNumber.localeCompare(b.employeeNumber, undefined, { numeric: true });
+    if (sortBy === 'id_desc') return b.employeeNumber.localeCompare(a.employeeNumber, undefined, { numeric: true });
+    if (sortBy === 'name_asc') return a.fullName.localeCompare(b.fullName);
+    if (sortBy === 'name_desc') return b.fullName.localeCompare(a.fullName);
+    return 0;
+  });
 
   const handleViewTeacher = (id: string) => {
     navigate(`/teachers/${id}`);
@@ -90,7 +100,7 @@ const TeachersPage: React.FC = () => {
 
       {/* Search & Filters */}
       <Card className="p-4 border-none shadow-md overflow-hidden bg-white/50 backdrop-blur-sm">
-        <div className="flex flex-col md:flex-row gap-4">
+        <div className="flex flex-col lg:flex-row gap-4">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
             <input
@@ -101,7 +111,20 @@ const TeachersPage: React.FC = () => {
               className="w-full pl-10 pr-4 h-11 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm font-bold text-gray-700"
             />
           </div>
-          <div className="flex flex-row gap-3">
+          <div className="flex flex-wrap md:flex-nowrap gap-3 items-center">
+            <div className="flex items-center gap-2">
+                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest whitespace-nowrap">Sort:</label>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as any)}
+                  className="h-11 px-4 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none min-w-[160px] text-xs font-black uppercase tracking-wider text-gray-600 cursor-pointer"
+                >
+                  <option value="id_asc">Teacher ID (A-Z)</option>
+                  <option value="id_desc">Teacher ID (Z-A)</option>
+                  <option value="name_asc">Name (A-Z)</option>
+                  <option value="name_desc">Name (Z-A)</option>
+                </select>
+            </div>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
@@ -120,7 +143,7 @@ const TeachersPage: React.FC = () => {
       <Card className="border-none shadow-xl overflow-hidden bg-white rounded-3xl">
         {isLoading ? (
           <div className="p-10 text-center animate-pulse text-gray-400 font-bold uppercase text-[10px] tracking-[0.2em]">Syncing Faculty Data...</div>
-        ) : teachers.length === 0 ? (
+        ) : sortedTeachers.length === 0 ? (
           <div className="p-20 text-center text-gray-400 italic">No teachers found matching the criteria.</div>
         ) : (
           <div className="overflow-x-auto">
@@ -135,7 +158,7 @@ const TeachersPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {teachers.map((teacher: Teacher) => (
+                {sortedTeachers.map((teacher: Teacher) => (
                   <tr key={teacher.id} className="hover:bg-blue-50/20 transition-colors group">
                     <td className="p-5">
                       <div className="flex items-center gap-3">
