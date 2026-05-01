@@ -31,8 +31,9 @@ export const uploadToCloudinary = async (
     // Write file buffer to local storage
     fs.writeFileSync(filePath, file.buffer);
 
-    // Return the local URL
-    return `http://localhost:${config.port}/uploads/${filename}`;
+    // Return the relative URL
+    // This is safer for production/proxy environments as it avoids hardcoding 'localhost'
+    return `/uploads/${filename}`;
   }
 
   return new Promise((resolve, reject) => {
