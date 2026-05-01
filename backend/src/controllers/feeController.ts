@@ -383,7 +383,7 @@ export const getMonthlyFeeStatus = async (req: AuthRequest, res: Response): Prom
     const setting = await prisma.systemSetting.findUnique({
       where: { key: 'monthly_fee_amount' },
     });
-    const monthlyFeeAmount = parseFloat(setting?.value || '2000');
+    const monthlyFeeAmount = parseFloat(setting?.value || '13000');
 
     // 2. Build Student Filter
     const studentWhere: any = {

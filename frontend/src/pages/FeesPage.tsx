@@ -17,6 +17,7 @@ import {
   Settings2
 } from 'lucide-react';
 import api from '../services/api';
+import { generatePaymentReportPDF } from '../utils/generatePaymentReport';
 import { Card } from '../components/UI/Card';
 import { Button } from '../components/UI/Button';
 import { Input, Select } from '../components/UI/Input';
@@ -182,6 +183,22 @@ const FeesPage: React.FC = () => {
           >
             <History size={18} className="text-gray-400 shrink-0" />
             Full History
+          </Button>
+          <Button 
+            variant="secondary" 
+            onClick={() => generatePaymentReportPDF(
+              studentsStatus, 
+              summary, 
+              { 
+                className: classes.find((c: any) => c.id === selectedClass)?.name || 'All Classes',
+                monthLabel: currentMonthLabel,
+                statusFilter: statusFilter
+              }
+            )} 
+            className="shadow-sm h-12 rounded-2xl font-bold border-gray-100 px-6 hover:bg-gray-50 flex items-center gap-2 transition-all whitespace-nowrap bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border-indigo-100"
+          >
+            <Printer size={18} className="text-indigo-400 shrink-0" />
+            Report
           </Button>
           <Button 
             variant="secondary"
@@ -513,7 +530,7 @@ const FeesPage: React.FC = () => {
             type="number" 
             step="0.01" 
             required 
-            defaultValue={summary?.monthlyFeePerStudent || '2000'}
+            defaultValue={summary?.monthlyFeePerStudent || '13000'}
             placeholder="e.g. 2500" 
           />
 

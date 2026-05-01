@@ -12,6 +12,7 @@ import {
   Info
 } from 'lucide-react';
 import api from '../services/api';
+import { generateLedgerReportPDF } from '../utils/generateLedgerReport';
 import { Card } from '../components/UI/Card';
 import { Button } from '../components/UI/Button';
 import { Select } from '../components/UI/Input';
@@ -88,6 +89,20 @@ const PaymentsPage: React.FC = () => {
                     >
                         <History size={18} className="text-gray-400 shrink-0" />
                         Full History
+                    </Button>
+                    <Button 
+                        variant="secondary" 
+                        onClick={() => generateLedgerReportPDF(
+                            transactions, 
+                            { 
+                                searchQuery,
+                                feeTypeFilter
+                            }
+                        )} 
+                        className="shadow-sm h-12 rounded-2xl font-bold border-gray-100 px-6 hover:bg-gray-50 flex items-center gap-2 transition-all whitespace-nowrap bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border-indigo-100"
+                    >
+                        <Printer size={18} className="text-indigo-400 shrink-0" />
+                        Export Ledger
                     </Button>
                     <Button 
                         onClick={() => setIsRecordModalOpen(true)} 
