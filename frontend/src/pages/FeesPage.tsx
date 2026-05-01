@@ -531,7 +531,7 @@ const FeesPage: React.FC = () => {
             step="0.01" 
             required 
             defaultValue={summary?.monthlyFeePerStudent || '13000'}
-            placeholder="e.g. 2500" 
+            placeholder="e.g. 13000" 
           />
 
           <div className="flex justify-end gap-3 pt-2">

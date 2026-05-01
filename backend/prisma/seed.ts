@@ -89,7 +89,7 @@ async function main() {
     update: {},
     create: {
       key: 'monthly_fee_amount',
-      value: '2000', // LKR 2000 per month
+      value: '13000', // LKR 13000 per month
     },
   });
 

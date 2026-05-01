@@ -27,6 +27,13 @@ const GlobalPaymentModal: React.FC<GlobalPaymentModalProps> = ({
   });
 
   const queryClient = useQueryClient();
+  
+  // Auto-populate amount for Monthly Fee
+  React.useEffect(() => {
+    if (formData.feeType === 'MONTHLY' && !formData.paidAmount) {
+      setFormData(prev => ({ ...prev, paidAmount: '13000' }));
+    }
+  }, [formData.feeType]);
 
   // Fetch ALL students for selection
   const { data: studentsData, isLoading: studentsLoading } = useQuery({
@@ -163,7 +170,7 @@ const GlobalPaymentModal: React.FC<GlobalPaymentModalProps> = ({
              <Input
                 label="Amount (LKR)"
                 type="number"
-                placeholder="2000"
+                placeholder="13000"
                 value={formData.paidAmount}
                 onChange={(e) => setFormData({ ...formData, paidAmount: e.target.value })}
                 required
