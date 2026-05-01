@@ -35,10 +35,10 @@ export const registerTeacher = async (req: AuthRequest, res: Response): Promise<
       orderBy: { employeeNumber: 'desc' },
     });
 
-    const nextNumber = lastTeacher 
+    const nextNumber = lastTeacher
       ? parseInt(lastTeacher.employeeNumber.split('-')[1]) + 1
       : 1;
-    
+
     const employeeNumber = `TCH-${nextNumber.toString().padStart(4, '0')}`;
 
     // Map qualifications
@@ -59,8 +59,8 @@ export const registerTeacher = async (req: AuthRequest, res: Response): Promise<
         fullName: restData.fullName,
         nameWithInitials: restData.nameWithInitials,
         dateOfBirth: dob,
-        gender: restData.gender,
-        nic: restData.nic,
+        gender: restData.gender === '' ? undefined : restData.gender,
+        nic: restData.nic === '' ? undefined : restData.nic,
         address: restData.address,
         city: restData.city,
         district: restData.district,
@@ -120,15 +120,15 @@ export const registerTeacher = async (req: AuthRequest, res: Response): Promise<
     if (error.code === 'P2002') {
       const target = error.meta?.target || [];
       const field = Array.isArray(target) ? target.join(', ') : String(target);
-      
+
       let message = 'A record with this information already exists.';
       if (field.includes('employeeNumber')) message = 'This employee number is already in use.';
       if (field.includes('nic')) message = 'A teacher with this NIC is already registered.';
       if (field.includes('email')) message = 'This email address is already in use.';
 
-      res.status(400).json({ 
-        success: false, 
-        error: message 
+      res.status(400).json({
+        success: false,
+        error: message
       });
       return;
     }
@@ -146,7 +146,7 @@ export const getAllTeachers = async (req: AuthRequest, res: Response): Promise<v
     const { status, search } = req.query;
 
     const where: any = {};
-    
+
     if (status) where.status = status;
     if (search) {
       where.OR = [
@@ -236,6 +236,14 @@ export const updateTeacher = async (req: AuthRequest, res: Response): Promise<vo
       }
     });
 
+    // Sanitize Enum and Unique fields
+    if (updateData.gender === '') {
+      delete updateData.gender;
+    }
+    if (updateData.nic === '') {
+      delete updateData.nic;
+    }
+
     // Convert date strings to Date objects
     if (updateData.dateOfBirth) {
       updateData.dateOfBirth = new Date(updateData.dateOfBirth);
@@ -287,9 +295,9 @@ export const updateTeacher = async (req: AuthRequest, res: Response): Promise<vo
     });
   } catch (error: any) {
     console.error('Error updating teacher:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: error.message || 'Failed to update teacher' 
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to update teacher'
     });
   }
 };
@@ -317,7 +325,7 @@ export const getTeacherSchedule = async (req: AuthRequest, res: Response): Promi
     if (date) {
       const dayOfWeek = new Date(date as string).toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
       const todaySchedules = schedules.filter(s => s.dayOfWeek === dayOfWeek);
-      
+
       res.json({
         success: true,
         data: todaySchedules,

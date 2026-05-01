@@ -12,8 +12,8 @@ export const registerStudent = async (req: AuthRequest, res: Response): Promise<
 
     // Filter fields to match Prisma schema
     const {
-      fullName, nameWithInitials, gender, bloodGroup, religion, ethnicity, 
-      nationality, nic, birthCertificateNo, address, city, district, 
+      fullName, nameWithInitials, gender, bloodGroup, religion, ethnicity,
+      nationality, nic, birthCertificateNo, address, city, district,
       province, postalCode, mobileNumber, homePhone, email, classId,
       admissionDate, previousSchool, guardianName, guardianRelationship,
       guardianNIC, guardianPhone, guardianAddress, guardianOccupation,
@@ -21,6 +21,13 @@ export const registerStudent = async (req: AuthRequest, res: Response): Promise<
       emergencyRelationship, medicalConditions, allergies, status,
       indexNumber
     } = studentData;
+
+    // Sanitize Enum and Unique fields
+    const sanitizedBloodGroup = bloodGroup === '' ? null : bloodGroup;
+    const sanitizedGender = gender === '' ? undefined : gender;
+    const sanitizedNic = nic === '' ? null : nic;
+    const sanitizedIndexNumber = indexNumber === '' ? null : indexNumber;
+    const sanitizedBirthCertificateNo = birthCertificateNo === '' ? null : birthCertificateNo;
 
     if (!fullName || !nameWithInitials || !gender || !studentData.dateOfBirth || !classId) {
       res.status(400).json({ success: false, error: 'Missing required student information' });
@@ -30,8 +37,8 @@ export const registerStudent = async (req: AuthRequest, res: Response): Promise<
     // Validate date strings
     const dob = new Date(studentData.dateOfBirth);
     if (isNaN(dob.getTime())) {
-      res.status(400).json({ 
-        success: false, 
+      res.status(400).json({
+        success: false,
         error: `Invalid date of birth provided: ${studentData.dateOfBirth}`
       });
       return;
@@ -69,26 +76,26 @@ export const registerStudent = async (req: AuthRequest, res: Response): Promise<
       orderBy: { admissionNumber: 'desc' },
     });
 
-    const nextNumber = lastStudent 
+    const nextNumber = lastStudent
       ? parseInt(lastStudent.admissionNumber.split('-')[1]) + 1
       : 1;
-    
+
     const admissionNumber = `STD-${nextNumber.toString().padStart(5, '0')}`;
 
     const student = await prisma.student.create({
       data: {
         admissionNumber,
-        indexNumber,
+        indexNumber: sanitizedIndexNumber,
         fullName,
         nameWithInitials,
         dateOfBirth: dob,
-        gender,
-        bloodGroup,
+        gender: sanitizedGender,
+        bloodGroup: sanitizedBloodGroup,
         religion,
         ethnicity,
         nationality: nationality || 'Sri Lankan',
-        nic,
-        birthCertificateNo,
+        nic: sanitizedNic,
+        birthCertificateNo: sanitizedBirthCertificateNo,
         address,
         city,
         district,
@@ -131,7 +138,7 @@ export const registerStudent = async (req: AuthRequest, res: Response): Promise<
     });
   } catch (error: any) {
     console.error('Error registering student:', error);
-    
+
     // Cleanup uploaded files if registration fails
     for (const url of uploadedUrls) {
       try {
@@ -140,21 +147,21 @@ export const registerStudent = async (req: AuthRequest, res: Response): Promise<
         console.error('Failed to cleanup file:', url, deleteError);
       }
     }
-    
+
     // Handle Prisma Unique Constraint Errors (P2002)
     if (error.code === 'P2002') {
       const target = error.meta?.target || [];
       const field = Array.isArray(target) ? target.join(', ') : String(target);
-      
+
       let message = 'A record with this information already exists.';
       if (field.includes('admissionNumber')) message = 'This admission number is already in use.';
       if (field.includes('nic')) message = 'A student with this NIC is already registered.';
       if (field.includes('birthCertificateNo')) message = 'A student with this Birth Certificate number is already registered.';
       if (field.includes('email')) message = 'This email address is already in use.';
 
-      res.status(400).json({ 
-        success: false, 
-        error: message 
+      res.status(400).json({
+        success: false,
+        error: message
       });
       return;
     }
@@ -172,7 +179,7 @@ export const getAllStudents = async (req: AuthRequest, res: Response): Promise<v
     const { classId, status, search, page = '1', limit = '50' } = req.query;
 
     const where: any = {};
-    
+
     if (classId) where.classId = classId;
     if (status) where.status = status;
     if (search) {
@@ -211,8 +218,8 @@ export const getAllStudents = async (req: AuthRequest, res: Response): Promise<v
     });
   } catch (error) {
     console.error('CRITICAL: Error fetching students:', error);
-    res.status(500).json({ 
-      success: false, 
+    res.status(500).json({
+      success: false,
       error: 'Failed to fetch students',
       details: error instanceof Error ? error.message : String(error)
     });
@@ -269,7 +276,7 @@ export const updateStudent = async (req: AuthRequest, res: Response): Promise<vo
   try {
     const { id } = req.params;
     const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-    
+
     // Create a clean update object with only allowed fields
     const allowedFields = [
       'fullName', 'nameWithInitials', 'dateOfBirth', 'gender', 'bloodGroup',
@@ -288,6 +295,23 @@ export const updateStudent = async (req: AuthRequest, res: Response): Promise<vo
         updateData[field] = req.body[field];
       }
     });
+
+    // Sanitize Enum and Unique fields
+    if (updateData.bloodGroup === '') {
+      updateData.bloodGroup = null;
+    }
+    if (updateData.gender === '') {
+      delete updateData.gender;
+    }
+    if (updateData.nic === '') {
+      updateData.nic = null;
+    }
+    if (updateData.indexNumber === '') {
+      updateData.indexNumber = null;
+    }
+    if (updateData.birthCertificateNo === '') {
+      updateData.birthCertificateNo = null;
+    }
 
     // Convert date strings to Date objects if present
     if (updateData.dateOfBirth) {
@@ -353,8 +377,8 @@ export const updateStudent = async (req: AuthRequest, res: Response): Promise<vo
     });
   } catch (error: any) {
     console.error('Error updating student:', error);
-    res.status(500).json({ 
-      success: false, 
+    res.status(500).json({
+      success: false,
       error: error.message || 'Failed to update student',
       details: error.code === 'P2002' ? 'Duplicate value detected' : undefined
     });

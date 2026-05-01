@@ -37,10 +37,10 @@ export const registerStaff = async (req: AuthRequest, res: Response): Promise<vo
             orderBy: { employeeNumber: 'desc' },
         });
 
-        const nextNumber = lastStaff 
+        const nextNumber = lastStaff
             ? parseInt(lastStaff.employeeNumber.split('-')[1]) + 1
             : 1;
-        
+
         const employeeNumber = `STF-${nextNumber.toString().padStart(4, '0')}`;
 
         // Parse numeric fields
@@ -52,9 +52,8 @@ export const registerStaff = async (req: AuthRequest, res: Response): Promise<vo
                 fullName: staffData.fullName,
                 nameWithInitials: staffData.nameWithInitials,
                 dateOfBirth: dob,
-                gender: staffData.gender,
-                nic: staffData.nic,
-                drivingLicenseNo: staffData.drivingLicenseNo || null,
+                nic: staffData.nic === '' ? undefined : staffData.nic,
+                drivingLicenseNo: staffData.drivingLicenseNo === '' ? null : (staffData.drivingLicenseNo || null),
                 address: staffData.address,
                 city: staffData.city,
                 district: staffData.district,
@@ -63,9 +62,10 @@ export const registerStaff = async (req: AuthRequest, res: Response): Promise<vo
                 mobileNumber: staffData.mobileNumber,
                 email: staffData.email,
                 joinedDate: joinedDate,
-                department: staffData.department,
+                department: staffData.department === '' ? undefined : staffData.department,
                 designation: staffData.designation,
                 employmentType: staffData.employmentType,
+                gender: staffData.gender === '' ? undefined : staffData.gender,
                 profilePhoto: profilePhotoUrl,
                 basicSalary: basicSalary,
                 status: staffData.status || 'ACTIVE',
@@ -108,7 +108,7 @@ export const registerStaff = async (req: AuthRequest, res: Response): Promise<vo
         if (error.code === 'P2002') {
             const target = error.meta?.target || [];
             const field = Array.isArray(target) ? target.join(', ') : String(target);
-            
+
             let message = 'A record with this information already exists.';
             if (field.includes('employeeNumber')) message = 'This employee number is already in use.';
             if (field.includes('nic')) message = 'A staff member with this NIC is already registered.';
@@ -128,7 +128,7 @@ export const getAllStaff = async (req: AuthRequest, res: Response): Promise<void
         const { status, search, department } = req.query;
 
         const where: any = {};
-        
+
         if (status) where.status = status;
         if (department) where.department = department;
         if (search) {
@@ -212,6 +212,20 @@ export const updateStaff = async (req: AuthRequest, res: Response): Promise<void
             }
         });
 
+        // Sanitize Enum and Unique fields
+        if (updateData.gender === '') {
+            delete updateData.gender;
+        }
+        if (updateData.department === '') {
+            delete updateData.department;
+        }
+        if (updateData.nic === '') {
+            delete updateData.nic;
+        }
+        if (updateData.drivingLicenseNo === '') {
+            updateData.drivingLicenseNo = null;
+        }
+
         // Parse numeric fields
         if (updateData.basicSalary) {
             updateData.basicSalary = parseFloat(updateData.basicSalary);
@@ -279,9 +293,9 @@ export const updateStaff = async (req: AuthRequest, res: Response): Promise<void
         });
     } catch (error: any) {
         console.error('Error updating staff:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: error.message || 'Failed to update staff' 
+        res.status(500).json({
+            success: false,
+            error: error.message || 'Failed to update staff'
         });
     }
 };
@@ -320,7 +334,7 @@ export const recordSalaryPayment = async (req: AuthRequest, res: Response): Prom
                 category: 'SALARIES',
                 description: `Staff Salary - ${staff?.fullName || 'Unknown Personnel'} (${month})`,
                 amount: netSalary,
-                vendor: staff?.fullName || 'Staff Member', 
+                vendor: staff?.fullName || 'Staff Member',
                 billNumber: receiptNumber || null,
                 paymentMethod: paymentMethod || 'CASH',
                 remarks: remarks,
@@ -345,7 +359,7 @@ export const recordSalaryPayment = async (req: AuthRequest, res: Response): Prom
 export const deleteStaffSalary = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         const { salaryId } = req.params;
-        
+
         // Let's find the salary record first so we could theoretically delete the matched expenditure,
         // but for now we just delete the salary record.
         await prisma.staffSalary.delete({
