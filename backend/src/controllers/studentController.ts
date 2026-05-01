@@ -268,8 +268,26 @@ export const getStudentById = async (req: AuthRequest, res: Response): Promise<v
 export const updateStudent = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const updateData = { ...req.body };
     const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+    
+    // Create a clean update object with only allowed fields
+    const allowedFields = [
+      'fullName', 'nameWithInitials', 'dateOfBirth', 'gender', 'bloodGroup',
+      'religion', 'ethnicity', 'nationality', 'nic', 'birthCertificateNo',
+      'indexNumber', 'classId', 'address', 'city', 'district', 'province',
+      'postalCode', 'mobileNumber', 'homePhone', 'email', 'admissionDate',
+      'previousSchool', 'guardianName', 'guardianRelationship', 'guardianNIC',
+      'guardianPhone', 'guardianAddress', 'guardianOccupation', 'guardianEmail',
+      'emergencyContactName', 'emergencyContactPhone', 'emergencyRelationship',
+      'status', 'leavingDate', 'leavingReason', 'leavingReasonOther'
+    ];
+
+    const updateData: any = {};
+    allowedFields.forEach(field => {
+      if (req.body[field] !== undefined) {
+        updateData[field] = req.body[field];
+      }
+    });
 
     // Convert date strings to Date objects if present
     if (updateData.dateOfBirth) {
@@ -281,7 +299,7 @@ export const updateStudent = async (req: AuthRequest, res: Response): Promise<vo
     }
 
     // Handle Profile Photo Removal or Update
-    if (updateData.removeProfilePhoto === 'true') {
+    if (req.body.removeProfilePhoto === 'true') {
       const currentStudent = await prisma.student.findUnique({ where: { id } });
       if (currentStudent?.profilePhoto) {
         try {
@@ -291,7 +309,6 @@ export const updateStudent = async (req: AuthRequest, res: Response): Promise<vo
         }
       }
       updateData.profilePhoto = null;
-      delete updateData.removeProfilePhoto;
     } else if (files && files['profilePhoto'] && files['profilePhoto'][0]) {
       // Get current student to possibly delete old photo
       const currentStudent = await prisma.student.findUnique({ where: { id } });
@@ -334,9 +351,13 @@ export const updateStudent = async (req: AuthRequest, res: Response): Promise<vo
       message: 'Student updated successfully',
       data: student,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error updating student:', error);
-    res.status(500).json({ success: false, error: 'Failed to update student' });
+    res.status(500).json({ 
+      success: false, 
+      error: error.message || 'Failed to update student',
+      details: error.code === 'P2002' ? 'Duplicate value detected' : undefined
+    });
   }
 };
 

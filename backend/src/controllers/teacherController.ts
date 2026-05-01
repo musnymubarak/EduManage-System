@@ -219,8 +219,22 @@ export const getTeacherById = async (req: AuthRequest, res: Response): Promise<v
 export const updateTeacher = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const { qualifications, ...updateData } = req.body;
     const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+
+    // Create a clean update object with only allowed fields
+    const allowedFields = [
+      'fullName', 'nameWithInitials', 'dateOfBirth', 'gender', 'nic',
+      'address', 'city', 'district', 'province', 'postalCode',
+      'mobileNumber', 'email', 'joinedDate', 'designation',
+      'employmentType', 'basicSalary', 'specialization', 'experience', 'status'
+    ];
+
+    const updateData: any = {};
+    allowedFields.forEach(field => {
+      if (req.body[field] !== undefined) {
+        updateData[field] = req.body[field];
+      }
+    });
 
     // Convert date strings to Date objects
     if (updateData.dateOfBirth) {
@@ -236,7 +250,7 @@ export const updateTeacher = async (req: AuthRequest, res: Response): Promise<vo
     }
 
     // Handle Profile Photo Removal or Update
-    if (updateData.removeProfilePhoto === 'true') {
+    if (req.body.removeProfilePhoto === 'true') {
       const currentTeacher = await prisma.teacher.findUnique({ where: { id } });
       if (currentTeacher?.profilePhoto) {
         try {
@@ -246,7 +260,6 @@ export const updateTeacher = async (req: AuthRequest, res: Response): Promise<vo
         }
       }
       updateData.profilePhoto = null;
-      delete updateData.removeProfilePhoto;
     } else if (files && files['profilePhoto'] && files['profilePhoto'][0]) {
       const currentTeacher = await prisma.teacher.findUnique({ where: { id } });
       if (currentTeacher?.profilePhoto) {
@@ -272,9 +285,12 @@ export const updateTeacher = async (req: AuthRequest, res: Response): Promise<vo
       message: 'Teacher updated successfully',
       data: teacher,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error updating teacher:', error);
-    res.status(500).json({ error: 'Failed to update teacher' });
+    res.status(500).json({ 
+      success: false, 
+      error: error.message || 'Failed to update teacher' 
+    });
   }
 };
 

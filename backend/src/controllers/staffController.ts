@@ -195,10 +195,22 @@ export const getStaffById = async (req: AuthRequest, res: Response): Promise<voi
 export const updateStaff = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         const { id } = req.params;
-        const staffData = req.body;
         const files = req.files as { [fieldname: string]: Express.Multer.File[] };
 
-        const updateData: any = { ...staffData };
+        // Create a clean update object with only allowed fields
+        const allowedFields = [
+            'fullName', 'nameWithInitials', 'dateOfBirth', 'gender', 'nic',
+            'drivingLicenseNo', 'address', 'city', 'district', 'province',
+            'postalCode', 'mobileNumber', 'email', 'department', 'designation',
+            'employmentType', 'joinedDate', 'basicSalary', 'status'
+        ];
+
+        const updateData: any = {};
+        allowedFields.forEach(field => {
+            if (req.body[field] !== undefined) {
+                updateData[field] = req.body[field];
+            }
+        });
 
         // Parse numeric fields
         if (updateData.basicSalary) {
@@ -216,7 +228,7 @@ export const updateStaff = async (req: AuthRequest, res: Response): Promise<void
         }
 
         // Handle Profile Photo Removal or Update
-        if (updateData.removeProfilePhoto === 'true') {
+        if (req.body.removeProfilePhoto === 'true') {
             const currentStaff = await prisma.staff.findUnique({ where: { id } });
             if (currentStaff?.profilePhoto) {
                 try {
@@ -226,7 +238,6 @@ export const updateStaff = async (req: AuthRequest, res: Response): Promise<void
                 }
             }
             updateData.profilePhoto = null;
-            delete updateData.removeProfilePhoto;
         } else if (files && files['profilePhoto'] && files['profilePhoto'][0]) {
             // Get current staff to possibly delete old photo from Cloudinary
             const currentStaff = await prisma.staff.findUnique({ where: { id } });
@@ -268,7 +279,10 @@ export const updateStaff = async (req: AuthRequest, res: Response): Promise<void
         });
     } catch (error: any) {
         console.error('Error updating staff:', error);
-        res.status(500).json({ success: false, error: error.message || 'Failed to update staff' });
+        res.status(500).json({ 
+            success: false, 
+            error: error.message || 'Failed to update staff' 
+        });
     }
 };
 
