@@ -29,11 +29,12 @@ import { Button } from '../components/UI/Button';
 import { Badge } from '../components/UI/Badge';
 import { Modal } from '../components/UI/Modal';
 import { formatDate, formatCurrency, getStatusColor } from '../utils/helpers';
+import StudentMedicalHistoryTab from '../components/Student/StudentMedicalHistoryTab';
 
 const StudentProfilePage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'overview' | 'academics' | 'fees' | 'attendance' | 'documents'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'academics' | 'fees' | 'attendance' | 'documents' | 'medical'>('overview');
   const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
   const queryClient = useQueryClient();
 
@@ -182,6 +183,7 @@ const StudentProfilePage: React.FC = () => {
           { id: 'academics', label: 'Academics', icon: GraduationCap },
           { id: 'fees', label: 'Fees & Payments', icon: CreditCard },
           { id: 'attendance', label: 'Attendance', icon: Calendar },
+          { id: 'medical', label: 'Medical History', icon: Stethoscope },
           { id: 'documents', label: 'Documents', icon: FileText }
         ].map((tab) => (
           <button
@@ -216,7 +218,7 @@ const StudentProfilePage: React.FC = () => {
                 <DetailItem label="Nationality" value={student.nationality} />
                 <DetailItem label="NIC Number" value={student.nic || 'Not Provided'} />
                 <DetailItem label="Birth Certificate No" value={student.birthCertificateNo} />
-                <DetailItem label="Blood Group" value={student.bloodGroup || 'Not Provided'} />
+                <DetailItem label="Blood Group" value={student.medicalHistory?.bloodGroup ? `${student.medicalHistory.bloodGroup} ${student.medicalHistory.rhFactor || ''}` : (student.bloodGroup || 'Not Provided')} />
                 <DetailItem label="Previous School" value={student.previousSchool || 'None'} />
               </div>
 
@@ -264,13 +266,40 @@ const StudentProfilePage: React.FC = () => {
               </Card>
 
               <Card className="border-l-4 border-l-yellow-500">
-                <div className="flex items-center gap-2 border-b pb-4 mb-4">
-                  <div className="p-2 bg-yellow-100 rounded-lg text-yellow-600"><Stethoscope size={20} /></div>
-                  <h3 className="text-lg font-bold text-gray-900">Medical History</h3>
+                <div className="flex items-center justify-between border-b pb-4 mb-4">
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 bg-yellow-100 rounded-lg text-yellow-600"><Stethoscope size={20} /></div>
+                    <h3 className="text-lg font-bold text-gray-900">Medical Summary</h3>
+                  </div>
+                  <Button 
+                    variant="secondary" 
+                    size="sm" 
+                    className="h-7 px-2 text-[10px] font-black uppercase tracking-widest"
+                    onClick={() => setActiveTab('medical')}
+                  >
+                    View Full
+                  </Button>
                 </div>
                 <div className="space-y-4">
-                  <DetailItem label="Medical Conditions" value={student.medicalConditions || 'No conditions reported'} />
-                  <DetailItem label="Allergies" value={student.allergies || 'No allergies reported'} />
+                  {student.medicalHistory ? (
+                    <>
+                      <div className="grid grid-cols-2 gap-4">
+                        <DetailItem label="Blood Group" value={`${student.medicalHistory.bloodGroup || '-'} ${student.medicalHistory.rhFactor || ''}`} />
+                        <DetailItem label="BMI" value={student.medicalHistory.bmi?.toString() || '-'} />
+                      </div>
+                      <DetailItem 
+                        label="Critical Allergies" 
+                        value={student.medicalHistory.foodDrugAllergy ? student.medicalHistory.allergyDetails : 'None reported'} 
+                        icon={student.medicalHistory.foodDrugAllergy ? <AlertTriangle size={14} className="text-red-500" /> : undefined}
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <DetailItem label="Medical Conditions" value={student.medicalConditions || 'No conditions reported'} />
+                      <DetailItem label="Allergies" value={student.allergies || 'No allergies reported'} />
+                      <p className="text-[10px] text-gray-400 font-medium italic">* Comprehensive record not yet filled</p>
+                    </>
+                  )}
                 </div>
               </Card>
             </div>
@@ -339,6 +368,10 @@ const StudentProfilePage: React.FC = () => {
 
         {activeTab === 'fees' && (
           <StudentFeeLedger studentId={id!} />
+        )}
+
+        {activeTab === 'medical' && (
+          <StudentMedicalHistoryTab studentId={id!} />
         )}
 
         {activeTab === 'attendance' && (

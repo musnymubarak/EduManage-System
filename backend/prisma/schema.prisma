@@ -115,9 +115,10 @@ model Student {
   emergencyContactPhone String
   emergencyRelationship String
   
-  // Medical Information
+  // Medical Information (Legacy fields, migrating to StudentMedicalHistory)
   medicalConditions     String?
   allergies             String?
+  medicalHistory        StudentMedicalHistory?
   
   // Documents & Attachments
   profilePhoto          String?
@@ -151,6 +152,59 @@ model StudentDocument {
   uploadedAt  DateTime @default(now())
 
   @@map("student_documents")
+}
+
+model StudentMedicalHistory {
+  id                  String   @id @default(uuid())
+  studentId           String   @unique
+  student             Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  
+  // Basic Biometrics
+  bloodGroup          String?  // Migrated from Student model
+  rhFactor            String?  // e.g., Positive, Negative
+  height              Float?   // in cm
+  weight              Float?   // in kg
+  bmi                 Float?
+
+  // Sensory
+  vision              String?  // GOOD, POOR
+  wearingGlasses      Boolean  @default(false)
+  squintEye           String?  // RIGHT, LEFT, BOTH, NONE
+  sight               String?  // SHORT, LONG, NORMAL
+  hearingProblem      String?  // RIGHT, LEFT, BOTH, NONE
+
+  // Dental
+  oralHygiene         String?  // SATISFIED, UNSATISFIED
+  dentalCaries        Boolean  @default(false)
+  gumDisorder         Boolean  @default(false)
+
+  // Conditions & Allergies
+  foodDrugAllergy     Boolean  @default(false)
+  allergyDetails      String?  @db.Text
+  skinProblem         Boolean  @default(false)
+  skinProblemDetails  String?  @db.Text
+  respiratoryProblem  Boolean  @default(false)
+  respiratoryDetails  String?  @db.Text
+  undergoneSurgery    Boolean  @default(false)
+  surgeryDetails      String?  @db.Text
+  nervousProblem      Boolean  @default(false)
+  nervousDetails      String?  @db.Text
+  gastritis           Boolean  @default(false)
+  otherSickness       String?  @db.Text
+
+  // Immunization
+  immunizationGiven   Boolean  @default(false)
+  vaccineBcg          Boolean  @default(false)
+  vaccinePolio        Boolean  @default(false)
+  vaccineRubella      Boolean  @default(false)
+  vaccineAtd          Boolean  @default(false)
+  vaccineHpv          Boolean  @default(false)
+  immunizationDetails String?  @db.Text
+
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@map("student_medical_history")
 }
 
 // ============================================

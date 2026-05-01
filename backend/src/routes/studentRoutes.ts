@@ -33,4 +33,8 @@ router.post(
 );
 router.delete('/:id', authorize('SUPER_ADMIN'), studentController.deleteStudent);
 
+// Medical History Routes
+router.get('/:id/medical', studentController.getStudentMedicalHistory);
+router.put('/:id/medical', authorize(...managers), studentController.upsertStudentMedicalHistory);
+
 export default router;

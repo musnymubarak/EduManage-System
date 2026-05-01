@@ -62,11 +62,51 @@ export interface Student {
   leavingReasonOther?: string;
 }
 
+export interface StudentMedicalHistory {
+  id: string;
+  studentId: string;
+  bloodGroup?: string;
+  rhFactor?: string;
+  height?: number;
+  weight?: number;
+  bmi?: number;
+  vision?: string;
+  wearingGlasses: boolean;
+  squintEye?: string;
+  sight?: string;
+  hearingProblem?: string;
+  oralHygiene?: string;
+  dentalCaries: boolean;
+  gumDisorder: boolean;
+  foodDrugAllergy: boolean;
+  allergyDetails?: string;
+  skinProblem: boolean;
+  skinProblemDetails?: string;
+  respiratoryProblem: boolean;
+  respiratoryDetails?: string;
+  undergoneSurgery: boolean;
+  surgeryDetails?: string;
+  nervousProblem: boolean;
+  nervousDetails?: string;
+  gastritis: boolean;
+  otherSickness?: string;
+  immunizationGiven: boolean;
+  vaccineBcg: boolean;
+  vaccinePolio: boolean;
+  vaccineRubella: boolean;
+  vaccineAtd: boolean;
+  vaccineHpv: boolean;
+  immunizationDetails?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface StudentDetail extends Student {
   documents: StudentDocument[];
   feePayments: FeePayment[];
   attendance: Attendance[];
   examMarks: ExamMark[];
+  medicalHistory?: StudentMedicalHistory;
 }
 
 export interface StudentDocument {

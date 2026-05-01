@@ -244,6 +244,7 @@ export const getStudentById = async (req: AuthRequest, res: Response): Promise<v
             },
           },
         },
+        medicalHistory: true,
       },
     });
 
@@ -417,5 +418,48 @@ export const markStudentAsLeft = async (req: AuthRequest, res: Response): Promis
   } catch (error) {
     console.error('Error marking student as left:', error);
     res.status(500).json({ success: false, error: 'Failed to mark student as left' });
+  }
+};
+
+export const getStudentMedicalHistory = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+
+    const medicalHistory = await prisma.studentMedicalHistory.findUnique({
+      where: { studentId: id },
+    });
+
+    res.json({
+      success: true,
+      data: medicalHistory,
+    });
+  } catch (error) {
+    console.error('Error fetching medical history:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch medical history' });
+  }
+};
+
+export const upsertStudentMedicalHistory = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const updateData = req.body;
+
+    const medicalHistory = await prisma.studentMedicalHistory.upsert({
+      where: { studentId: id },
+      update: updateData,
+      create: {
+        studentId: id,
+        ...updateData,
+      },
+    });
+
+    res.json({
+      success: true,
+      message: 'Medical history updated successfully',
+      data: medicalHistory,
+    });
+  } catch (error) {
+    console.error('Error updating medical history:', error);
+    res.status(500).json({ success: false, error: 'Failed to update medical history' });
   }
 };
