@@ -8,8 +8,7 @@ import {
   Calendar,
   ArrowDownLeft,
   LayoutGrid,
-  History,
-  Info
+  History
 } from 'lucide-react';
 import api from '../services/api';
 import { generateLedgerReportPDF } from '../utils/generateLedgerReport';
@@ -300,6 +299,112 @@ const PaymentsPage: React.FC = () => {
 };
 
 // --- Receipt Modal Component ---
+const ReceiptContent: React.FC<{ fee: any; copyLabel?: string }> = ({ fee, copyLabel }) => (
+  <div className="receipt-content-body bg-white p-6 text-slate-800 border border-slate-200 relative flex flex-col justify-between overflow-hidden shadow-sm" style={{ height: '148.5mm', width: '105mm', boxSizing: 'border-box', fontFamily: 'Inter, system-ui, sans-serif' }}>
+    {/* Blue Accent Triangle (Stylized) */}
+    <div className="absolute top-0 left-0 w-12 h-12 bg-blue-900" style={{ clipPath: 'polygon(0 0, 100% 0, 0 100%)' }}></div>
+    
+    {copyLabel && (
+      <div className="absolute top-2 right-4 text-[6px] font-bold text-slate-300 uppercase tracking-widest">
+        {copyLabel}
+      </div>
+    )}
+
+    <div>
+        {/* HEADER SECTION */}
+        <div className="flex justify-between items-start mb-6 pt-2">
+            <div className="mt-4">
+                <h2 className="text-xl font-black text-slate-900 tracking-tighter uppercase">RECEIPT</h2>
+            </div>
+            <div className="text-right">
+                <div className="flex items-center gap-2 justify-end mb-1">
+                    <img src={logo} alt="Logo" className="h-6 w-6 object-contain" />
+                    <h1 className="text-[11px] font-black text-blue-900 uppercase">Sumaiya Ladies Arabic College</h1>
+                </div>
+            </div>
+        </div>
+
+        {/* INFO GRID */}
+        <div className="flex justify-between gap-4 mb-6">
+            <div className="flex-1">
+                <p className="text-[8px] font-bold text-slate-400 uppercase tracking-wider mb-1">Receipt To :</p>
+                <p className="text-[10px] font-black text-slate-900 uppercase">{fee.student?.fullName}</p>
+                <p className="text-[9px] font-medium text-slate-500">ID: {fee.student?.admissionNumber}</p>
+            </div>
+            <div className="text-right">
+                <p className="text-[8px] font-bold text-slate-400 uppercase tracking-wider mb-1">Receipt Details</p>
+                <p className="text-[9px] font-bold text-slate-700">Receipt No: <span className="font-black text-slate-900">{fee.receiptNumber}</span></p>
+                <p className="text-[9px] font-bold text-slate-700">Date: <span className="font-black text-slate-900">{formatDate(fee.paymentDate || fee.createdAt)}</span></p>
+                <p className="text-[9px] font-bold text-slate-700 uppercase mt-1">Method: {fee.paymentMethod}</p>
+            </div>
+        </div>
+
+        {/* MAIN TABLE */}
+        <div className="border border-slate-200 rounded-sm mb-4">
+            <table className="w-full text-left">
+                <thead className="bg-white border-b border-slate-200">
+                    <tr>
+                        <th className="px-3 py-2 text-[8px] font-black text-blue-900 uppercase tracking-widest border-r border-slate-100">Date</th>
+                        <th className="px-3 py-2 text-[8px] font-black text-blue-900 uppercase tracking-widest border-r border-slate-100">Description</th>
+                        <th className="px-3 py-2 text-right text-[8px] font-black text-blue-900 uppercase tracking-widest">Amount</th>
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                    <tr className="min-h-[80px]">
+                        <td className="px-3 py-4 text-[9px] font-medium text-slate-600 border-r border-slate-100 align-top">
+                            {formatDate(fee.paymentDate || fee.createdAt)}
+                        </td>
+                        <td className="px-3 py-4 border-r border-slate-100 align-top">
+                            <p className="text-[10px] font-black text-slate-800 uppercase">{fee.feeType} COLLECTION</p>
+                            <p className="text-[8px] text-slate-400 mt-1 uppercase">Ref: Academic Records</p>
+                        </td>
+                        <td className="px-3 py-4 text-right text-[10px] font-black text-slate-800 align-top">
+                            {formatCurrency(fee.paidAmount)}
+                        </td>
+                    </tr>
+                    <tr className="h-12">
+                        <td className="border-r border-slate-100"></td>
+                        <td className="border-r border-slate-100"></td>
+                        <td></td>
+                    </tr>
+                </tbody>
+                <tfoot className="border-t border-slate-200">
+                    <tr>
+                        <td colSpan={2} className="px-3 py-2 text-right text-[9px] font-black text-slate-500 uppercase">Total Amount</td>
+                        <td className="px-3 py-2 text-right text-[11px] font-black text-blue-900">{formatCurrency(fee.paidAmount)}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        {/* Terms & Conditions */}
+        <div className="mb-4">
+            <p className="text-[8px] font-black text-slate-800 uppercase mb-1">Notice</p>
+            <ul className="text-[7px] text-slate-500 space-y-0.5 list-disc pl-3">
+                <li>Payment acknowledged. Please keep this for your records.</li>
+                <li>System generated receipt, no physical signature required for internal use.</li>
+            </ul>
+        </div>
+    </div>
+
+    {/* FOOTER SECTION */}
+    <div className="border-t border-slate-100 pt-4 mt-auto">
+        <div className="flex justify-between items-end">
+            <div className="max-w-[150px]">
+                <p className="text-[8px] font-black text-blue-900 uppercase mb-1">Contact Us</p>
+                <p className="text-[7px] text-slate-500 leading-tight">munaichchenai, Kinniya 31100</p>
+                <p className="text-[7px] text-slate-500">Phone: 0262 236 033</p>
+                <p className="text-[6px] text-slate-300 mt-2 uppercase">System Gen: {new Date().toLocaleTimeString()}</p>
+            </div>
+            <div className="text-right">
+                <div className="w-32 border-b border-slate-300 h-8 mb-1 ml-auto"></div>
+                <p className="text-[8px] font-black text-slate-900 uppercase">Official Signature</p>
+            </div>
+        </div>
+    </div>
+  </div>
+);
+
 const FeeReceiptModal: React.FC<{ isOpen: boolean; onClose: () => void; fee: any }> = ({ isOpen, onClose, fee }) => {
     const handlePrint = () => window.print();
     if (!fee) return null;
@@ -310,94 +415,39 @@ const FeeReceiptModal: React.FC<{ isOpen: boolean; onClose: () => void; fee: any
               <Button variant="secondary" onClick={onClose} className="font-bold border-none">Close</Button>
               <Button onClick={handlePrint} className="bg-blue-600 hover:bg-blue-700 shadow-md font-black px-6">
                   <Printer size={18} className="mr-2" /> 
-                  Authorize Print
+                  Print (1/4 A4)
               </Button>
           </div>
       }>
-          <div className="bg-white p-12 text-gray-900" id="receipt-content">
-              {/* Branding */}
-              <div className="flex justify-between items-start border-b-4 border-double border-gray-900 pb-10 mb-10">
-                  <div className="flex gap-6 items-center">
-                      <div className="h-20 w-20 bg-gray-900 rounded-2xl flex items-center justify-center p-2">
-                          <img src={logo} alt="Logo" className="max-h-full max-w-full object-contain" />
-                      </div>
-                      <div>
-                          <h1 className="text-4xl font-black tracking-tighter">SUMAYA MADRASA</h1>
-                          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 mt-1">Institutional Financial Record</p>
-                      </div>
-                  </div>
-                  <div className="text-right">
-                      <p className="text-sm font-black text-blue-600 tracking-tighter bg-blue-50 px-3 py-1 rounded-lg inline-block mb-2">No: {fee.receiptNumber}</p>
-                      <p className="text-[10px] font-bold uppercase text-gray-400 tracking-widest">Transaction Date</p>
-                      <p className="text-sm font-black">{formatDate(fee.paymentDate || fee.createdAt)}</p>
-                  </div>
-              </div>
-  
-              {/* Identity */}
-              <div className="grid grid-cols-2 gap-12 mb-12">
-                  <div className="bg-gray-50 p-6 rounded-3xl border border-gray-100">
-                     <p className="text-[10px] font-black uppercase text-gray-400 tracking-[0.2em] mb-3">Student Particulars</p>
-                     <p className="text-2xl font-black text-gray-900 mb-1 leading-none">{fee.student?.fullName}</p>
-                     <p className="text-xs font-bold text-gray-600 uppercase tracking-widest">ID: {fee.student?.admissionNumber}</p>
-                  </div>
-                  <div className="text-right flex flex-col justify-end">
-                     <p className="text-[10px] font-black uppercase text-gray-400 tracking-[0.2em] mb-3">Classification</p>
-                     <p className="text-xl font-bold text-gray-900 mb-1">{fee.feeType} FEE</p>
-                     {fee.month && <p className="text-sm font-medium text-gray-600 italic">Period: {fee.month}</p>}
-                     <p className="text-xs font-black text-blue-600 mt-2 uppercase">Method: {fee.paymentMethod}</p>
-                  </div>
-              </div>
-  
-              {/* Financials */}
-              <div className="border-2 border-gray-900 rounded-3xl overflow-hidden mb-12">
-                  <table className="w-full text-left">
-                      <thead className="bg-gray-900 text-white">
-                          <tr>
-                              <th className="p-6 text-xs font-black uppercase tracking-widest">Description</th>
-                              <th className="p-6 text-right text-xs font-black uppercase tracking-widest">Value (LKR)</th>
-                          </tr>
-                      </thead>
-                      <tbody>
-                          <tr>
-                              <td className="p-6">
-                                  <p className="font-bold text-lg text-gray-900">Standard {fee.feeType} Assessment / Collection</p>
-                                  <p className="text-xs text-gray-500 mt-1">Steward: {fee.collector?.fullName || 'Academic Staff'}</p>
-                              </td>
-                              <td className="p-6 text-right font-black text-xl text-gray-900">{formatCurrency(fee.amount)}</td>
-                          </tr>
-                      </tbody>
-                      <tfoot className="bg-gray-50 border-t-2 border-gray-900">
-                          <tr>
-                              <td className="p-6 text-right text-xs font-black uppercase tracking-widest">Net Paid Amount</td>
-                              <td className="p-6 text-right text-3xl font-black text-green-600">{formatCurrency(fee.paidAmount)}</td>
-                          </tr>
-                      </tfoot>
-                  </table>
-              </div>
-  
-              {/* Stewardship */}
-              <div className="grid grid-cols-2 gap-8 items-end">
-                  <div>
-                      <Info size={16} className="text-blue-500 mb-2" />
-                      <p className="text-xs text-gray-500 uppercase font-black tracking-widest italic mb-4">Official Document — Sumaya Management</p>
-                      {fee.remarks && (
-                          <p className="text-xs text-gray-600 bg-gray-50 p-4 rounded-xl border-l-4 border-gray-200">Memo: {fee.remarks}</p>
-                      )}
-                  </div>
-                  <div className="text-right">
-                        <div className="mb-10 inline-block text-center border-b-2 border-gray-900 pb-1 w-64 h-16 flex flex-col justify-end">
-                             <p className="text-sm font-black italic text-blue-900/40">Authorized by Bursar</p>
-                        </div>
-                        <p className="text-xs font-black uppercase tracking-[0.4em] text-gray-900">Official Signature</p>
-                  </div>
+          {/* VIEW IN MODAL (Single Preview) */}
+          <div className="no-print p-6 bg-gray-100 min-h-[400px] flex justify-center">
+              <div className="shadow-2xl scale-90 origin-top">
+                  <ReceiptContent fee={fee} copyLabel="Official Receipt" />
               </div>
           </div>
+
+          {/* PRINT LAYOUT (Hidden from UI, 1/4 of A4) */}
+          <div id="receipt-print-grid" className="hidden print:block print:w-[210mm] print:h-[297mm] print:bg-white">
+              <ReceiptContent fee={fee} copyLabel="Official Receipt" />
+          </div>
+
           <style dangerouslySetInnerHTML={{ __html: `
           @media print {
+            @page { size: A4 portrait; margin: 0; }
             body { background: white !important; margin: 0 !important; padding: 0 !important; }
-            .no-print, aside, header, nav { display: none !important; }
-            #receipt-content { position: fixed; top: 0; left: 0; width: 100vw; padding: 40px !important; z-index: 9999; visibility: visible !important; }
-            #receipt-content * { visibility: visible !important; }
+            .no-print, aside, header, nav, footer, .modal-overlay, .modal-content-wrapper { display: none !important; }
+            #receipt-print-grid { 
+              display: block !important;
+              position: fixed; 
+              top: 0; 
+              left: 0; 
+              width: 210mm; 
+              height: 297mm; 
+              z-index: 99999;
+              background: white !important;
+              visibility: visible !important;
+            }
+            #receipt-print-grid * { visibility: visible !important; }
           }
         `}} />
       </Modal>

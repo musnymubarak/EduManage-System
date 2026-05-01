@@ -1,16 +1,16 @@
 import React from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { 
-  LayoutDashboard, 
-  Users, 
-  GraduationCap, 
-  CalendarCheck, 
-  DollarSign, 
-  FileText, 
-  Package, 
-  CheckSquare, 
-  UserCog, 
+import {
+  LayoutDashboard,
+  Users,
+  GraduationCap,
+  CalendarCheck,
+  DollarSign,
+  FileText,
+  Package,
+  CheckSquare,
+  UserCog,
   TrendingUp,
   Gift,
   LogOut,
@@ -53,9 +53,9 @@ const MainLayout: React.FC = () => {
       <aside className="flex w-64 flex-col flex-shrink-0 bg-white shadow-lg border-r border-gray-200">
         <div className="flex h-16 flex-shrink-0 items-center justify-center bg-blue-600 px-4 gap-3">
           <img src={logo} alt="Samaiya Madrasa Logo" className="h-10 w-10 object-contain brightness-0 invert" />
-          <h1 className="text-xl font-bold text-white tracking-tight">Samaiya Madrasa</h1>
+          <h1 className="text-xl font-bold text-white tracking-tight">Sumaiya Madrasa</h1>
         </div>
-        
+
         {/* Independent scroll area for the sidebar content */}
         <div className="flex-1 overflow-y-auto custom-scrollbar">
           <div className="p-4">
@@ -71,11 +71,10 @@ const MainLayout: React.FC = () => {
                   <Link
                     key={item.path}
                     to={item.path}
-                    className={`flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors ${
-                      isActive(item.path)
+                    className={`flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors ${isActive(item.path)
                         ? 'bg-blue-50 text-blue-600'
                         : 'text-gray-700 hover:bg-gray-50'
-                    }`}
+                      }`}
                   >
                     <Icon size={20} />
                     <span>{item.label}</span>
