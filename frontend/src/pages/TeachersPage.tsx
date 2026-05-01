@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Search, Eye, GraduationCap, Users, BookOpen, Pencil, UserCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
