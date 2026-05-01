@@ -280,8 +280,19 @@ export const updateStudent = async (req: AuthRequest, res: Response): Promise<vo
       updateData.admissionDate = new Date(updateData.admissionDate);
     }
 
-    // Handle Profile Photo Upload if present
-    if (files && files['profilePhoto'] && files['profilePhoto'][0]) {
+    // Handle Profile Photo Removal or Update
+    if (updateData.removeProfilePhoto === 'true') {
+      const currentStudent = await prisma.student.findUnique({ where: { id } });
+      if (currentStudent?.profilePhoto) {
+        try {
+          await deleteFromCloudinary(currentStudent.profilePhoto);
+        } catch (e) {
+          console.error('Failed to delete old profile photo:', e);
+        }
+      }
+      updateData.profilePhoto = null;
+      delete updateData.removeProfilePhoto;
+    } else if (files && files['profilePhoto'] && files['profilePhoto'][0]) {
       // Get current student to possibly delete old photo
       const currentStudent = await prisma.student.findUnique({ where: { id } });
       if (currentStudent?.profilePhoto) {

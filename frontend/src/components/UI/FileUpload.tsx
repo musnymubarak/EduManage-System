@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Upload, X, File as FileIcon, Image as ImageIcon, FileText } from 'lucide-react';
-import { cn } from '../../utils/helpers';
+import { cn, getFileUrl } from '../../utils/helpers';
 
 interface FileUploadProps {
   label?: string;
@@ -204,8 +204,8 @@ export const SingleImageUpload: React.FC<SingleImageUploadProps> = ({
       const objectUrl = URL.createObjectURL(value);
       setPreview(objectUrl);
       return () => URL.revokeObjectURL(objectUrl);
-    } else if (typeof value === 'string') {
-      setPreview(value);
+    } else if (typeof value === 'string' && value) {
+      setPreview(getFileUrl(value));
     } else {
       setPreview('');
     }

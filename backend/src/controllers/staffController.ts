@@ -215,8 +215,19 @@ export const updateStaff = async (req: AuthRequest, res: Response): Promise<void
             updateData.joinedDate = new Date(joinedDateStr);
         }
 
-        // Handle Profile Photo Upload if new photo provided
-        if (files && files['profilePhoto'] && files['profilePhoto'][0]) {
+        // Handle Profile Photo Removal or Update
+        if (updateData.removeProfilePhoto === 'true') {
+            const currentStaff = await prisma.staff.findUnique({ where: { id } });
+            if (currentStaff?.profilePhoto) {
+                try {
+                    await deleteFromCloudinary(currentStaff.profilePhoto);
+                } catch (e) {
+                    console.error('Failed to delete old profile photo:', e);
+                }
+            }
+            updateData.profilePhoto = null;
+            delete updateData.removeProfilePhoto;
+        } else if (files && files['profilePhoto'] && files['profilePhoto'][0]) {
             // Get current staff to possibly delete old photo from Cloudinary
             const currentStaff = await prisma.staff.findUnique({ where: { id } });
             if (currentStaff?.profilePhoto) {

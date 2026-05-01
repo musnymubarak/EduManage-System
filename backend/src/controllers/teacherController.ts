@@ -235,8 +235,19 @@ export const updateTeacher = async (req: AuthRequest, res: Response): Promise<vo
       updateData.basicSalary = parseFloat(updateData.basicSalary);
     }
 
-    // Handle Profile Photo Upload
-    if (files && files['profilePhoto'] && files['profilePhoto'][0]) {
+    // Handle Profile Photo Removal or Update
+    if (updateData.removeProfilePhoto === 'true') {
+      const currentTeacher = await prisma.teacher.findUnique({ where: { id } });
+      if (currentTeacher?.profilePhoto) {
+        try {
+          await deleteFromCloudinary(currentTeacher.profilePhoto);
+        } catch (e) {
+          console.error('Failed to delete old profile photo:', e);
+        }
+      }
+      updateData.profilePhoto = null;
+      delete updateData.removeProfilePhoto;
+    } else if (files && files['profilePhoto'] && files['profilePhoto'][0]) {
       const currentTeacher = await prisma.teacher.findUnique({ where: { id } });
       if (currentTeacher?.profilePhoto) {
         try {

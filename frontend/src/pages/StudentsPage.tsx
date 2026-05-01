@@ -262,8 +262,15 @@ interface StudentModalProps {
 }
 
 const StudentModal: React.FC<StudentModalProps> = ({ isOpen, onClose, classes, initialData }) => {
-  const [profilePhoto, setProfilePhoto] = useState<File | null>(null);
+  const [profilePhoto, setProfilePhoto] = useState<File | string | null>(null);
   const [documents, setDocuments] = useState<File[]>([]);
+
+  React.useEffect(() => {
+    if (isOpen) {
+      setProfilePhoto(initialData?.profilePhoto || null);
+    }
+  }, [isOpen, initialData]);
+
   const queryClient = useQueryClient();
 
   const studentMutation = useMutation({
@@ -296,8 +303,11 @@ const StudentModal: React.FC<StudentModalProps> = ({ isOpen, onClose, classes, i
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     
-    if (profilePhoto) {
+    if (profilePhoto instanceof File) {
       formData.append('profilePhoto', profilePhoto);
+    } else if (initialData?.profilePhoto && profilePhoto === null) {
+      // Photo was removed
+      formData.append('removeProfilePhoto', 'true');
     }
 
     documents.forEach((doc) => {

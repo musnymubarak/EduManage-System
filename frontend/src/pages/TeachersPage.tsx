@@ -236,19 +236,22 @@ interface TeacherModalProps {
 }
 
 const TeacherModal: React.FC<TeacherModalProps> = ({ isOpen, onClose, initialData }) => {
-  const [qualifications, setQualifications] = useState<any[]>([
-    { degree: '', institution: '', year: '', fieldOfStudy: '' },
-  ]);
+  const [profilePhoto, setProfilePhoto] = useState<File | string | null>(null);
+  const [qualifications, setQualifications] = useState<any[]>(
+    initialData?.qualifications?.map((q: any) => ({
+      degree: q.qualification,
+      institution: q.institution,
+      year: q.year,
+      fieldOfStudy: q.field
+    })) || [{ degree: '', institution: '', year: '', fieldOfStudy: '' }]
+  );
 
-  useEffect(() => {
-    if (initialData?.qualifications) {
-      setQualifications(initialData.qualifications);
-    } else {
-      setQualifications([{ degree: '', institution: '', year: '', fieldOfStudy: '' }]);
+  React.useEffect(() => {
+    if (isOpen) {
+      setProfilePhoto(initialData?.profilePhoto || null);
     }
-  }, [initialData]);
+  }, [isOpen, initialData]);
 
-  const [profilePhoto, setProfilePhoto] = useState<File | null>(null);
   const [documents, setDocuments] = useState<File[]>([]);
   const queryClient = useQueryClient();
 
@@ -287,8 +290,11 @@ const TeacherModal: React.FC<TeacherModalProps> = ({ isOpen, onClose, initialDat
     const validQualifications = qualifications.filter(q => q.degree && q.institution);
     formData.append('qualifications', JSON.stringify(validQualifications));
 
-    if (profilePhoto) {
+    if (profilePhoto instanceof File) {
       formData.append('profilePhoto', profilePhoto);
+    } else if (initialData?.profilePhoto && profilePhoto === null) {
+      // Photo was removed
+      formData.append('removeProfilePhoto', 'true');
     }
 
     documents.forEach((doc) => {
