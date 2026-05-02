@@ -239,7 +239,13 @@ const TeacherProfilePage: React.FC = () => {
                 </div>
                 <DetailItem label="City" value={teacher.city} />
                 <DetailItem label="District" value={teacher.district} />
-                <DetailItem label="Mobile Number" value={teacher.mobileNumber} icon={<Phone size={14} className="text-blue-500" />} />
+                <DetailItem 
+                  label="Phone Numbers" 
+                  value={teacher.phoneNumbers && teacher.phoneNumbers.length > 0 
+                    ? teacher.phoneNumbers.join(', ') 
+                    : 'Not Provided'} 
+                  icon={<Phone size={14} className="text-blue-500" />} 
+                />
                 <DetailItem label="Email Address" value={teacher.email || 'Not Provided'} icon={<Mail size={14} className="text-blue-500" />} />
               </div>
             </Card>

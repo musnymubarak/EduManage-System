@@ -107,7 +107,7 @@ model Student {
   guardianName          String
   guardianRelationship  String
   guardianNIC           String
-  guardianPhone         String
+  guardianPhones        String[]     @default([])
   guardianAddress       String?
   guardianOccupation    String?
   guardianEmail         String?
@@ -230,7 +230,7 @@ model Teacher {
   postalCode         String?
   gnDivision         String?
   dsDivision         String?
-  mobileNumber       String
+  phoneNumbers       String[] @default([])
   email              String?
   
   // Qualifications
@@ -339,7 +339,7 @@ model Staff {
   postalCode         String?
   gnDivision         String?
   dsDivision         String?
-  mobileNumber       String
+  phoneNumbers       String[] @default([])
   email              String?
 
   // Employment Information

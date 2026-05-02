@@ -68,7 +68,7 @@ export const registerTeacher = async (req: AuthRequest, res: Response): Promise<
         postalCode: restData.postalCode,
         gnDivision: restData.gnDivision,
         dsDivision: restData.dsDivision,
-        mobileNumber: restData.mobileNumber,
+        phoneNumbers: Array.isArray(restData.phoneNumbers) ? restData.phoneNumbers : (restData.phoneNumbers ? [restData.phoneNumbers] : []),
         email: restData.email,
         joinedDate: joinedDate,
         designation: restData.designation,
@@ -227,7 +227,7 @@ export const updateTeacher = async (req: AuthRequest, res: Response): Promise<vo
     const allowedFields = [
       'fullName', 'nameWithInitials', 'dateOfBirth', 'gender', 'nic',
       'address', 'city', 'district', 'province', 'postalCode',
-      'gnDivision', 'dsDivision', 'mobileNumber', 'email', 'joinedDate', 'designation',
+      'gnDivision', 'dsDivision', 'phoneNumbers', 'email', 'joinedDate', 'designation',
       'employmentType', 'basicSalary', 'specialization', 'experience', 'status'
     ];
 
@@ -284,7 +284,12 @@ export const updateTeacher = async (req: AuthRequest, res: Response): Promise<vo
 
     const teacher = await prisma.teacher.update({
       where: { id },
-      data: updateData as any,
+      data: {
+        ...updateData,
+        phoneNumbers: updateData.phoneNumbers 
+          ? (Array.isArray(updateData.phoneNumbers) ? updateData.phoneNumbers : [updateData.phoneNumbers])
+          : undefined
+      } as any,
       include: {
         qualifications: true,
       },

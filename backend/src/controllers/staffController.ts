@@ -61,7 +61,7 @@ export const registerStaff = async (req: AuthRequest, res: Response): Promise<vo
                 postalCode: staffData.postalCode,
                 gnDivision: staffData.gnDivision,
                 dsDivision: staffData.dsDivision,
-                mobileNumber: staffData.mobileNumber,
+                phoneNumbers: Array.isArray(staffData.phoneNumbers) ? staffData.phoneNumbers : (staffData.phoneNumbers ? [staffData.phoneNumbers] : []),
                 email: staffData.email,
                 joinedDate: joinedDate,
                 department: staffData.department === '' ? undefined : staffData.department,
@@ -203,7 +203,7 @@ export const updateStaff = async (req: AuthRequest, res: Response): Promise<void
         const allowedFields = [
             'fullName', 'nameWithInitials', 'dateOfBirth', 'gender', 'nic',
             'drivingLicenseNo', 'address', 'city', 'district', 'province',
-            'postalCode', 'gnDivision', 'dsDivision', 'mobileNumber', 'email', 'department', 'designation',
+            'postalCode', 'gnDivision', 'dsDivision', 'phoneNumbers', 'email', 'department', 'designation',
             'employmentType', 'joinedDate', 'basicSalary', 'status'
         ];
 
@@ -269,7 +269,12 @@ export const updateStaff = async (req: AuthRequest, res: Response): Promise<void
 
         const staff = await prisma.staff.update({
             where: { id },
-            data: updateData as any,
+            data: {
+                ...updateData,
+                phoneNumbers: updateData.phoneNumbers 
+                  ? (Array.isArray(updateData.phoneNumbers) ? updateData.phoneNumbers : [updateData.phoneNumbers])
+                  : undefined
+            } as any,
         });
 
         // Handle Documents Upload

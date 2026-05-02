@@ -29,6 +29,7 @@ import { Input, Select, TextArea } from '../components/UI/Input';
 import { Modal } from '../components/UI/Modal';
 import { SingleImageUpload, FileUpload } from '../components/UI/FileUpload';
 import { formatDate, formatCurrency, getFileUrl } from '../utils/helpers';
+import { MultiPhoneInput } from '../components/UI/MultiPhoneInput';
 
 import toast from 'react-hot-toast';
 
@@ -331,8 +332,12 @@ const StaffProfilePage: React.FC = () => {
                                 <div className="flex items-center gap-4 bg-gray-50 p-4 rounded-2xl group transition-all hover:bg-blue-50">
                                     <div className="bg-white p-3 rounded-xl shadow-sm group-hover:text-blue-600 transition-colors"><Phone size={20} /></div>
                                     <div>
-                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Mobile Line</p>
-                                        <p className="text-gray-900 font-bold">{staff.mobileNumber}</p>
+                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Phone Lines</p>
+                                        <p className="text-gray-900 font-bold">
+                                            {staff.phoneNumbers && staff.phoneNumbers.length > 0 
+                                                ? staff.phoneNumbers.join(', ') 
+                                                : 'Not Provided'}
+                                        </p>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-4 bg-gray-50 p-4 rounded-2xl group transition-all hover:bg-blue-50">
@@ -711,8 +716,8 @@ const StaffProfilePage: React.FC = () => {
 
                     <div className="space-y-4">
                         <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 border-b border-blue-100 pb-2">Contact Context</h4>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <Input label="Mobile Number" name="mobileNumber" defaultValue={staff.mobileNumber} required />
+                        <div className="grid grid-cols-1 gap-4">
+                            <MultiPhoneInput label="Phone Numbers" name="phoneNumbers" initialValues={staff.phoneNumbers} />
                             <Input label="Email Address (Optional)" name="email" type="email" defaultValue={staff.email || ''} />
                         </div>
                         <Input label="Physical Address" name="address" defaultValue={staff.address} required />

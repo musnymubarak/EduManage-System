@@ -12,6 +12,7 @@ import { Modal } from '../components/UI/Modal';
 import { Badge } from '../components/UI/Badge';
 import { SingleImageUpload, FileUpload } from '../components/UI/FileUpload';
 import { getFileUrl } from '../utils/helpers';
+import { MultiPhoneInput } from '../components/UI/MultiPhoneInput';
 
 
 const StudentsPage: React.FC = () => {
@@ -206,7 +207,9 @@ const StudentsPage: React.FC = () => {
                     </td>
                     <td className="p-5">
                       <p className="font-black text-gray-900 text-xs">{student.guardianName}</p>
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">{student.guardianPhone}</p>
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">
+                        {student.guardianPhones && student.guardianPhones.length > 0 ? student.guardianPhones[0] : 'N/A'}
+                      </p>
                     </td>
                     <td className="p-5">
                       <Badge variant={student.status === 'ACTIVE' ? 'success' : 'danger'} className="text-[9px] font-black tracking-widest uppercase px-3 py-1">
@@ -381,7 +384,7 @@ const StudentModal: React.FC<StudentModalProps> = ({ isOpen, onClose, classes, i
                 options={classes.map((cls) => ({ value: cls.id, label: cls.name }))}
               />
             </div>
-            <Input label="Mobile Number" name="mobileNumber" defaultValue={initialData?.mobileNumber} placeholder="+94 7X XXX XXXX" />
+            <Input label="Mobile Number" name="mobileNumber" defaultValue={initialData?.mobileNumber} />
             <Input label="Physical Address" name="address" required defaultValue={initialData?.address} placeholder="House No, Street Name..." />
             <div className="grid grid-cols-2 gap-4">
               <Input label="City" name="city" required defaultValue={initialData?.city} />
@@ -413,7 +416,7 @@ const StudentModal: React.FC<StudentModalProps> = ({ isOpen, onClose, classes, i
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input label="Guardian NIC" name="guardianNIC" required defaultValue={initialData?.guardianNIC} placeholder="NIC Number" />
-            <Input label="Guardian Phone" name="guardianPhone" required defaultValue={initialData?.guardianPhone} placeholder="+94 7X XXX XXXX" />
+            <MultiPhoneInput label="Guardian Phone Numbers" name="guardianPhones" initialValues={initialData?.guardianPhones} required />
           </div>
           <Input label="Guardian Occupation" name="guardianOccupation" defaultValue={initialData?.guardianOccupation} placeholder="e.g. Engineer, Teacher" />
           <Input label="Guardian Address" name="guardianAddress" defaultValue={initialData?.guardianAddress} placeholder="If different from student's address" />

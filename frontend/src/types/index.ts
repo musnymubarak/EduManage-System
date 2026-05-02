@@ -48,7 +48,7 @@ export interface Student {
   guardianName: string;
   guardianRelationship: string;
   guardianNIC: string;
-  guardianPhone: string;
+  guardianPhones: string[];
   guardianAddress?: string;
   guardianOccupation?: string;
   guardianEmail?: string;
@@ -146,7 +146,7 @@ export interface Teacher {
   postalCode?: string;
   gnDivision?: string;
   dsDivision?: string;
-  mobileNumber: string;
+  phoneNumbers: string[];
   email?: string;
   joinedDate: string;
   designation: string;
@@ -174,7 +174,7 @@ export interface Staff {
   postalCode?: string;
   gnDivision?: string;
   dsDivision?: string;
-  mobileNumber: string;
+  phoneNumbers: string[];
   email?: string;
   department: string;
   designation: string;

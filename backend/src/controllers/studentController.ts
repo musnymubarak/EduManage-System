@@ -16,7 +16,7 @@ export const registerStudent = async (req: AuthRequest, res: Response): Promise<
       nationality, nic, birthCertificateNo, address, city, district,
       province, postalCode, gnDivision, dsDivision, mobileNumber, homePhone, email, classId,
       admissionDate, previousSchool, guardianName, guardianRelationship,
-      guardianNIC, guardianPhone, guardianAddress, guardianOccupation,
+      guardianNIC, guardianPhones, guardianAddress, guardianOccupation,
       guardianEmail, emergencyContactName, emergencyContactPhone,
       emergencyRelationship, medicalConditions, allergies, status,
       indexNumber
@@ -112,7 +112,7 @@ export const registerStudent = async (req: AuthRequest, res: Response): Promise<
         guardianName,
         guardianRelationship,
         guardianNIC,
-        guardianPhone,
+        guardianPhones: Array.isArray(guardianPhones) ? guardianPhones : (guardianPhones ? [guardianPhones] : []),
         guardianAddress,
         guardianOccupation,
         guardianEmail,
@@ -286,7 +286,7 @@ export const updateStudent = async (req: AuthRequest, res: Response): Promise<vo
       'indexNumber', 'classId', 'address', 'city', 'district', 'province',
       'postalCode', 'gnDivision', 'dsDivision', 'mobileNumber', 'homePhone', 'email', 'admissionDate',
       'previousSchool', 'guardianName', 'guardianRelationship', 'guardianNIC',
-      'guardianPhone', 'guardianAddress', 'guardianOccupation', 'guardianEmail',
+      'guardianPhones', 'guardianAddress', 'guardianOccupation', 'guardianEmail',
       'emergencyContactName', 'emergencyContactPhone', 'emergencyRelationship',
       'status', 'leavingDate', 'leavingReason', 'leavingReasonOther'
     ];
@@ -324,6 +324,12 @@ export const updateStudent = async (req: AuthRequest, res: Response): Promise<vo
       updateData.admissionDate = new Date(updateData.admissionDate);
     }
 
+    if (updateData.guardianPhones !== undefined) {
+      updateData.guardianPhones = Array.isArray(updateData.guardianPhones) 
+        ? updateData.guardianPhones 
+        : (updateData.guardianPhones ? [updateData.guardianPhones] : []);
+    }
+
     // Handle Profile Photo Removal or Update
     if (req.body.removeProfilePhoto === 'true') {
       const currentStudent = await prisma.student.findUnique({ where: { id } });
@@ -350,7 +356,12 @@ export const updateStudent = async (req: AuthRequest, res: Response): Promise<vo
 
     const student = await prisma.student.update({
       where: { id },
-      data: updateData as any,
+      data: {
+        ...updateData,
+        mobileNumbers: updateData.mobileNumbers 
+          ? (Array.isArray(updateData.mobileNumbers) ? updateData.mobileNumbers : [updateData.mobileNumbers])
+          : undefined
+      } as any,
       include: {
         class: true,
       },

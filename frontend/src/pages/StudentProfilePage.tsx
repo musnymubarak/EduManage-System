@@ -162,9 +162,13 @@ const StudentProfilePage: React.FC = () => {
                   <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Gender</p>
                   <p className="text-sm font-bold text-gray-700 capitalize">{student.gender.toLowerCase()}</p>
                 </div>
-                <div className="space-y-1">
-                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Joined Date</p>
-                  <p className="text-sm font-bold text-gray-700">{formatDate(student.admissionDate)}</p>
+                <div>
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Guardian Phones</p>
+                  <p className="text-gray-900 font-bold truncate max-w-[200px]">
+                    {student.guardianPhones && student.guardianPhones.length > 0 
+                      ? student.guardianPhones.join(', ') 
+                      : 'Not Provided'}
+                  </p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Date of Birth</p>
@@ -233,7 +237,11 @@ const StudentProfilePage: React.FC = () => {
                 <DetailItem label="City" value={student.city} />
                 <DetailItem label="District" value={student.district} />
                 <DetailItem label="Province" value={student.province} />
-                <DetailItem label="Contact Number" value={student.mobileNumber || student.homePhone || 'Not Provided'} />
+                <DetailItem 
+                  label="Mobile Number" 
+                  value={student.mobileNumber || 'Not Provided'} 
+                  icon={<Phone size={14} className="text-blue-500" />} 
+                />
               </div>
             </Card>
 
@@ -248,7 +256,13 @@ const StudentProfilePage: React.FC = () => {
                   <DetailItem label="Guardian Name" value={student.guardianName} />
                   <DetailItem label="Relationship" value={student.guardianRelationship} />
                   <DetailItem label="NIC" value={student.guardianNIC} />
-                  <DetailItem label="Phone" value={student.guardianPhone} icon={<Phone size={14} className="text-blue-500" />} />
+                  <DetailItem 
+                    label="Phone" 
+                    value={student.guardianPhones && student.guardianPhones.length > 0 
+                      ? student.guardianPhones.join(', ') 
+                      : 'Not Provided'} 
+                    icon={<Phone size={14} className="text-blue-500" />} 
+                  />
                   <DetailItem label="Occupation" value={student.guardianOccupation} />
                 </div>
               </Card>

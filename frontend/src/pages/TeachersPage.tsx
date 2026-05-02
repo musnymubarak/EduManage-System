@@ -12,6 +12,7 @@ import { Modal } from '../components/UI/Modal';
 import { Badge } from '../components/UI/Badge';
 import { SingleImageUpload, FileUpload } from '../components/UI/FileUpload';
 import { getFileUrl } from '../utils/helpers';
+import { MultiPhoneInput } from '../components/UI/MultiPhoneInput';
 
 
 const TeachersPage: React.FC = () => {
@@ -181,7 +182,7 @@ const TeachersPage: React.FC = () => {
                       </div>
                     </td>
                     <td className="p-5">
-                      <p className="font-black text-gray-900 text-xs">{teacher.mobileNumber}</p>
+                      <p className="font-black text-gray-900 text-xs">{teacher.phoneNumbers?.[0] || 'N/A'}</p>
                       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">{teacher.email}</p>
                     </td>
                     <td className="p-5">
@@ -379,7 +380,7 @@ const TeacherModal: React.FC<TeacherModalProps> = ({ isOpen, onClose, initialDat
             
             <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 border-b border-blue-100 pb-2 pt-2">Contact Details</h4>
             <div className="grid grid-cols-1 gap-4">
-              <Input label="Mobile Number" name="mobileNumber" required defaultValue={initialData?.mobileNumber} placeholder="+94 7X XXX XXXX" />
+              <MultiPhoneInput label="Phone Numbers" name="phoneNumbers" initialValues={initialData?.phoneNumbers} />
               <Input label="Email Address" name="email" type="email" defaultValue={initialData?.email} placeholder="teacher@sumayamadrasa.com" />
             </div>
           </div>

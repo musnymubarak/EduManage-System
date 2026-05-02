@@ -11,6 +11,7 @@ import { Modal } from '../components/UI/Modal';
 import { Badge } from '../components/UI/Badge';
 import { SingleImageUpload, FileUpload } from '../components/UI/FileUpload';
 import { formatDate, formatCurrency, getFileUrl } from '../utils/helpers';
+import { MultiPhoneInput } from '../components/UI/MultiPhoneInput';
 
 const StaffPage: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState('');
@@ -372,8 +373,8 @@ const StaffModal: React.FC<StaffModalProps> = ({ isOpen, onClose, initialData })
                         <Input label="Joined Date" name="joinedDate" type="date" required defaultValue={initialData?.joinedDate?.split('T')[0]} />
                         
                         <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 border-b border-blue-100 pb-2 pt-2">Contact Details</h4>
-                        <div className="grid grid-cols-2 gap-4">
-                            <Input label="Mobile" name="mobileNumber" required defaultValue={initialData?.mobileNumber} placeholder="+94 7X XXX XXXX" />
+                        <div className="grid grid-cols-1 gap-4">
+                            <MultiPhoneInput label="Phone Numbers" name="phoneNumbers" initialValues={initialData?.phoneNumbers} />
                             <Input label="Email" name="email" type="email" defaultValue={initialData?.email} placeholder="staff@sumayamadrasa.com" />
                         </div>
                     </div>
