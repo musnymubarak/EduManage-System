@@ -463,6 +463,7 @@ model Inventory {
   category     InventoryCategory
   quantity     Int
   minQuantity  Int               @default(10)
+  enableAlert  Boolean           @default(false)
   unit         String
   location     String?
   status       InventoryStatus   @default(AVAILABLE)

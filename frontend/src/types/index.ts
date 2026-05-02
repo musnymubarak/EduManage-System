@@ -344,6 +344,7 @@ export interface Inventory {
   quantity: number;
   minQuantity: number;
   unit: string;
+  enableAlert: boolean;
   location?: string;
   status: string;
 }

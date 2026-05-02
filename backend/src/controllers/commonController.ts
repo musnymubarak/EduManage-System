@@ -434,6 +434,7 @@ export const getLowStockItems = async (_req: AuthRequest, res: Response): Promis
   try {
     const items = await prisma.inventory.findMany({
       where: {
+        enableAlert: true,
         quantity: {
           lte: prisma.inventory.fields.minQuantity,
         },

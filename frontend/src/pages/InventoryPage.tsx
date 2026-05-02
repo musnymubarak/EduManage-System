@@ -15,6 +15,21 @@ const InventoryPage: React.FC = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<Inventory | null>(null);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+  const queryClient = useQueryClient();
+
+  const toggleAlertMutation = useMutation({
+    mutationFn: async ({ id, enableAlert }: { id: string; enableAlert: boolean }) => {
+      const response = await api.put(`/inventory/${id}`, { enableAlert });
+      return response.data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
+      toast.success(`Alerts ${variables.enableAlert ? 'enabled' : 'disabled'}`);
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.error || 'Failed to update alert settings');
+    },
+  });
 
   // Fetch inventory items
   const { data: inventoryData, isLoading } = useQuery({
@@ -28,7 +43,7 @@ const InventoryPage: React.FC = () => {
   const items: Inventory[] = inventoryData?.data || [];
 
   // Separate low stock items
-  const lowStockItems = items.filter((item) => item.quantity <= item.minQuantity);
+  const lowStockItems = items.filter((item) => item.enableAlert && item.quantity <= item.minQuantity);
 
   const handleUpdateQuantity = (item: Inventory) => {
     setSelectedItem(item);
@@ -104,6 +119,9 @@ const InventoryPage: React.FC = () => {
                   <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
                     Status
                   </th>
+                  <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">
+                    Alert
+                  </th>
                   <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">
                     Actions
                   </th>
@@ -111,7 +129,7 @@ const InventoryPage: React.FC = () => {
               </thead>
               <tbody className="divide-y">
                 {items.map((item) => {
-                  const isLowStock = item.quantity <= item.minQuantity;
+                  const isLowStock = item.enableAlert && item.quantity <= item.minQuantity;
                   return (
                     <tr key={item.id} className={`hover:bg-gray-50 ${isLowStock ? 'bg-red-50' : ''}`}>
                       <td className="px-4 py-3">
@@ -150,6 +168,23 @@ const InventoryPage: React.FC = () => {
                         >
                           {item.status}
                         </Badge>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <button
+                          onClick={() => toggleAlertMutation.mutate({ 
+                            id: item.id, 
+                            enableAlert: !item.enableAlert 
+                          })}
+                          disabled={toggleAlertMutation.isPending}
+                          className={`rounded-full p-2 transition-colors ${
+                            item.enableAlert 
+                              ? 'bg-blue-100 text-blue-600 hover:bg-blue-200' 
+                              : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
+                          } ${toggleAlertMutation.isPending ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          title={item.enableAlert ? 'Disable Alerts' : 'Enable Alerts'}
+                        >
+                          {item.enableAlert ? <AlertTriangle size={16} /> : <AlertTriangle size={16} className="opacity-50" />}
+                        </button>
                       </td>
                       <td className="px-4 py-3 text-right">
                         <button
@@ -204,6 +239,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose }) => {
     minQuantity: '',
     unit: '',
     location: '',
+    enableAlert: false,
   });
 
   const queryClient = useQueryClient();
@@ -224,6 +260,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose }) => {
         minQuantity: '',
         unit: '',
         location: '',
+        enableAlert: false,
       });
     },
     onError: (error: any) => {
@@ -325,6 +362,20 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose }) => {
           onChange={handleChange}
           placeholder="e.g. Store Room A, Shelf 3"
         />
+
+        <div className="flex items-center gap-2 py-2">
+          <input
+            type="checkbox"
+            id="enableAlert"
+            name="enableAlert"
+            checked={formData.enableAlert}
+            onChange={(e) => setFormData({ ...formData, enableAlert: e.target.checked })}
+            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+          />
+          <label htmlFor="enableAlert" className="text-sm font-medium text-gray-700">
+            Enable Low Stock Alerts
+          </label>
+        </div>
       </form>
     </Modal>
   );
