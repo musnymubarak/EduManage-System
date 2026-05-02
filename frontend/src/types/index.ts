@@ -339,6 +339,7 @@ export interface Exam {
 
 export interface Inventory {
   id: string;
+  serialNumber?: string;
   itemName: string;
   category: string;
   quantity: number;
@@ -346,6 +347,7 @@ export interface Inventory {
   unit: string;
   enableAlert: boolean;
   location?: string;
+  purchaseDate?: string | Date;
   status: string;
 }
 

@@ -459,6 +459,7 @@ model ExamMark {
 
 model Inventory {
   id           String            @id @default(uuid())
+  serialNumber String?           @unique
   itemName     String
   category     InventoryCategory
   quantity     Int

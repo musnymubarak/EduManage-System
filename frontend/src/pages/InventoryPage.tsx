@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
-import { Plus, Package, AlertTriangle, Edit, TrendingDown } from 'lucide-react';
+import { Plus, Package, AlertTriangle, TrendingUp, TrendingDown, Pencil } from 'lucide-react';
 import api from '../services/api';
 import { Inventory } from '../types';
 import { Card } from '../components/UI/Card';
@@ -15,6 +15,7 @@ const InventoryPage: React.FC = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<Inventory | null>(null);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const toggleAlertMutation = useMutation({
@@ -99,6 +100,9 @@ const InventoryPage: React.FC = () => {
               <thead>
                 <tr className="border-b bg-gray-50">
                   <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                    Serial Number
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
                     Item Name
                   </th>
                   <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
@@ -132,6 +136,9 @@ const InventoryPage: React.FC = () => {
                   const isLowStock = item.enableAlert && item.quantity <= item.minQuantity;
                   return (
                     <tr key={item.id} className={`hover:bg-gray-50 ${isLowStock ? 'bg-red-50' : ''}`}>
+                      <td className="px-4 py-3 text-sm font-mono text-blue-600">
+                        {item.serialNumber || 'N/A'}
+                      </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
                           <Package className="h-5 w-5 text-gray-400" />
@@ -187,13 +194,25 @@ const InventoryPage: React.FC = () => {
                         </button>
                       </td>
                       <td className="px-4 py-3 text-right">
-                        <button
-                          onClick={() => handleUpdateQuantity(item)}
-                          className="rounded p-1 hover:bg-gray-100"
-                          title="Update Quantity"
-                        >
-                          <Edit size={18} className="text-blue-600" />
-                        </button>
+                        <div className="flex justify-end gap-2">
+                          <button
+                            onClick={() => handleUpdateQuantity(item)}
+                            className="rounded p-1 text-blue-600 hover:bg-blue-50"
+                            title="Update Quantity"
+                          >
+                            <TrendingUp size={18} />
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSelectedItem(item);
+                              setIsEditModalOpen(true);
+                            }}
+                            className="rounded p-1 text-gray-600 hover:bg-gray-100"
+                            title="Edit Item Details"
+                          >
+                            <Pencil size={18} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -221,6 +240,16 @@ const InventoryPage: React.FC = () => {
           item={selectedItem}
         />
       )}
+      {selectedItem && (
+        <EditItemModal
+          isOpen={isEditModalOpen}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setSelectedItem(null);
+          }}
+          item={selectedItem}
+        />
+      )}
     </div>
   );
 };
@@ -240,6 +269,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose }) => {
     unit: '',
     location: '',
     enableAlert: false,
+    purchaseDate: '',
   });
 
   const queryClient = useQueryClient();
@@ -261,6 +291,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose }) => {
         unit: '',
         location: '',
         enableAlert: false,
+        purchaseDate: '',
       });
     },
     onError: (error: any) => {
@@ -363,6 +394,14 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose }) => {
           placeholder="e.g. Store Room A, Shelf 3"
         />
 
+        <Input
+          label="Purchase Date"
+          name="purchaseDate"
+          type="date"
+          value={formData.purchaseDate}
+          onChange={handleChange}
+        />
+
         <div className="flex items-center gap-2 py-2">
           <input
             type="checkbox"
@@ -373,6 +412,165 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose }) => {
             className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
           />
           <label htmlFor="enableAlert" className="text-sm font-medium text-gray-700">
+            Enable Low Stock Alerts
+          </label>
+        </div>
+      </form>
+    </Modal>
+  );
+};
+
+// Edit Item Modal Component
+interface EditItemModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  item: Inventory;
+}
+
+const EditItemModal: React.FC<EditItemModalProps> = ({ isOpen, onClose, item }) => {
+  const [formData, setFormData] = useState({
+    itemName: item.itemName,
+    category: item.category,
+    quantity: item.quantity.toString(),
+    minQuantity: item.minQuantity.toString(),
+    unit: item.unit,
+    location: item.location || '',
+    enableAlert: item.enableAlert,
+    purchaseDate: item.purchaseDate ? new Date(item.purchaseDate).toISOString().split('T')[0] : '',
+  });
+
+  const queryClient = useQueryClient();
+
+  const editItemMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await api.put(`/inventory/${item.id}`, data);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
+      toast.success('Inventory item updated successfully');
+      onClose();
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.error || 'Failed to update inventory item');
+    },
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value,
+    }));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const submitData = {
+      ...formData,
+      quantity: parseInt(formData.quantity),
+      minQuantity: parseInt(formData.minQuantity),
+    };
+
+    editItemMutation.mutate(submitData);
+  };
+
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={`Edit Item - ${item.itemName}`}
+      size="lg"
+      footer={
+        <div className="flex justify-end gap-3">
+          <Button variant="secondary" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button onClick={handleSubmit} disabled={editItemMutation.isPending}>
+            {editItemMutation.isPending ? 'Saving...' : 'Save Changes'}
+          </Button>
+        </div>
+      }
+    >
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <Input
+          label="Item Name"
+          name="itemName"
+          value={formData.itemName}
+          onChange={handleChange}
+          required
+        />
+
+        <Select
+          label="Category"
+          name="category"
+          value={formData.category}
+          onChange={handleChange}
+          required
+          options={[
+            { label: 'Furniture', value: 'FURNITURE' },
+            { label: 'Stationery', value: 'STATIONERY' },
+            { label: 'Electronics', value: 'ELECTRONICS' },
+            { label: 'Sports', value: 'SPORTS' },
+            { label: 'Books', value: 'BOOKS' },
+            { label: 'Other', value: 'OTHER' },
+          ]}
+        />
+
+        <Input
+          label="Current Quantity"
+          name="quantity"
+          type="number"
+          value={formData.quantity}
+          onChange={handleChange}
+          required
+        />
+
+        <Input
+          label="Min Quantity Alert"
+          name="minQuantity"
+          type="number"
+          value={formData.minQuantity}
+          onChange={handleChange}
+          required
+        />
+
+        <Input
+          label="Unit"
+          name="unit"
+          value={formData.unit}
+          onChange={handleChange}
+          required
+          placeholder="e.g. pieces, sets, kg"
+        />
+
+        <Input
+          label="Location"
+          name="location"
+          value={formData.location}
+          onChange={handleChange}
+          placeholder="e.g. Store Room A, Shelf 3"
+        />
+
+        <Input
+          label="Purchase Date"
+          name="purchaseDate"
+          type="date"
+          value={formData.purchaseDate}
+          onChange={handleChange}
+        />
+
+        <div className="flex items-center gap-2 py-2 md:col-span-2">
+          <input
+            type="checkbox"
+            id="edit-enableAlert"
+            name="enableAlert"
+            checked={formData.enableAlert}
+            onChange={handleChange}
+            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+          />
+          <label htmlFor="edit-enableAlert" className="text-sm font-medium text-gray-700">
             Enable Low Stock Alerts
           </label>
         </div>

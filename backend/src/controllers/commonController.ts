@@ -391,12 +391,42 @@ export const getAllInventory = async (req: AuthRequest, res: Response): Promise<
 
 export const addInventoryItem = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
+    const { location, purchaseDate } = req.body;
+    
+    // 1. Generate Prefix from Location (first 3 letters, uppercase)
+    const locPrefix = (location || 'GEN').substring(0, 3).toUpperCase();
+    
+    // 2. Count existing items with same location prefix for sequence
+    const count = await prisma.inventory.count({
+      where: {
+        location: {
+          startsWith: location?.substring(0, 3) || 'GEN',
+          mode: 'insensitive'
+        }
+      }
+    });
+    
+    const sequence = (count + 1).toString().padStart(3, '0');
+    
+    // 3. Get Years
+    const currentYear = new Date().getFullYear();
+    const purchaseYear = purchaseDate ? new Date(purchaseDate).getFullYear() : currentYear;
+    
+    // 4. Construct Serial Number: SLAC/2026/LOC001/2024
+    // Using 2026 as per user requirement, but ideally it should be dynamic
+    const serialNumber = `SLAC/2026/${locPrefix}${sequence}/${purchaseYear}`;
+
     const item = await prisma.inventory.create({
-      data: req.body,
+      data: {
+        ...req.body,
+        purchaseDate: purchaseDate ? new Date(purchaseDate) : null,
+        serialNumber
+      },
     });
 
     res.status(201).json({ success: true, data: item });
   } catch (error) {
+    console.error('Error adding inventory item:', error);
     res.status(500).json({ error: 'Failed to add inventory item' });
   }
 };
@@ -404,13 +434,53 @@ export const addInventoryItem = async (req: AuthRequest, res: Response): Promise
 export const updateInventoryItem = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
+    const { purchaseDate, location, ...rest } = req.body;
+    
+    // Fetch current item to check if we need to generate serial number
+    const currentItem = await prisma.inventory.findUnique({ where: { id } });
+    if (!currentItem) {
+      res.status(404).json({ error: 'Item not found' });
+      return;
+    }
+
+    let serialNumber = currentItem.serialNumber;
+
+    // Regenerate serial number if location or purchaseDate changes, or if it was missing
+    if (!serialNumber || location || purchaseDate) {
+      const targetLocation = location || currentItem.location || 'GEN';
+      const locPrefix = targetLocation.substring(0, 3).toUpperCase();
+      
+      const count = await prisma.inventory.count({
+        where: {
+          location: {
+            startsWith: targetLocation.substring(0, 3),
+            mode: 'insensitive'
+          },
+          id: { not: id } // Don't count itself
+        }
+      });
+      
+      const sequence = (count + 1).toString().padStart(3, '0');
+      const currentYear = new Date().getFullYear();
+      const pDate = purchaseDate ? new Date(purchaseDate) : currentItem.purchaseDate;
+      const purchaseYear = pDate ? new Date(pDate).getFullYear() : currentYear;
+      
+      serialNumber = `SLAC/2026/${locPrefix}${sequence}/${purchaseYear}`;
+    }
+
     const item = await prisma.inventory.update({
       where: { id },
-      data: req.body,
+      data: {
+        ...rest,
+        location,
+        purchaseDate: purchaseDate ? new Date(purchaseDate) : undefined,
+        serialNumber
+      },
     });
 
     res.json({ success: true, data: item });
   } catch (error) {
+    console.error('Error updating inventory item:', error);
     res.status(500).json({ error: 'Failed to update inventory item' });
   }
 };
