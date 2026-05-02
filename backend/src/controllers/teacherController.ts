@@ -228,7 +228,8 @@ export const updateTeacher = async (req: AuthRequest, res: Response): Promise<vo
       'fullName', 'nameWithInitials', 'dateOfBirth', 'gender', 'nic',
       'address', 'city', 'district', 'province', 'postalCode',
       'gnDivision', 'dsDivision', 'phoneNumbers', 'email', 'joinedDate', 'designation',
-      'employmentType', 'basicSalary', 'specialization', 'experience', 'status'
+      'employmentType', 'basicSalary', 'specialization', 'experience', 'status',
+      'leavingDate', 'leavingReason', 'leavingReasonOther'
     ];
 
     const updateData: any = {};
@@ -423,5 +424,31 @@ export const deleteTeacherMemo = async (req: AuthRequest, res: Response): Promis
   } catch (error) {
     console.error('Error deleting memo:', error);
     res.status(500).json({ error: 'Failed to delete memo' });
+  }
+};
+
+export const markTeacherAsLeft = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { leavingReason, leavingReasonOther } = req.body;
+
+    const teacher = await prisma.teacher.update({
+      where: { id },
+      data: {
+        status: 'INACTIVE',
+        leavingDate: new Date(),
+        leavingReason,
+        leavingReasonOther
+      },
+    });
+
+    res.json({
+      success: true,
+      message: 'Teacher marked as left successfully',
+      data: teacher,
+    });
+  } catch (error) {
+    console.error('Error marking teacher as left:', error);
+    res.status(500).json({ error: 'Failed to process teacher leaving' });
   }
 };

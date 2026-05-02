@@ -19,7 +19,9 @@ import {
   ClipboardList,
   Plus,
   Trash2,
-  X
+  X,
+  LogOut,
+  AlertTriangle
 } from 'lucide-react';
 import { Input } from '../components/UI/Input';
 import api from '../services/api';
@@ -36,6 +38,7 @@ const TeacherProfilePage: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'overview' | 'schedule' | 'attendance' | 'documents' | 'memos'>('overview');
   const [isMemoModalOpen, setIsMemoModalOpen] = useState(false);
+  const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: teacher, isLoading, error } = useQuery<TeacherDetail>({
@@ -125,6 +128,32 @@ const TeacherProfilePage: React.FC = () => {
         </div>
       </div>
 
+      {/* Leaving Status Banner */}
+      {teacher.status === 'INACTIVE' && teacher.leavingReason && (
+        <Card className="bg-red-50 border-2 border-red-100 p-6 rounded-3xl">
+          <div className="flex items-start gap-4">
+            <div className="p-3 bg-red-100 rounded-2xl text-red-600">
+              <LogOut size={24} />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-black text-red-900 uppercase tracking-tight">Teacher has left the institution</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
+                <div>
+                  <p className="text-[10px] font-black text-red-400 uppercase tracking-widest">Leaving Date</p>
+                  <p className="text-sm font-bold text-red-800">{formatDate(teacher.leavingDate || '')}</p>
+                </div>
+                <div className="md:col-span-2">
+                  <p className="text-[10px] font-black text-red-400 uppercase tracking-widest">Reason for Leaving</p>
+                  <p className="text-sm font-bold text-red-800">
+                    {teacher.leavingReason === 'OTHER' ? teacher.leavingReasonOther : teacher.leavingReason?.replace(/_/g, ' ')}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
+
       {/* Profile Header Card */}
       <Card className="overflow-hidden border-none shadow-xl bg-gradient-to-br from-white to-blue-50/30">
         <div className="p-8">
@@ -151,11 +180,23 @@ const TeacherProfilePage: React.FC = () => {
             </div>
 
             <div className="flex-1 space-y-4">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">{teacher.fullName}</h1>
-                <p className="text-gray-500 font-medium text-lg">{teacher.designation}</p>
-                <p className="text-gray-400 font-medium">Employee No: <span className="text-blue-600 font-bold">{teacher.employeeNumber}</span></p>
-              </div>
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <h1 className="text-3xl font-bold text-gray-900">{teacher.fullName}</h1>
+                    <p className="text-gray-500 font-medium text-lg">{teacher.designation}</p>
+                    <p className="text-gray-400 font-medium">Employee No: <span className="text-blue-600 font-bold">{teacher.employeeNumber}</span></p>
+                  </div>
+                  {teacher.status === 'ACTIVE' && (
+                    <Button 
+                      variant="secondary" 
+                      onClick={() => setIsLeaveModalOpen(true)}
+                      className="bg-red-50 text-red-600 border-red-100 hover:bg-red-600 hover:text-white font-black uppercase tracking-widest text-[10px] h-10 px-4 rounded-xl transition-all"
+                    >
+                      <LogOut size={16} className="mr-2" />
+                      Mark as Left
+                    </Button>
+                  )}
+                </div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                 <div className="space-y-1">
@@ -533,6 +574,17 @@ const TeacherProfilePage: React.FC = () => {
           </Card>
         </div>
       )}
+
+      {/* Leave Confirmation Modal */}
+      <TeacherMarkAsLeftModal 
+        isOpen={isLeaveModalOpen} 
+        onClose={() => setIsLeaveModalOpen(false)} 
+        teacher={teacher} 
+        onSuccess={() => {
+          setIsLeaveModalOpen(false);
+          queryClient.invalidateQueries({ queryKey: ['teacher', id] });
+        }}
+      />
     </div>
   );
 };
@@ -569,6 +621,114 @@ const StatCard: React.FC<{ label: string; value: string | number; suffix?: strin
         </p>
       </div>
     </Card>
+  );
+};
+
+
+// Mark as Left Modal Component
+const TeacherMarkAsLeftModal: React.FC<{ 
+  isOpen: boolean; 
+  onClose: () => void; 
+  teacher: TeacherDetail;
+  onSuccess: () => void;
+}> = ({ isOpen, onClose, teacher, onSuccess }) => {
+  const [leavingReason, setLeavingReason] = useState('');
+  const [leavingReasonOther, setLeavingReasonOther] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!leavingReason) {
+      toast.error('Please select a reason');
+      return;
+    }
+    if (leavingReason === 'OTHER' && !leavingReasonOther) {
+      toast.error('Please specify the reason');
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      await api.put(`/teachers/${teacher.id}/leave`, {
+        leavingReason,
+        leavingReasonOther
+      });
+      toast.success('Teacher record updated successfully');
+      onSuccess();
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Action failed');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+      <Card className="w-full max-w-md p-0 overflow-hidden shadow-2xl border-none">
+        <div className="flex items-center justify-between border-b p-5 bg-red-50/50">
+          <h3 className="text-lg font-black text-red-900 uppercase tracking-tight">Final Termination Record</h3>
+          <button onClick={onClose} className="p-2 text-red-400 hover:bg-red-100 rounded-xl transition-colors">
+            <X size={20} />
+          </button>
+        </div>
+
+        <div className="p-6 space-y-6">
+          <div className="bg-red-50 p-5 rounded-2xl border border-red-100 flex gap-4">
+            <AlertTriangle className="text-red-500 shrink-0" size={24} />
+            <div>
+              <p className="text-xs font-black text-red-900 uppercase tracking-tight">Warning: Irreversible Action</p>
+              <p className="text-xs text-red-700 mt-1">This will mark <b>{teacher.fullName}</b> as INACTIVE. They will be removed from active payroll and schedules.</p>
+            </div>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1.5 block">Primary Reason for Leaving</label>
+              <select
+                value={leavingReason}
+                onChange={(e) => setLeavingReason(e.target.value)}
+                className="w-full h-12 px-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 outline-none text-sm font-bold"
+                required
+              >
+                <option value="">Select reason...</option>
+                <option value="RESIGNED">Resigned</option>
+                <option value="TERMINATED">Terminated</option>
+                <option value="RETIRED">Retired</option>
+                <option value="CONTRACT_EXPIRED">Contract Expired</option>
+                <option value="OTHER">Other Reason</option>
+              </select>
+            </div>
+
+            {leavingReason === 'OTHER' && (
+              <div>
+                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1.5 block">Specify Detailed Reason</label>
+                <textarea
+                  value={leavingReasonOther}
+                  onChange={(e) => setLeavingReasonOther(e.target.value)}
+                  className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 outline-none text-sm font-bold"
+                  placeholder="Please provide details..."
+                  rows={3}
+                  required
+                />
+              </div>
+            )}
+
+            <div className="flex justify-end gap-3 pt-4 border-t border-gray-50">
+              <Button variant="secondary" onClick={onClose} className="font-bold border-none hover:bg-gray-100">Cancel</Button>
+              <Button 
+                type="submit" 
+                disabled={isSubmitting} 
+                className="bg-red-600 hover:bg-red-700 shadow-xl shadow-red-100 px-8 h-12 rounded-xl font-black uppercase tracking-widest text-[11px]"
+              >
+                {isSubmitting ? 'Processing...' : 'Confirm Termination'}
+              </Button>
+            </div>
+          </form>
+        </div>
+      </Card>
+    </div>
   );
 };
 

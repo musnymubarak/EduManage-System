@@ -204,7 +204,8 @@ export const updateStaff = async (req: AuthRequest, res: Response): Promise<void
             'fullName', 'nameWithInitials', 'dateOfBirth', 'gender', 'nic',
             'drivingLicenseNo', 'address', 'city', 'district', 'province',
             'postalCode', 'gnDivision', 'dsDivision', 'phoneNumbers', 'email', 'department', 'designation',
-            'employmentType', 'joinedDate', 'basicSalary', 'status'
+            'employmentType', 'joinedDate', 'basicSalary', 'status',
+            'leavingDate', 'leavingReason', 'leavingReasonOther'
         ];
 
         const updateData: any = {};
@@ -445,5 +446,31 @@ export const deleteStaffDuty = async (req: AuthRequest, res: Response): Promise<
         });
     } catch (error) {
         res.status(500).json({ error: 'Failed to remove duty' });
+    }
+};
+
+export const markStaffAsLeft = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const { id } = req.params;
+        const { leavingReason, leavingReasonOther } = req.body;
+
+        const staff = await prisma.staff.update({
+            where: { id },
+            data: {
+                status: 'INACTIVE',
+                leavingDate: new Date(),
+                leavingReason,
+                leavingReasonOther
+            },
+        });
+
+        res.json({
+            success: true,
+            message: 'Staff member marked as left successfully',
+            data: staff,
+        });
+    } catch (error) {
+        console.error('Error marking staff as left:', error);
+        res.status(500).json({ error: 'Failed to process staff leaving' });
     }
 };

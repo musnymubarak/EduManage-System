@@ -39,4 +39,7 @@ router.post('/:id/duties', authorize(...managers), staffController.assignStaffDu
 router.put('/:id/duties/:dutyId', authorize(...managers), staffController.updateDutyStatus);
 router.delete('/:id/duties/:dutyId', authorize(...managers), staffController.deleteStaffDuty);
 
+// Leaving
+router.put('/:id/leave', authorize(...managers), staffController.markStaffAsLeft);
+
 export default router;

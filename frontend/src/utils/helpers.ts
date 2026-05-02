@@ -42,6 +42,10 @@ export function getStatusColor(status: string): string {
     PRESENT: 'bg-green-100 text-green-800',
     ABSENT: 'bg-red-100 text-red-800',
     LATE: 'bg-orange-100 text-orange-800',
+    RESIGNED: 'bg-red-100 text-red-800',
+    TERMINATED: 'bg-red-100 text-red-800',
+    RETIRED: 'bg-gray-100 text-gray-800',
+    CONTRACT_EXPIRED: 'bg-gray-100 text-gray-800',
   };
   return colors[status] || 'bg-gray-100 text-gray-800';
 }

@@ -358,8 +358,8 @@ export const updateStudent = async (req: AuthRequest, res: Response): Promise<vo
       where: { id },
       data: {
         ...updateData,
-        mobileNumbers: updateData.mobileNumbers 
-          ? (Array.isArray(updateData.mobileNumbers) ? updateData.mobileNumbers : [updateData.mobileNumbers])
+        mobileNumber: updateData.mobileNumber 
+          ? (Array.isArray(updateData.mobileNumber) ? updateData.mobileNumber[0] : updateData.mobileNumber)
           : undefined
       } as any,
       include: {

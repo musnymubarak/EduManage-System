@@ -154,6 +154,9 @@ export interface Teacher {
   basicSalary: number;
   profilePhoto?: string;
   status: string;
+  leavingDate?: string;
+  leavingReason?: string;
+  leavingReasonOther?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -183,6 +186,9 @@ export interface Staff {
   basicSalary: number;
   profilePhoto?: string;
   status: string;
+  leavingDate?: string;
+  leavingReason?: string;
+  leavingReasonOther?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -190,6 +196,8 @@ export interface Staff {
 export interface StaffDetail extends Staff {
   documents: StaffDocument[];
   attendance: Attendance[];
+  duties: StaffDuty[];
+  salaryHistory: StaffSalary[];
 }
 
 export interface StaffDocument {
@@ -199,6 +207,36 @@ export interface StaffDocument {
   fileName: string;
   fileUrl: string;
   uploadedAt: string;
+}
+
+export interface StaffDuty {
+  id: string;
+  staffId: string;
+  title: string;
+  description?: string;
+  status: string;
+  assignedDate: string;
+  dueDate?: string;
+  completedAt?: string;
+  remarks?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface StaffSalary {
+  id: string;
+  staffId: string;
+  month: string;
+  basicSalary: number;
+  allowances: number;
+  deductions: number;
+  netSalary: number;
+  paymentDate: string;
+  paymentMethod: string;
+  receiptNumber?: string;
+  remarks?: string;
+  paidBy: string;
+  createdAt: string;
 }
 
 export interface TeacherDetail extends Teacher {

@@ -19,9 +19,12 @@ import {
     Download,
     ExternalLink,
     Edit,
-    Trash2
+    Trash2,
+    LogOut,
+    AlertTriangle
 } from 'lucide-react';
 import api from '../services/api';
+import { StaffDetail, StaffDuty, StaffSalary } from '../types';
 import { Card } from '../components/UI/Card';
 import { Button } from '../components/UI/Button';
 import { Badge } from '../components/UI/Badge';
@@ -41,10 +44,11 @@ const StaffProfilePage: React.FC = () => {
     const [isDutyModalOpen, setIsDutyModalOpen] = useState(false);
     const [isSalaryModalOpen, setIsSalaryModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
     const [editProfilePhoto, setEditProfilePhoto] = useState<File | null>(null);
     const [editDocuments, setEditDocuments] = useState<File[]>([]);
 
-    const { data: staff, isLoading, error } = useQuery({
+    const { data: staff, isLoading, error } = useQuery<StaffDetail>({
         queryKey: ['staff', id],
         queryFn: async () => {
             const response = await api.get(`/staff/${id}`);
@@ -182,8 +186,42 @@ const StaffProfilePage: React.FC = () => {
                     <Button onClick={() => setIsEditModalOpen(true)} className="bg-gray-900 hover:bg-gray-800 text-white shadow-sm rounded-xl px-4 flex items-center gap-2 h-10 transition-colors">
                         <Edit size={16} /> <span className="font-bold text-xs uppercase tracking-wider">Edit Profile</span>
                     </Button>
+                    {staff.status === 'ACTIVE' && (
+                        <Button 
+                            onClick={() => setIsLeaveModalOpen(true)}
+                            className="bg-red-50 text-red-600 border-red-100 hover:bg-red-600 hover:text-white shadow-sm rounded-xl px-4 flex items-center gap-2 h-10 transition-all"
+                        >
+                            <LogOut size={16} /> <span className="font-black text-xs uppercase tracking-widest">Mark as Left</span>
+                        </Button>
+                    )}
                 </div>
             </div>
+
+            {/* Leaving Status Banner */}
+            {staff.status === 'INACTIVE' && staff.leavingReason && (
+                <Card className="bg-red-50 border-2 border-red-100 p-6 rounded-3xl mb-6 shadow-sm">
+                    <div className="flex items-start gap-4">
+                        <div className="p-3 bg-red-100 rounded-2xl text-red-600 shadow-inner">
+                            <LogOut size={24} />
+                        </div>
+                        <div className="flex-1">
+                            <h3 className="text-lg font-black text-red-900 uppercase tracking-tight">Staff member has left the institution</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
+                                <div>
+                                    <p className="text-[10px] font-black text-red-400 uppercase tracking-widest">Leaving Date</p>
+                                    <p className="text-sm font-bold text-red-800">{formatDate(staff.leavingDate || '')}</p>
+                                </div>
+                                <div className="md:col-span-2">
+                                    <p className="text-[10px] font-black text-red-400 uppercase tracking-widest">Reason for Leaving</p>
+                                    <p className="text-sm font-bold text-red-800">
+                                        {staff.leavingReason === 'OTHER' ? staff.leavingReasonOther : staff.leavingReason?.replace(/_/g, ' ')}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </Card>
+            )}
 
 
             {/* Profile Header Hero */}
@@ -379,7 +417,7 @@ const StaffProfilePage: React.FC = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {staff.duties.length === 0 ? (
                                 <div className="col-span-full py-20 text-center text-gray-400 italic">No duties currently assigned to this personnel.</div>
-                            ) : staff.duties.map((duty: any) => (
+                            ) : staff.duties.map((duty: StaffDuty) => (
                                 <Card key={duty.id} className="border border-gray-100 shadow-sm hover:shadow-md transition-all p-6 rounded-2xl group flex flex-col justify-between">
                                     <div>
                                         <div className="flex justify-between items-start mb-4">
@@ -457,7 +495,7 @@ const StaffProfilePage: React.FC = () => {
                                         <tr>
                                             <td colSpan={7} className="p-20 text-center text-gray-400 italic">No salary payment records found in the archive.</td>
                                         </tr>
-                                    ) : staff.salaryHistory.map((history: any) => (
+                                    ) : staff.salaryHistory.map((history: StaffSalary) => (
                                         <tr key={history.id} className="hover:bg-green-50/20 transition-colors">
                                             <td className="p-5">
                                                 <Badge variant="info" className="font-black text-[10px] uppercase tracking-widest px-4 py-1.5">{history.month}</Badge>
@@ -749,6 +787,124 @@ const StaffProfilePage: React.FC = () => {
                     </div>
                 </form>
             </Modal>
+
+            {/* Leave Confirmation Modal */}
+            <StaffMarkAsLeftModal 
+                isOpen={isLeaveModalOpen} 
+                onClose={() => setIsLeaveModalOpen(false)} 
+                staff={staff} 
+                onSuccess={() => {
+                    setIsLeaveModalOpen(false);
+                    queryClient.invalidateQueries({ queryKey: ['staff', id] });
+                }}
+            />
+        </div>
+    );
+};
+
+// Mark as Left Modal Component for Staff
+const StaffMarkAsLeftModal: React.FC<{ 
+    isOpen: boolean; 
+    onClose: () => void; 
+    staff: StaffDetail;
+    onSuccess: () => void;
+}> = ({ isOpen, onClose, staff, onSuccess }) => {
+    const [leavingReason, setLeavingReason] = useState('');
+    const [leavingReasonOther, setLeavingReasonOther] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!leavingReason) {
+            toast.error('Please select a reason');
+            return;
+        }
+        if (leavingReason === 'OTHER' && !leavingReasonOther) {
+            toast.error('Please specify the reason');
+            return;
+        }
+
+        try {
+            setIsSubmitting(true);
+            await api.put(`/staff/${staff.id}/leave`, {
+                leavingReason,
+                leavingReasonOther
+            });
+            toast.success('Personnel record updated successfully');
+            onSuccess();
+        } catch (err: any) {
+            toast.error(err.response?.data?.error || 'Action failed');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    if (!isOpen) return null;
+
+    return (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+            <Card className="w-full max-w-md p-0 overflow-hidden shadow-2xl border-none rounded-[2rem]">
+                <div className="flex items-center justify-between border-b p-6 bg-red-50/50">
+                    <h3 className="text-xl font-black text-red-900 uppercase tracking-tight">Personnel Termination</h3>
+                    <button onClick={onClose} className="p-2 text-red-400 hover:bg-red-100 rounded-xl transition-colors">
+                        <Trash2 size={20} />
+                    </button>
+                </div>
+
+                <div className="p-8 space-y-6">
+                    <div className="bg-red-50 p-6 rounded-3xl border border-red-100 flex gap-4">
+                        <AlertTriangle className="text-red-500 shrink-0" size={28} />
+                        <div>
+                            <p className="text-xs font-black text-red-900 uppercase tracking-tight">Operational Warning</p>
+                            <p className="text-xs text-red-700 mt-1 leading-relaxed font-bold">Marking <b>{staff.fullName}</b> as INACTIVE will suspend their access and payroll entries.</p>
+                        </div>
+                    </div>
+
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        <div>
+                            <label className="text-[10px] font-black uppercase text-gray-400 tracking-[0.2em] mb-2 block ml-1">Termination Cause</label>
+                            <select
+                                value={leavingReason}
+                                onChange={(e) => setLeavingReason(e.target.value)}
+                                className="w-full h-14 px-5 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-red-500/10 focus:border-red-500 outline-none text-sm font-black transition-all appearance-none cursor-pointer"
+                                required
+                            >
+                                <option value="">Select reason...</option>
+                                <option value="RESIGNED">Resigned</option>
+                                <option value="TERMINATED">Terminated</option>
+                                <option value="CONTRACT_EXPIRED">Contract Expired</option>
+                                <option value="RETIRED">Retired</option>
+                                <option value="MEDICAL">Medical Reason</option>
+                                <option value="OTHER">Other Reason</option>
+                            </select>
+                        </div>
+
+                        {leavingReason === 'OTHER' && (
+                            <div>
+                                <label className="text-[10px] font-black uppercase text-gray-400 tracking-[0.2em] mb-2 block ml-1">Detailed Description</label>
+                                <textarea
+                                    value={leavingReasonOther}
+                                    onChange={(e) => setLeavingReasonOther(e.target.value)}
+                                    className="w-full p-5 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-red-500/10 focus:border-red-500 outline-none text-sm font-bold transition-all min-h-[100px]"
+                                    placeholder="Provide detailed context..."
+                                    required
+                                />
+                            </div>
+                        )}
+
+                        <div className="flex justify-end gap-4 pt-6 border-t border-gray-50">
+                            <Button variant="secondary" onClick={onClose} className="font-black border-none hover:bg-gray-100 px-6 h-12 rounded-2xl uppercase tracking-widest text-[10px]">Cancel</Button>
+                            <Button 
+                                type="submit" 
+                                disabled={isSubmitting} 
+                                className="bg-red-600 hover:bg-red-700 shadow-xl shadow-red-100 px-8 h-12 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px]"
+                            >
+                                {isSubmitting ? 'Updating...' : 'Confirm Departure'}
+                            </Button>
+                        </div>
+                    </form>
+                </div>
+            </Card>
         </div>
     );
 };
