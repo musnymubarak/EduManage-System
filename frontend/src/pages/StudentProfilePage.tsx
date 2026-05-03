@@ -19,7 +19,8 @@ import {
   AlertTriangle,
   LogOut,
   DollarSign,
-  Clock
+  Clock,
+  Edit
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../services/api';
@@ -30,12 +31,14 @@ import { Badge } from '../components/UI/Badge';
 import { Modal } from '../components/UI/Modal';
 import { formatDate, formatCurrency, getStatusColor, getFileUrl } from '../utils/helpers';
 import StudentMedicalHistoryTab from '../components/Student/StudentMedicalHistoryTab';
+import { StudentModal } from './StudentsPage';
 
 const StudentProfilePage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'overview' | 'academics' | 'fees' | 'attendance' | 'documents' | 'medical'>('overview');
   const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: student, isLoading, error } = useQuery<StudentDetail>({
@@ -46,6 +49,16 @@ const StudentProfilePage: React.FC = () => {
     },
     enabled: !!id,
   });
+
+  const { data: classesData } = useQuery({
+    queryKey: ['classes'],
+    queryFn: async () => {
+      const response = await api.get('/classes');
+      return response.data;
+    },
+  });
+
+  const classes = classesData?.data || [];
 
   if (isLoading) {
     return (
@@ -74,13 +87,26 @@ const StudentProfilePage: React.FC = () => {
 
   return (
     <div className="space-y-6 pb-12">
-      {/* Search & Back Header */}
+      {/* Header */}
       <div className="flex items-center justify-between">
         <Button onClick={() => navigate('/students')} variant="secondary" className="bg-white hover:bg-gray-50 border border-gray-200">
           <ArrowLeft size={18} className="mr-2" /> Back to Students
         </Button>
-        <div className="flex gap-2 text-sm text-gray-500">
-          <span>Students</span> / <span className="font-semibold text-gray-900">{student.fullName}</span>
+        <div className="flex items-center gap-4">
+          <div className="flex gap-2 text-sm text-gray-500 font-bold hidden sm:flex">
+            <span>Students</span> / <span className="text-gray-900">{student.fullName}</span>
+          </div>
+          <Button onClick={() => setIsEditModalOpen(true)} className="bg-gray-900 hover:bg-gray-800 text-white shadow-sm rounded-xl px-4 flex items-center gap-2 h-10 transition-colors">
+            <Edit size={16} /> <span className="font-bold text-xs uppercase tracking-wider">Edit Profile</span>
+          </Button>
+          {student.status === 'ACTIVE' && (
+            <Button 
+              onClick={() => setIsLeaveModalOpen(true)}
+              className="bg-red-50 text-red-600 border-red-100 hover:bg-red-600 hover:text-white shadow-sm rounded-xl px-4 flex items-center gap-2 h-10 transition-all"
+            >
+              <LogOut size={16} /> <span className="font-black text-xs uppercase tracking-widest">Mark as Left</span>
+            </Button>
+          )}
         </div>
       </div>
 
@@ -141,19 +167,9 @@ const StudentProfilePage: React.FC = () => {
                   <h1 className="text-3xl font-bold text-gray-900">{student.fullName}</h1>
                   <p className="text-gray-500 font-medium">Admission No: <span className="text-blue-600 font-bold">{student.admissionNumber}</span></p>
                 </div>
-                {student.status === 'ACTIVE' && (
-                  <Button 
-                    variant="secondary" 
-                    onClick={() => setIsLeaveModalOpen(true)}
-                    className="bg-red-50 text-red-600 border-red-100 hover:bg-red-600 hover:text-white font-black uppercase tracking-widest text-[10px] h-10 px-4 rounded-xl transition-all"
-                  >
-                    <LogOut size={16} className="mr-2" />
-                    Mark as Left
-                  </Button>
-                )}
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
                 <div className="space-y-1">
                   <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Class</p>
                   <p className="text-sm font-bold text-gray-700">{student.class?.name || 'Unassigned'} ({student.class?.grade || '-'})</p>
@@ -173,6 +189,10 @@ const StudentProfilePage: React.FC = () => {
                 <div className="space-y-1">
                   <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Date of Birth</p>
                   <p className="text-sm font-bold text-gray-700">{formatDate(student.dateOfBirth)}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Date of Admission</p>
+                  <p className="text-sm font-bold text-gray-700">{formatDate(student.admissionDate)}</p>
                 </div>
               </div>
             </div>
@@ -224,6 +244,7 @@ const StudentProfilePage: React.FC = () => {
                 <DetailItem label="Birth Certificate No" value={student.birthCertificateNo} />
                 <DetailItem label="Blood Group" value={student.medicalHistory?.bloodGroup ? `${student.medicalHistory.bloodGroup} ${student.medicalHistory.rhFactor || ''}` : (student.bloodGroup || 'Not Provided')} />
                 <DetailItem label="Previous School" value={student.previousSchool || 'None'} />
+                <DetailItem label="Admission Date" value={formatDate(student.admissionDate)} />
               </div>
 
               <div className="pt-4 flex items-center gap-2 border-b pb-4">
@@ -482,6 +503,14 @@ const StudentProfilePage: React.FC = () => {
         )}
       </div>
 
+      {/* Student Edit Modal */}
+      <StudentModal 
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        classes={classes}
+        initialData={student as any}
+      />
+
       {/* Leave Confirmation Modal */}
       <MarkAsLeftModal 
         isOpen={isLeaveModalOpen} 
@@ -505,12 +534,14 @@ const MarkAsLeftModal: React.FC<{
 }> = ({ isOpen, onClose, student, onSuccess }) => {
   const [leavingReason, setLeavingReason] = useState('');
   const [leavingReasonOther, setLeavingReasonOther] = useState('');
+  const [leavingDate, setLeavingDate] = useState(new Date().toISOString().split('T')[0]);
 
   const leaveMutation = useMutation({
     mutationFn: async () => {
       const response = await api.put(`/students/${student.id}/leave`, {
         leavingReason,
-        leavingReasonOther
+        leavingReasonOther,
+        leavingDate
       });
       return response.data;
     },
@@ -548,6 +579,17 @@ const MarkAsLeftModal: React.FC<{
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
+          <div>
+            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1.5 block">Leaving Date</label>
+            <input
+              type="date"
+              value={leavingDate}
+              onChange={(e) => setLeavingDate(e.target.value)}
+              className="w-full h-12 px-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 outline-none text-sm font-bold"
+              required
+            />
+          </div>
+
           <div>
             <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1.5 block">Primary Reason for Leaving</label>
             <select

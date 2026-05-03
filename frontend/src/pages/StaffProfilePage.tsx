@@ -811,6 +811,7 @@ const StaffMarkAsLeftModal: React.FC<{
 }> = ({ isOpen, onClose, staff, onSuccess }) => {
     const [leavingReason, setLeavingReason] = useState('');
     const [leavingReasonOther, setLeavingReasonOther] = useState('');
+    const [leavingDate, setLeavingDate] = useState(new Date().toISOString().split('T')[0]);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -828,7 +829,8 @@ const StaffMarkAsLeftModal: React.FC<{
             setIsSubmitting(true);
             await api.put(`/staff/${staff.id}/leave`, {
                 leavingReason,
-                leavingReasonOther
+                leavingReasonOther,
+                leavingDate
             });
             toast.success('Personnel record updated successfully');
             onSuccess();
@@ -861,6 +863,17 @@ const StaffMarkAsLeftModal: React.FC<{
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-6">
+                        <div>
+                            <label className="text-[10px] font-black uppercase text-gray-400 tracking-[0.2em] mb-2 block ml-1">Leaving Date</label>
+                            <input
+                                type="date"
+                                value={leavingDate}
+                                onChange={(e) => setLeavingDate(e.target.value)}
+                                className="w-full h-14 px-5 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-red-500/10 focus:border-red-500 outline-none text-sm font-black transition-all"
+                                required
+                            />
+                        </div>
+
                         <div>
                             <label className="text-[10px] font-black uppercase text-gray-400 tracking-[0.2em] mb-2 block ml-1">Termination Cause</label>
                             <select

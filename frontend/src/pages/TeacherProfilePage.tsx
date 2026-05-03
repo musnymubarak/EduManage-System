@@ -21,7 +21,8 @@ import {
   Trash2,
   X,
   LogOut,
-  AlertTriangle
+  AlertTriangle,
+  Edit
 } from 'lucide-react';
 import { Input } from '../components/UI/Input';
 import api from '../services/api';
@@ -30,6 +31,7 @@ import { Card } from '../components/UI/Card';
 import { Button } from '../components/UI/Button';
 import { Badge } from '../components/UI/Badge';
 import { formatDate, formatCurrency, getFileUrl } from '../utils/helpers';
+import { TeacherModal } from './TeachersPage';
 
 
 
@@ -39,6 +41,7 @@ const TeacherProfilePage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'overview' | 'schedule' | 'attendance' | 'documents' | 'memos'>('overview');
   const [isMemoModalOpen, setIsMemoModalOpen] = useState(false);
   const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: teacher, isLoading, error } = useQuery<TeacherDetail>({
@@ -123,8 +126,21 @@ const TeacherProfilePage: React.FC = () => {
         <Button onClick={() => navigate('/teachers')} variant="secondary" className="bg-white hover:bg-gray-50 border border-gray-200">
           <ArrowLeft size={18} className="mr-2" /> Back to Teachers
         </Button>
-        <div className="flex gap-2 text-sm text-gray-500">
-          <span>Teachers</span> / <span className="font-semibold text-gray-900">{teacher.fullName}</span>
+        <div className="flex items-center gap-4">
+          <div className="flex gap-2 text-sm text-gray-500 font-bold hidden sm:flex">
+            <span>Teachers</span> / <span className="text-gray-900">{teacher.fullName}</span>
+          </div>
+          <Button onClick={() => setIsEditModalOpen(true)} className="bg-gray-900 hover:bg-gray-800 text-white shadow-sm rounded-xl px-4 flex items-center gap-2 h-10 transition-colors">
+            <Edit size={16} /> <span className="font-bold text-xs uppercase tracking-wider">Edit Profile</span>
+          </Button>
+          {teacher.status === 'ACTIVE' && (
+            <Button 
+              onClick={() => setIsLeaveModalOpen(true)}
+              className="bg-red-50 text-red-600 border-red-100 hover:bg-red-600 hover:text-white shadow-sm rounded-xl px-4 flex items-center gap-2 h-10 transition-all"
+            >
+              <LogOut size={16} /> <span className="font-black text-xs uppercase tracking-widest">Mark as Left</span>
+            </Button>
+          )}
         </div>
       </div>
 
@@ -186,16 +202,6 @@ const TeacherProfilePage: React.FC = () => {
                     <p className="text-gray-500 font-medium text-lg">{teacher.designation}</p>
                     <p className="text-gray-400 font-medium">Employee No: <span className="text-blue-600 font-bold">{teacher.employeeNumber}</span></p>
                   </div>
-                  {teacher.status === 'ACTIVE' && (
-                    <Button 
-                      variant="secondary" 
-                      onClick={() => setIsLeaveModalOpen(true)}
-                      className="bg-red-50 text-red-600 border-red-100 hover:bg-red-600 hover:text-white font-black uppercase tracking-widest text-[10px] h-10 px-4 rounded-xl transition-all"
-                    >
-                      <LogOut size={16} className="mr-2" />
-                      Mark as Left
-                    </Button>
-                  )}
                 </div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
@@ -575,6 +581,13 @@ const TeacherProfilePage: React.FC = () => {
         </div>
       )}
 
+      {/* Teacher Edit Modal */}
+      <TeacherModal 
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        initialData={teacher as any}
+      />
+
       {/* Leave Confirmation Modal */}
       <TeacherMarkAsLeftModal 
         isOpen={isLeaveModalOpen} 
@@ -634,6 +647,7 @@ const TeacherMarkAsLeftModal: React.FC<{
 }> = ({ isOpen, onClose, teacher, onSuccess }) => {
   const [leavingReason, setLeavingReason] = useState('');
   const [leavingReasonOther, setLeavingReasonOther] = useState('');
+  const [leavingDate, setLeavingDate] = useState(new Date().toISOString().split('T')[0]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -651,7 +665,8 @@ const TeacherMarkAsLeftModal: React.FC<{
       setIsSubmitting(true);
       await api.put(`/teachers/${teacher.id}/leave`, {
         leavingReason,
-        leavingReasonOther
+        leavingReasonOther,
+        leavingDate
       });
       toast.success('Teacher record updated successfully');
       onSuccess();
@@ -684,6 +699,17 @@ const TeacherMarkAsLeftModal: React.FC<{
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1.5 block">Leaving Date</label>
+              <input
+                type="date"
+                value={leavingDate}
+                onChange={(e) => setLeavingDate(e.target.value)}
+                className="w-full h-12 px-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 outline-none text-sm font-bold"
+                required
+              />
+            </div>
+
             <div>
               <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1.5 block">Primary Reason for Leaving</label>
               <select

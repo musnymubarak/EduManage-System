@@ -236,7 +236,7 @@ interface TeacherModalProps {
   initialData?: any | null;
 }
 
-const TeacherModal: React.FC<TeacherModalProps> = ({ isOpen, onClose, initialData }) => {
+export const TeacherModal: React.FC<TeacherModalProps> = ({ isOpen, onClose, initialData }) => {
   const [profilePhoto, setProfilePhoto] = useState<File | string | null>(null);
   const [qualifications, setQualifications] = useState<any[]>(
     initialData?.qualifications?.map((q: any) => ({
@@ -375,7 +375,7 @@ const TeacherModal: React.FC<TeacherModalProps> = ({ isOpen, onClose, initialDat
             </div>
             <div className="grid grid-cols-2 gap-4">
               <Input label="Basic Salary (LKR)" name="basicSalary" type="number" required defaultValue={initialData?.basicSalary} placeholder="0.00" />
-              <Input label="Joined Date" name="joinedDate" type="date" required defaultValue={initialData?.joinedDate?.split('T')[0]} />
+              <Input label="Joined Date" name="joinedDate" type="date" required defaultValue={initialData?.joinedDate?.split('T')[0] || new Date().toISOString().split('T')[0]} />
             </div>
             
             <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 border-b border-blue-100 pb-2 pt-2">Contact Details</h4>

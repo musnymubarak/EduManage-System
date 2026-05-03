@@ -430,13 +430,13 @@ export const deleteTeacherMemo = async (req: AuthRequest, res: Response): Promis
 export const markTeacherAsLeft = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const { leavingReason, leavingReasonOther } = req.body;
+    const { leavingReason, leavingReasonOther, leavingDate } = req.body;
 
     const teacher = await prisma.teacher.update({
       where: { id },
       data: {
         status: 'INACTIVE',
-        leavingDate: new Date(),
+        leavingDate: leavingDate ? new Date(leavingDate) : new Date(),
         leavingReason,
         leavingReasonOther
       },

@@ -478,7 +478,7 @@ export const deleteStudent = async (req: AuthRequest, res: Response): Promise<vo
 export const markStudentAsLeft = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const { leavingReason, leavingReasonOther } = req.body;
+    const { leavingReason, leavingReasonOther, leavingDate } = req.body;
 
     const validReasons = ['GRADUATED', 'LEFT_FOR_ANOTHER_SCHOOL', 'SUSPENDED', 'DISMISSED_EXPELLED', 'OTHER'];
     if (!validReasons.includes(leavingReason)) {
@@ -495,7 +495,7 @@ export const markStudentAsLeft = async (req: AuthRequest, res: Response): Promis
       where: { id },
       data: {
         status: 'INACTIVE',
-        leavingDate: new Date(),
+        leavingDate: leavingDate ? new Date(leavingDate) : new Date(),
         leavingReason,
         leavingReasonOther: leavingReason === 'OTHER' ? leavingReasonOther : null,
       },

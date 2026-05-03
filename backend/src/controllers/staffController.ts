@@ -452,13 +452,13 @@ export const deleteStaffDuty = async (req: AuthRequest, res: Response): Promise<
 export const markStaffAsLeft = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         const { id } = req.params;
-        const { leavingReason, leavingReasonOther } = req.body;
+        const { leavingReason, leavingReasonOther, leavingDate } = req.body;
 
         const staff = await prisma.staff.update({
             where: { id },
             data: {
                 status: 'INACTIVE',
-                leavingDate: new Date(),
+                leavingDate: leavingDate ? new Date(leavingDate) : new Date(),
                 leavingReason,
                 leavingReasonOther
             },

@@ -264,7 +264,7 @@ interface StudentModalProps {
   initialData?: Student | null;
 }
 
-const StudentModal: React.FC<StudentModalProps> = ({ isOpen, onClose, classes, initialData }) => {
+export const StudentModal: React.FC<StudentModalProps> = ({ isOpen, onClose, classes, initialData }) => {
   const [profilePhoto, setProfilePhoto] = useState<File | string | null>(null);
   const [documents, setDocuments] = useState<File[]>([]);
 
@@ -384,6 +384,7 @@ const StudentModal: React.FC<StudentModalProps> = ({ isOpen, onClose, classes, i
                 options={classes.map((cls) => ({ value: cls.id, label: cls.name }))}
               />
             </div>
+            <Input label="Admission Date" name="admissionDate" type="date" required defaultValue={initialData?.admissionDate?.split('T')[0] || new Date().toISOString().split('T')[0]} />
             <Input label="Mobile Number" name="mobileNumber" defaultValue={initialData?.mobileNumber} />
             <Input label="Physical Address" name="address" required defaultValue={initialData?.address} placeholder="House No, Street Name..." />
             <div className="grid grid-cols-2 gap-4">

@@ -370,7 +370,7 @@ const StaffModal: React.FC<StaffModalProps> = ({ isOpen, onClose, initialData })
                             />
                             <Input label="Basic Salary (LKR)" name="basicSalary" type="number" required defaultValue={initialData?.basicSalary} placeholder="0.00" />
                         </div>
-                        <Input label="Joined Date" name="joinedDate" type="date" required defaultValue={initialData?.joinedDate?.split('T')[0]} />
+                        <Input label="Joined Date" name="joinedDate" type="date" required defaultValue={initialData?.joinedDate?.split('T')[0] || new Date().toISOString().split('T')[0]} />
                         
                         <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 border-b border-blue-100 pb-2 pt-2">Contact Details</h4>
                         <div className="grid grid-cols-1 gap-4">
