@@ -52,8 +52,8 @@ const MainLayout: React.FC = () => {
       {/* Sidebar - Always visible on web, with independent scroll */}
       <aside className="flex w-64 flex-col flex-shrink-0 bg-white shadow-lg border-r border-gray-200">
         <div className="flex h-16 flex-shrink-0 items-center justify-center bg-blue-600 px-4 gap-3">
-          <img src={logo} alt="Samaiya Madrasa Logo" className="h-10 w-10 object-contain brightness-0 invert" />
-          <h1 className="text-xl font-bold text-white tracking-tight">Sumaiya Madrasa</h1>
+          <img src={logo} alt="Sumaiya Ladies Arabic College Logo" className="h-10 w-10 object-contain brightness-0 invert" />
+          <h1 className="text-xl font-bold text-white tracking-tight">SLAC</h1>
         </div>
 
         {/* Independent scroll area for the sidebar content */}

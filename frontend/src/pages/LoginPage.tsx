@@ -28,12 +28,12 @@ const LoginPage: React.FC = () => {
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600 px-4">
       <div className="w-full max-w-md">
         <div className="rounded-2xl bg-white p-8 shadow-2xl">
-          <div className="mb-8 text-center">
-            <h1 className="flex items-center justify-center gap-3 text-3xl font-bold text-gray-800">
-              <img src={logo} alt="Samaiya Madrasa Logo" className="h-20 w-20 object-contain" />
-              Samaiya Madrasa
+          <div className="mb-8 flex flex-col items-center text-center">
+            <img src={logo} alt="Sumaiya Ladies Arabic College Logo" className="mb-4 h-32 w-32 object-contain" />
+            <h1 className="text-2xl font-bold text-gray-800">
+              Sumaiya Ladies Arabic College
             </h1>
-            <p className="mt-2 text-gray-600">Management System</p>
+            <p className="mt-2 font-medium tracking-wide text-gray-600">Management System</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -86,7 +86,7 @@ const LoginPage: React.FC = () => {
         </div>
 
         <div className="mt-6 text-center text-sm text-white">
-          © 2024 Samaiya Madrasa. All rights reserved.
+          © {new Date().getFullYear()} Sumaiya Ladies Arabic College. All rights reserved.
         </div>
       </div>
     </div>

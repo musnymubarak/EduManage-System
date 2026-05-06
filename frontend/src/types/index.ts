@@ -416,4 +416,8 @@ export interface DashboardStats {
     lowStockItems: number;
   };
   recentAdmissions: any[];
+  topTodos: Todo[];
+  feeStatusCounts: { name: string; value: number }[];
+  financialTrends: { name: string; income: number; expense: number }[];
+  attendanceTrends: { date: string; studentPercentage: number; teacherPercentage: number }[];
 }
