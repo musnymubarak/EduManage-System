@@ -45,7 +45,7 @@ services:
     environment:
       VITE_API_URL: /api
     ports:
-      - "127.0.0.1:8080:80"
+      - "127.0.0.1:8003:80"
     depends_on:
       - backend
     networks:
