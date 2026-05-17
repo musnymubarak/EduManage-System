@@ -10,6 +10,23 @@ import { Input, Select, TextArea } from '../components/UI/Input';
 import { Modal } from '../components/UI/Modal';
 import { formatDate, formatCurrency } from '../utils/helpers';
 
+const CATEGORY_LABELS: Record<string, string> = {
+  SALARIES: 'Salary',
+  UTILITIES: 'Utilities',
+  MAINTENANCE: 'Maintenance',
+  SUPPLIES: 'Supplies',
+  TRANSPORTATION: 'Transport',
+  EVENTS: 'Events',
+  OTHER: 'Other',
+};
+
+const PAYMENT_METHOD_LABELS: Record<string, string> = {
+  CASH: 'Cash',
+  BANK_TRANSFER: 'Bank Transfer',
+  CHEQUE: 'Cheque',
+  ONLINE: 'Card/Online',
+};
+
 const ExpenditurePage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
@@ -74,11 +91,12 @@ const ExpenditurePage: React.FC = () => {
               className="rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">All Categories</option>
-              <option value="SALARY">Salary</option>
+              <option value="SALARIES">Salary</option>
               <option value="UTILITIES">Utilities</option>
               <option value="MAINTENANCE">Maintenance</option>
               <option value="SUPPLIES">Supplies</option>
-              <option value="TRANSPORT">Transport</option>
+              <option value="TRANSPORTATION">Transport</option>
+              <option value="EVENTS">Events</option>
               <option value="OTHER">Other</option>
             </select>
           </div>
@@ -149,7 +167,7 @@ const ExpenditurePage: React.FC = () => {
                       </div>
                     </td>
                     <td className="px-4 py-3 text-sm font-medium text-gray-900">
-                      {expenditure.category}
+                      {CATEGORY_LABELS[expenditure.category] || expenditure.category}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-600">
                       {expenditure.description}
@@ -162,7 +180,7 @@ const ExpenditurePage: React.FC = () => {
                       {formatCurrency(expenditure.amount)}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-600">
-                      {expenditure.paymentMethod}
+                      {PAYMENT_METHOD_LABELS[expenditure.paymentMethod] || expenditure.paymentMethod}
                     </td>
                   </tr>
                 ))}
@@ -272,11 +290,12 @@ const AddExpenditureModal: React.FC<AddExpenditureModalProps> = ({ isOpen, onClo
           value={formData.category}
           onChange={handleChange}
           options={[
-            { value: 'SALARY', label: 'Salary' },
+            { value: 'SALARIES', label: 'Salary' },
             { value: 'UTILITIES', label: 'Utilities (Electricity, Water)' },
             { value: 'MAINTENANCE', label: 'Maintenance & Repairs' },
             { value: 'SUPPLIES', label: 'Supplies & Materials' },
-            { value: 'TRANSPORT', label: 'Transport' },
+            { value: 'TRANSPORTATION', label: 'Transport' },
+            { value: 'EVENTS', label: 'Events' },
             { value: 'OTHER', label: 'Other' },
           ]}
           required
@@ -324,7 +343,7 @@ const AddExpenditureModal: React.FC<AddExpenditureModalProps> = ({ isOpen, onClo
             { value: 'CASH', label: 'Cash' },
             { value: 'BANK_TRANSFER', label: 'Bank Transfer' },
             { value: 'CHEQUE', label: 'Cheque' },
-            { value: 'CARD', label: 'Card' },
+            { value: 'ONLINE', label: 'Card/Online' },
           ]}
           required
         />

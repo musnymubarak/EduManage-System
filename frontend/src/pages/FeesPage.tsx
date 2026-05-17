@@ -735,8 +735,9 @@ const EditPaymentModal: React.FC<{ isOpen: boolean; onClose: () => void; payment
                     onChange={(e) => setFormData({...formData, paymentMethod: e.target.value})}
                     options={[
                         { value: 'CASH', label: 'Vault (Cash)' },
-                        { value: 'BANK_TRANSFER', label: 'E-Transfer' },
-                        { value: 'OTHER', label: 'Other' },
+                        { value: 'BANK_TRANSFER', label: 'Direct Transfer' },
+                        { value: 'ONLINE', label: 'Online Gateway' },
+                        { value: 'CHEQUE', label: 'Cheque' },
                     ]}
                 />
 
