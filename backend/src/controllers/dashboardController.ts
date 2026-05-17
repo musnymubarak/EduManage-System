@@ -6,6 +6,7 @@ export const getDashboardStats = async (_req: AuthRequest, res: Response): Promi
   try {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    const currentMonthStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
 
     // Get counts
     const [
@@ -16,7 +17,7 @@ export const getDashboardStats = async (_req: AuthRequest, res: Response): Promi
       activeTeachers,
       studentAttendanceToday,
       teacherAttendanceToday,
-      pendingFees,
+      paidStudentsCurrentMonth,
       todayTodos,
       lowStockItems,
     ] = await Promise.all([
@@ -39,7 +40,12 @@ export const getDashboardStats = async (_req: AuthRequest, res: Response): Promi
       }),
       prisma.feePayment.count({
         where: {
-          status: { in: ['PENDING', 'PARTIAL', 'OVERDUE'] },
+          feeType: 'MONTHLY',
+          month: currentMonthStr,
+          status: 'PAID',
+          student: {
+            status: 'ACTIVE',
+          },
         },
       }),
       prisma.todo.count({
@@ -56,6 +62,8 @@ export const getDashboardStats = async (_req: AuthRequest, res: Response): Promi
       }),
     ]);
 
+    const pendingFees = Math.max(0, activeStudents - paidStudentsCurrentMonth);
+
     // Get recent activities
     const recentAdmissions = await prisma.student.findMany({
       take: 5,
@@ -71,12 +79,15 @@ export const getDashboardStats = async (_req: AuthRequest, res: Response): Promi
       },
     });
 
-    // Get fee collection summary for current month
+    // Get fee collection summary for current month (specifically MONTHLY school fees to match Finance Hub)
     const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
     const partialPaymentsMonth = await prisma.partialPayment.findMany({
       where: {
         paymentDate: {
           gte: firstDayOfMonth,
+        },
+        feePayment: {
+          feeType: 'MONTHLY',
         },
       },
     });

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Search, Building, Users, Trash2, Edit, RefreshCw } from 'lucide-react';
+import { Plus, Search, Building, Users, Trash2, Edit, RefreshCw, Calendar, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
@@ -19,10 +19,31 @@ const ClassesPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isAcademicYearsModalOpen, setIsAcademicYearsModalOpen] = useState(false);
   const [selectedClass, setSelectedClass] = useState<Class | null>(null);
   const [sortBy, setSortBy] = useState<'grade_asc' | 'grade_desc' | 'name_asc' | 'name_desc'>('grade_asc');
+  const [selectedYearFilter, setSelectedYearFilter] = useState<string>('');
 
   const canMigrate = user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN';
+
+  // Fetch Academic Years
+  const { data: academicYearsResp } = useQuery({
+    queryKey: ['academic-years'],
+    queryFn: async () => {
+      const response = await api.get('/academic-years');
+      return response.data.data;
+    },
+  });
+  const academicYears = academicYearsResp || [];
+
+  React.useEffect(() => {
+    if (!selectedYearFilter && academicYears.length > 0) {
+      const active = academicYears.find((ay: any) => ay.isCurrent);
+      if (active) {
+        setSelectedYearFilter(active.year);
+      }
+    }
+  }, [academicYears]);
 
   // Fetch classes
   const { data: classesData, isLoading } = useQuery({
@@ -76,10 +97,18 @@ const ClassesPage: React.FC = () => {
   
   // Apply filtering and then sorting
   const filteredClasses = [...classes]
-    .filter(c => 
-      c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.academicYear.toLowerCase().includes(searchQuery.toLowerCase())
-    )
+    .filter(c => {
+      // Search term match
+      const matchesSearch = c.name.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      // Academic year match
+      const matchesYear = 
+        selectedYearFilter === 'all' || 
+        selectedYearFilter === '' || 
+        c.academicYear === selectedYearFilter;
+      
+      return matchesSearch && matchesYear;
+    })
     .sort((a, b) => {
       if (sortBy === 'grade_asc') return a.grade - b.grade || a.name.localeCompare(b.name);
       if (sortBy === 'grade_desc') return b.grade - a.grade || a.name.localeCompare(b.name);
@@ -103,22 +132,41 @@ const ClassesPage: React.FC = () => {
     );
   }
 
+  const activeYear = academicYears.find((ay: any) => ay.isCurrent);
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <Card>
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <h2 className="text-2xl font-bold text-gray-900">Class Management</h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-2xl font-bold text-gray-900">Class Management</h2>
+            {activeYear && (
+              <Badge variant="success" className="font-black text-xs uppercase tracking-wider px-3 py-1 bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center gap-1.5 rounded-lg shadow-sm">
+                <CheckCircle size={13} className="stroke-[3]" /> Active: {activeYear.year}
+              </Badge>
+            )}
+          </div>
           <div className="flex flex-wrap items-center gap-3">
             {canMigrate && (
-              <Button 
-                onClick={() => navigate('/migration')} 
-                variant="outline" 
-                className="hover:border-blue-500 hover:text-blue-600 active:scale-95 transition-all font-black text-xs uppercase tracking-wider h-10 px-4"
-              >
-                <RefreshCw size={16} className="mr-2 text-blue-600" />
-                Annual Migration
-              </Button>
+              <>
+                <Button 
+                  onClick={() => setIsAcademicYearsModalOpen(true)} 
+                  variant="outline" 
+                  className="hover:border-indigo-500 hover:text-indigo-600 active:scale-95 transition-all font-black text-xs uppercase tracking-wider h-10 px-4"
+                >
+                  <Calendar size={16} className="mr-2 text-indigo-600" />
+                  Academic Years
+                </Button>
+                <Button 
+                  onClick={() => navigate('/migration')} 
+                  variant="outline" 
+                  className="hover:border-blue-500 hover:text-blue-600 active:scale-95 transition-all font-black text-xs uppercase tracking-wider h-10 px-4"
+                >
+                  <RefreshCw size={16} className="mr-2 text-blue-600" />
+                  Annual Migration
+                </Button>
+              </>
             )}
             <Button 
               onClick={() => setIsAddModalOpen(true)}
@@ -133,8 +181,8 @@ const ClassesPage: React.FC = () => {
 
       {/* Filters & Sorting */}
       <Card>
-        <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-          <div className="relative w-full md:w-96">
+        <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
+          <div className="relative w-full lg:w-96">
             <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
@@ -144,18 +192,38 @@ const ClassesPage: React.FC = () => {
               className="w-full rounded-xl border border-gray-200 py-2.5 pl-10 pr-4 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm shadow-sm"
             />
           </div>
-          <div className="flex items-center gap-3 w-full md:w-auto">
-            <label className="text-xs font-medium text-gray-500 whitespace-nowrap">Sort By:</label>
-            <select 
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as any)}
-              className="rounded-xl border border-gray-200 py-2 px-4 text-sm font-bold text-gray-700 bg-gray-50 focus:border-blue-500 focus:outline-none transition-all cursor-pointer shadow-sm min-w-[180px]"
-            >
-              <option value="grade_asc">Grade (Low to High)</option>
-              <option value="grade_desc">Grade (High to Low)</option>
-              <option value="name_asc">Name (A-Z)</option>
-              <option value="name_desc">Name (Z-A)</option>
-            </select>
+          <div className="flex flex-col sm:flex-row items-center gap-4 w-full lg:w-auto">
+            {/* Academic Year Filter Selector */}
+            <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
+              <label className="text-xs font-black text-gray-500 whitespace-nowrap uppercase tracking-wider">Academic Year:</label>
+              <select
+                value={selectedYearFilter}
+                onChange={(e) => setSelectedYearFilter(e.target.value)}
+                className="rounded-xl border border-gray-200 py-2 px-4 text-sm font-bold text-gray-700 bg-white hover:border-gray-300 focus:border-blue-500 focus:outline-none transition-all cursor-pointer shadow-sm min-w-[170px]"
+              >
+                <option value="all">All Academic Years</option>
+                {academicYears.map((ay: any) => (
+                  <option key={ay.id} value={ay.year}>
+                    {ay.year} {ay.isCurrent ? '(Active)' : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Sort By Selector */}
+            <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
+              <label className="text-xs font-black text-gray-500 whitespace-nowrap uppercase tracking-wider">Sort By:</label>
+              <select 
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as any)}
+                className="rounded-xl border border-gray-200 py-2 px-4 text-sm font-bold text-gray-700 bg-white hover:border-gray-300 focus:border-blue-500 focus:outline-none transition-all cursor-pointer shadow-sm min-w-[170px]"
+              >
+                <option value="grade_asc">Grade (Low to High)</option>
+                <option value="grade_desc">Grade (High to Low)</option>
+                <option value="name_asc">Name (A-Z)</option>
+                <option value="name_desc">Name (Z-A)</option>
+              </select>
+            </div>
           </div>
         </div>
       </Card>
@@ -234,6 +302,7 @@ const ClassesPage: React.FC = () => {
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onSubmit={(classData) => createMutation.mutate(classData)}
+        academicYears={academicYears}
         title="Create New Class"
       />
 
@@ -249,9 +318,16 @@ const ClassesPage: React.FC = () => {
             updateMutation.mutate({ id: selectedClass.id, data });
           }}
           initialData={selectedClass}
+          academicYears={academicYears}
           title="Edit Class"
         />
       )}
+
+      {/* Manage Academic Years Modal */}
+      <AcademicYearsModal
+        isOpen={isAcademicYearsModalOpen}
+        onClose={() => setIsAcademicYearsModalOpen(false)}
+      />
     </div>
   );
 };
@@ -261,17 +337,30 @@ interface ClassModalProps {
   onClose: () => void;
   onSubmit: (data: any) => void;
   initialData?: Class;
+  academicYears: any[];
   title: string;
 }
 
-const ClassModal: React.FC<ClassModalProps> = ({ isOpen, onClose, onSubmit, initialData, title }) => {
+const ClassModal: React.FC<ClassModalProps> = ({ isOpen, onClose, onSubmit, initialData, academicYears, title }) => {
+  const defaultYear = initialData?.academicYear || academicYears.find((ay: any) => ay.isCurrent)?.year || '';
+  
   const [formData, setFormData] = useState({
     name: initialData?.name || '',
     grade: initialData?.grade.toString() || '',
     section: initialData?.section || '',
     capacity: initialData?.capacity.toString() || '30',
-    academicYear: initialData?.academicYear || '',
+    academicYear: defaultYear,
   });
+
+  // Re-sync default year when academicYears loaded or modal re-opened
+  React.useEffect(() => {
+    if (!formData.academicYear && academicYears.length > 0) {
+      setFormData(prev => ({
+        ...prev,
+        academicYear: academicYears.find((ay: any) => ay.isCurrent)?.year || ''
+      }));
+    }
+  }, [academicYears, isOpen]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -306,7 +395,7 @@ const ClassModal: React.FC<ClassModalProps> = ({ isOpen, onClose, onSubmit, init
             placeholder="e.g., A"
           />
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-4 items-end">
           <Input
             label="Capacity"
             type="number"
@@ -315,22 +404,333 @@ const ClassModal: React.FC<ClassModalProps> = ({ isOpen, onClose, onSubmit, init
             onChange={(e) => setFormData({ ...formData, capacity: e.target.value })}
             placeholder="e.g., 30"
           />
-          <Input
-            label="Academic Year"
-            value={formData.academicYear}
-            onChange={(e) => setFormData({ ...formData, academicYear: e.target.value })}
-            placeholder="e.g., 2024-2025"
-          />
+          <div>
+            <label className="text-xs font-black text-gray-500 uppercase tracking-wider block mb-1">Academic Year</label>
+            {academicYears && academicYears.length > 0 ? (
+              <select
+                value={formData.academicYear}
+                onChange={(e) => setFormData({ ...formData, academicYear: e.target.value })}
+                required
+                className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-bold text-gray-700 hover:border-gray-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 shadow-sm transition-all cursor-pointer w-full h-11"
+              >
+                <option value="">-- Select Year --</option>
+                {academicYears.map((ay: any) => (
+                  <option key={ay.id} value={ay.year}>
+                    {ay.year} {ay.isCurrent ? '(Active)' : ''}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <Input
+                required
+                placeholder="e.g., 2026-2027"
+                value={formData.academicYear}
+                onChange={(e) => setFormData({ ...formData, academicYear: e.target.value })}
+              />
+            )}
+          </div>
         </div>
-        <div className="flex justify-end gap-3 pt-4">
-          <Button type="button" variant="secondary" onClick={onClose}>
+        <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+          <Button type="button" variant="secondary" onClick={onClose} className="rounded-xl font-bold h-11 px-5">
             Cancel
           </Button>
-          <Button type="submit">
+          <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white font-bold h-11 px-5 rounded-xl">
             {initialData ? 'Update Class' : 'Create Class'}
           </Button>
         </div>
       </form>
+    </Modal>
+  );
+};
+
+/* ==========================================
+   ACADEMIC YEARS MANAGEMENT MODAL COMPONENT
+   ========================================== */
+interface AcademicYearsModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+const AcademicYearsModal: React.FC<AcademicYearsModalProps> = ({ isOpen, onClose }) => {
+  const queryClient = useQueryClient();
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingYear, setEditingYear] = useState<any | null>(null);
+  const [formData, setFormData] = useState({
+    year: '',
+    startDate: '',
+    endDate: '',
+    isCurrent: false
+  });
+
+  // Fetch Academic Years
+  const { data: yearsResponse, isLoading } = useQuery({
+    queryKey: ['academic-years'],
+    queryFn: async () => {
+      const response = await api.get('/academic-years');
+      return response.data.data;
+    },
+    enabled: isOpen
+  });
+
+  const years = yearsResponse || [];
+
+  // Create Mutation
+  const createMutation = useMutation({
+    mutationFn: (newYear: any) => api.post('/academic-years', newYear),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['academic-years'] });
+      toast.success('Academic Year created successfully!');
+      setIsFormOpen(false);
+      resetForm();
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.error || 'Failed to create academic year');
+    },
+  });
+
+  // Update Mutation
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) => api.put(`/academic-years/${id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['academic-years'] });
+      toast.success('Academic Year updated successfully!');
+      setIsFormOpen(false);
+      setEditingYear(null);
+      resetForm();
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.error || 'Failed to update academic year');
+    },
+  });
+
+  // Set Current Mutation
+  const setCurrentMutation = useMutation({
+    mutationFn: (id: string) => api.put(`/academic-years/${id}/set-current`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['academic-years'] });
+      queryClient.invalidateQueries({ queryKey: ['classes'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+      toast.success('Current active academic year updated successfully!');
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.error || 'Failed to set active academic year');
+    },
+  });
+
+  // Delete Mutation
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => api.delete(`/academic-years/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['academic-years'] });
+      toast.success('Academic Year deleted successfully');
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.error || 'Failed to delete academic year');
+    },
+  });
+
+  const resetForm = () => {
+    setFormData({
+      year: '',
+      startDate: '',
+      endDate: '',
+      isCurrent: false
+    });
+  };
+
+  const handleEditClick = (year: any) => {
+    setEditingYear(year);
+    setFormData({
+      year: year.year,
+      startDate: new Date(year.startDate).toISOString().split('T')[0],
+      endDate: new Date(year.endDate).toISOString().split('T')[0],
+      isCurrent: year.isCurrent
+    });
+    setIsFormOpen(true);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.year.match(/^\d{4}-\d{4}$/) && !formData.year.match(/^\d{4}$/)) {
+      toast.error('Academic year must be formatted as YYYY-YYYY or YYYY (e.g. 2026-2027)');
+      return;
+    }
+    
+    if (editingYear) {
+      updateMutation.mutate({ id: editingYear.id, data: formData });
+    } else {
+      createMutation.mutate(formData);
+    }
+  };
+
+  const handleDelete = (id: string, yearStr: string) => {
+    if (window.confirm(`Are you sure you want to delete academic year ${yearStr}?`)) {
+      deleteMutation.mutate(id);
+    }
+  };
+
+  const formatDate = (dateStr: string) => {
+    return new Date(dateStr).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  };
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title="Manage Academic Years" size="lg">
+      <div className="space-y-4">
+        {/* Toggle Form / List */}
+        {!isFormOpen ? (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-gray-505 font-medium">
+                Configure cycle codes, periods, and activate the current academic year registry.
+              </p>
+              <Button
+                type="button"
+                onClick={() => {
+                  resetForm();
+                  setIsFormOpen(true);
+                }}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs uppercase tracking-wider h-9 px-4 rounded-xl flex items-center gap-1.5"
+              >
+                <Plus size={14} /> Add Year
+              </Button>
+            </div>
+
+            {isLoading ? (
+              <div className="text-center py-8 text-sm font-semibold text-gray-500 animate-pulse">
+                Loading academic year list...
+              </div>
+            ) : years.length === 0 ? (
+              <div className="text-center py-8 border-2 border-dashed border-gray-100 rounded-2xl">
+                <Calendar className="h-10 w-10 mx-auto text-gray-300 stroke-[1.5] mb-2" />
+                <p className="text-xs font-bold text-gray-500">No Academic Years Defined</p>
+              </div>
+            ) : (
+              <div className="border border-gray-100 rounded-2xl overflow-hidden divide-y divide-gray-100 max-h-[380px] overflow-y-auto">
+                {years.map((year: any) => (
+                  <div key={year.id} className="p-4 flex items-center justify-between hover:bg-gray-50/50 transition-all">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-black text-gray-800 tracking-tight">{year.year}</span>
+                        {year.isCurrent && (
+                          <span className="text-[9px] font-black tracking-wider uppercase bg-emerald-50 text-emerald-600 border border-emerald-100 px-2 py-0.5 rounded-md flex items-center gap-0.5">
+                            <CheckCircle size={10} className="stroke-[3.5]" /> Active
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-gray-405 font-medium">
+                        Timeline: {formatDate(year.startDate)} – {formatDate(year.endDate)}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      {!year.isCurrent && (
+                        <button
+                          onClick={() => setCurrentMutation.mutate(year.id)}
+                          disabled={setCurrentMutation.isPending}
+                          className="text-[10px] font-black uppercase tracking-wider text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg active:scale-95 transition-all"
+                        >
+                          Activate
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleEditClick(year)}
+                        className="text-gray-400 hover:text-indigo-600 p-1.5 rounded-lg hover:bg-gray-55 active:scale-95 transition-all"
+                      >
+                        <Edit size={14} />
+                      </button>
+                      {!year.isCurrent && (
+                        <button
+                          onClick={() => handleDelete(year.id, year.year)}
+                          disabled={deleteMutation.isPending}
+                          className="text-rose-500 hover:text-rose-700 p-1.5 rounded-lg hover:bg-rose-50 active:scale-95 transition-all"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="flex justify-end pt-3 border-t border-slate-100">
+              <Button type="button" variant="secondary" onClick={onClose} className="rounded-xl font-bold h-11 px-6">
+                Close Settings
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4 pt-1">
+            <h4 className="text-sm font-black text-gray-800 border-b border-gray-100 pb-2 flex items-center gap-1.5">
+              <Calendar size={16} className="text-indigo-600" />
+              {editingYear ? `Edit Academic Year: ${editingYear.year}` : 'Add New Academic Year'}
+            </h4>
+            <Input
+              label="Academic Year Code (e.g., 2026-2027)"
+              required
+              placeholder="e.g. 2026-2027"
+              value={formData.year}
+              onChange={(e) => setFormData({ ...formData, year: e.target.value })}
+            />
+
+            <div className="grid grid-cols-2 gap-4">
+              <Input
+                label="Start Date"
+                type="date"
+                required
+                value={formData.startDate}
+                onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+              />
+              <Input
+                label="End Date"
+                type="date"
+                required
+                value={formData.endDate}
+                onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+              />
+            </div>
+
+            <div className="flex items-center gap-2 pt-1 pb-1">
+              <input
+                type="checkbox"
+                id="modalIsCurrentCheckbox"
+                className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 h-4 w-4"
+                checked={formData.isCurrent}
+                onChange={(e) => setFormData({ ...formData, isCurrent: e.target.checked })}
+              />
+              <label htmlFor="modalIsCurrentCheckbox" className="text-xs font-semibold text-slate-700 cursor-pointer select-none">
+                Set as active current academic year
+              </label>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => {
+                  setIsFormOpen(false);
+                  setEditingYear(null);
+                  resetForm();
+                }}
+                className="border-slate-200 text-slate-700 hover:bg-slate-50 font-black text-xs uppercase tracking-wider h-11 px-5 rounded-xl active:scale-95 transition-all"
+              >
+                Back to List
+              </Button>
+              <Button
+                type="submit"
+                disabled={createMutation.isPending || updateMutation.isPending}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs uppercase tracking-wider h-11 px-5 rounded-xl active:scale-95 transition-all shadow-md shadow-indigo-100"
+              >
+                Save Year
+              </Button>
+            </div>
+          </form>
+        )}
+      </div>
     </Modal>
   );
 };

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { 
   GraduationCap, Users, UserCheck, AlertTriangle, 
@@ -39,12 +40,28 @@ interface MigrationDecision {
   targetClassId?: string;
 }
 
+interface AcademicYear {
+  id: string;
+  year: string;
+  isCurrent: boolean;
+}
+
 const MigrationPage: React.FC = () => {
   const queryClient = useQueryClient();
   const [decisions, setDecisions] = useState<Record<string, MigrationDecision>>({});
   const [expandedClasses, setExpandedClasses] = useState<Record<string, boolean>>({});
   const [selectedClassFilter, setSelectedClassFilter] = useState<string>('all');
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [selectedTargetYear, setSelectedTargetYear] = useState<string>('');
+
+  // Fetch Academic Years
+  const { data: academicYears = [] } = useQuery<AcademicYear[]>({
+    queryKey: ['academic-years'],
+    queryFn: async () => {
+      const response = await api.get('/academic-years');
+      return response.data.data;
+    }
+  });
 
   // 1. Fetch Migration Preview Data
   const { data: previewData, isLoading, refetch, isFetching } = useQuery({
@@ -195,8 +212,13 @@ const MigrationPage: React.FC = () => {
   });
 
   const handleConfirmSubmit = () => {
+    if (!selectedTargetYear) {
+      toast.error('Please select a target academic year first.');
+      return;
+    }
     const targetStudents = filteredGroups.flatMap(g => g.students);
     const payload = {
+      targetAcademicYear: selectedTargetYear,
       migrations: targetStudents.map(student => {
         const dec = decisions[student.id] || { action: 'RETAIN' };
         return {
@@ -265,23 +287,55 @@ const MigrationPage: React.FC = () => {
         </div>
       </Card>
 
-      {/* Class Filter Card */}
-      <Card className="py-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <span className="text-sm font-bold text-gray-700">Filter Current Class:</span>
-            <select
-              value={selectedClassFilter}
-              onChange={(e) => setSelectedClassFilter(e.target.value)}
-              className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-bold text-gray-700 hover:border-gray-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 shadow-sm transition-all cursor-pointer min-w-[220px]"
-            >
-              <option value="all">All Classes ({classes.length})</option>
-              {classes.map(c => (
-                <option key={c.classId} value={c.classId}>Class {c.className} ({c.studentCount} students)</option>
-              ))}
-            </select>
+      {/* Configuration & Filter Card */}
+      <Card className="py-5">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-6">
+            {/* Filter Current Class */}
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-black text-gray-700 uppercase tracking-wider">Filter View:</span>
+              <select
+                value={selectedClassFilter}
+                onChange={(e) => setSelectedClassFilter(e.target.value)}
+                className="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-xs font-black text-gray-700 hover:border-gray-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 shadow-sm transition-all cursor-pointer min-w-[200px]"
+              >
+                <option value="all">All Classes ({classes.length})</option>
+                {classes.map(c => (
+                  <option key={c.classId} value={c.classId}>Class {c.className} ({c.studentCount} students)</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Target Academic Year */}
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-black text-rose-700 uppercase tracking-wider flex items-center gap-1.5">
+                Target Year:
+              </span>
+              <div className="flex items-center gap-2">
+                <select
+                  required
+                  value={selectedTargetYear}
+                  onChange={(e) => setSelectedTargetYear(e.target.value)}
+                  className="rounded-xl border-2 border-rose-200 bg-rose-50/15 px-4 py-2.5 text-xs font-black text-rose-700 hover:border-rose-300 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500/20 shadow-sm transition-all cursor-pointer min-w-[200px]"
+                >
+                  <option value="">-- Select Target Year --</option>
+                  {academicYears.map(ay => (
+                    <option key={ay.id} value={ay.year}>
+                      {ay.year} {ay.isCurrent ? '(Active)' : ''}
+                    </option>
+                  ))}
+                </select>
+                <Link 
+                  to="/academic-years" 
+                  className="text-xs font-bold text-indigo-600 hover:text-indigo-700 hover:underline flex items-center gap-1"
+                >
+                  Manage Years
+                </Link>
+              </div>
+            </div>
           </div>
-          <div className="text-xs text-gray-400 font-bold uppercase tracking-wider">
+          
+          <div className="text-xs text-slate-400 font-bold uppercase tracking-wider border-l-2 border-slate-100 pl-4">
             {selectedClassFilter === 'all' ? 'Managing All Classes' : `Managing Class ${classes.find(c => c.classId === selectedClassFilter)?.className}`}
           </div>
         </div>
@@ -560,7 +614,13 @@ const MigrationPage: React.FC = () => {
 
         <Button 
           type="button"
-          onClick={() => setIsConfirmModalOpen(true)}
+          onClick={() => {
+            if (!selectedTargetYear) {
+              toast.error('Please select a target academic year first.');
+              return;
+            }
+            setIsConfirmModalOpen(true);
+          }}
           className="bg-blue-600 hover:bg-blue-700 h-12 px-8 rounded-xl font-black text-sm uppercase tracking-wider shadow-lg shadow-blue-200"
           disabled={activeStudentsCount === 0 || executeMutation.isPending}
         >
@@ -581,7 +641,7 @@ const MigrationPage: React.FC = () => {
             <div className="text-sm">
               <p className="font-bold text-amber-900">Important Warning</p>
               <p className="text-amber-700 mt-1 leading-relaxed">
-                This is a bulk annual administrative action. Executing this will update student records permanently. Please ensure you have reviewed all class-level promotions and repeat assignments.
+                This will migrate all selected student cohorts into the new academic year: <strong className="text-rose-600 underline font-black">{selectedTargetYear}</strong>. All system classes will be advanced to this year. This action is permanent.
               </p>
             </div>
           </div>

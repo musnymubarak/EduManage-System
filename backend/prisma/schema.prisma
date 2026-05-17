@@ -317,7 +317,7 @@ model StaffAttendance {
 
 model Class {
   id           String              @id @default(uuid())
-  name         String              @unique
+  name         String
   grade        Int
   section      String?
   capacity     Int                 @default(30)
@@ -329,6 +329,7 @@ model Class {
   students     Student[]
   schedules    TeacherSchedule[]
 
+  @@unique([name, academicYear])
   @@map("classes")
 }
 

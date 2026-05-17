@@ -635,15 +635,51 @@ export const getMigrationPreview = async (_req: AuthRequest, res: Response): Pro
 
 export const executeMigration = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { migrations } = req.body; // Array of { studentId, action: 'PROMOTE' | 'RETAIN' | 'LEAVE', targetClassId }
+    const { migrations, targetAcademicYear } = req.body; 
 
     if (!Array.isArray(migrations) || migrations.length === 0) {
       res.status(400).json({ success: false, error: 'Invalid or empty migrations array' });
       return;
     }
 
+    if (targetAcademicYear) {
+      // Verify target academic year exists
+      const yearExists = await prisma.academicYear.findUnique({
+        where: { year: targetAcademicYear },
+      });
+      if (!yearExists) {
+        res.status(400).json({ success: false, error: `Academic year '${targetAcademicYear}' does not exist. Please create it first.` });
+        return;
+      }
+    }
+
     // Execute bulk update in a transaction
     await prisma.$transaction(async (tx) => {
+      // Cache to avoid redundant DB queries for finding cloned class IDs
+      const targetClassCache = new Map<string, string>();
+
+      const getTargetClassIdForName = async (className: string) => {
+        if (targetClassCache.has(className)) {
+          return targetClassCache.get(className)!;
+        }
+
+        const match = await tx.class.findUnique({
+          where: {
+            name_academicYear: {
+              name: className,
+              academicYear: targetAcademicYear
+            }
+          }
+        });
+
+        if (!match) {
+          throw new Error(`Class '${className}' does not exist for academic year '${targetAcademicYear}'`);
+        }
+
+        targetClassCache.set(className, match.id);
+        return match.id;
+      };
+
       for (const m of migrations) {
         const { studentId, action, targetClassId } = m;
 
@@ -651,9 +687,20 @@ export const executeMigration = async (req: AuthRequest, res: Response): Promise
           if (!targetClassId) {
             throw new Error(`Target class missing for promoted student: ${studentId}`);
           }
+          
+          const oldTargetClass = await tx.class.findUnique({
+            where: { id: targetClassId }
+          });
+          
+          if (!oldTargetClass) {
+            throw new Error(`Target class with ID '${targetClassId}' not found`);
+          }
+
+          const newTargetClassId = await getTargetClassIdForName(oldTargetClass.name);
+
           await tx.student.update({
             where: { id: studentId },
-            data: { classId: targetClassId }
+            data: { classId: newTargetClassId }
           });
         } else if (action === 'LEAVE') {
           await tx.student.update({
@@ -664,8 +711,32 @@ export const executeMigration = async (req: AuthRequest, res: Response): Promise
               leavingReason: 'GRADUATED'
             }
           });
+        } else if (action === 'RETAIN') {
+          // If retained, stay in same class name but move to the target academic year's class record
+          const student = await tx.student.findUnique({
+            where: { id: studentId },
+            include: { class: true }
+          });
+          
+          if (student) {
+            const newClassId = await getTargetClassIdForName(student.class.name);
+            await tx.student.update({
+              where: { id: studentId },
+              data: { classId: newClassId }
+            });
+          }
         }
-        // 'RETAIN' action does nothing (keeps student in current class)
+      }
+
+      if (targetAcademicYear) {
+        // Set the target academic year as the active/current year
+        await tx.academicYear.updateMany({
+          data: { isCurrent: false }
+        });
+        await tx.academicYear.update({
+          where: { year: targetAcademicYear },
+          data: { isCurrent: true }
+        });
       }
     });
 

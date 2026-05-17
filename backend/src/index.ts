@@ -15,6 +15,7 @@ import todoRoutes from './routes/todoRoutes';
 import dashboardRoutes from './routes/dashboardRoutes';
 import commonRoutes from './routes/commonRoutes';
 import staffRoutes from './routes/staffRoutes';
+import academicYearRoutes from './routes/academicYearRoutes';
 
 dotenv.config();
 
@@ -58,6 +59,7 @@ app.use('/api/fees', feeRoutes);
 app.use('/api/todos', todoRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/staff', staffRoutes);
+app.use('/api/academic-years', academicYearRoutes);
 app.use('/api', commonRoutes);
 
 // Error handling
