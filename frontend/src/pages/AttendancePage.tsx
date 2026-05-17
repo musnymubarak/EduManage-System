@@ -668,13 +668,13 @@ const StaffAttendanceMarking: React.FC<StaffAttendanceMarkingProps> = ({ selecte
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-5 py-4 text-left text-[10px] font-black uppercase tracking-widest text-gray-400">ID / Persona</th>
-                  <th className="px-5 py-4 text-left text-[10px] font-black uppercase tracking-widest text-gray-400">Dept & Designation</th>
-                  <th className="px-5 py-4 text-center text-[10px] font-black uppercase tracking-widest text-gray-400">Present</th>
-                  <th className="px-5 py-4 text-center text-[10px] font-black uppercase tracking-widest text-gray-400">Absent</th>
-                  <th className="px-5 py-4 text-center text-[10px] font-black uppercase tracking-widest text-gray-400">Late</th>
-                  <th className="px-5 py-4 text-center text-[10px] font-black uppercase tracking-widest text-gray-400">Sick</th>
-                  <th className="px-5 py-4 text-left text-[10px] font-black uppercase tracking-widest text-gray-400">Early Leave Note</th>
+                  <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">ID / Persona</th>
+                  <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Dept & Designation</th>
+                  <th className="px-5 py-4 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">Present</th>
+                  <th className="px-5 py-4 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">Absent</th>
+                  <th className="px-5 py-4 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">Late</th>
+                  <th className="px-5 py-4 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">Sick</th>
+                  <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Early Leave Note</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
@@ -682,7 +682,7 @@ const StaffAttendanceMarking: React.FC<StaffAttendanceMarkingProps> = ({ selecte
                   <tr key={s.id} className="hover:bg-blue-50/10 transition-colors">
                     <td className="px-5 py-4">
                       <p className="font-black text-gray-900 uppercase text-xs">{s.fullName}</p>
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">{s.employeeNumber}</p>
+                      <p className="text-xs text-gray-500">{s.employeeNumber}</p>
                     </td>
                     <td className="px-5 py-4">
                       <p className="text-xs font-black text-gray-900 uppercase">{s.designation}</p>

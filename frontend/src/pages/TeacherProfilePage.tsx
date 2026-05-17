@@ -700,7 +700,7 @@ const TeacherMarkAsLeftModal: React.FC<{
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1.5 block">Leaving Date</label>
+              <label className="text-xs font-medium text-gray-700 mb-1.5 block">Leaving Date</label>
               <input
                 type="date"
                 value={leavingDate}
@@ -711,7 +711,7 @@ const TeacherMarkAsLeftModal: React.FC<{
             </div>
 
             <div>
-              <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1.5 block">Primary Reason for Leaving</label>
+              <label className="text-xs font-medium text-gray-700 mb-1.5 block">Primary Reason for Leaving</label>
               <select
                 value={leavingReason}
                 onChange={(e) => setLeavingReason(e.target.value)}
@@ -729,7 +729,7 @@ const TeacherMarkAsLeftModal: React.FC<{
 
             {leavingReason === 'OTHER' && (
               <div>
-                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1.5 block">Specify Detailed Reason</label>
+                <label className="text-xs font-medium text-gray-700 mb-1.5 block">Specify Detailed Reason</label>
                 <textarea
                   value={leavingReasonOther}
                   onChange={(e) => setLeavingReasonOther(e.target.value)}
@@ -746,7 +746,7 @@ const TeacherMarkAsLeftModal: React.FC<{
               <Button 
                 type="submit" 
                 disabled={isSubmitting} 
-                className="bg-red-600 hover:bg-red-700 shadow-xl shadow-red-100 px-8 h-12 rounded-xl font-black uppercase tracking-widest text-[11px]"
+                className="bg-red-600 hover:bg-red-700 shadow-xl shadow-red-100 px-8 h-12 rounded-xl font-medium text-sm"
               >
                 {isSubmitting ? 'Processing...' : 'Confirm Termination'}
               </Button>

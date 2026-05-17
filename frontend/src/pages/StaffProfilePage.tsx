@@ -247,7 +247,7 @@ const StaffProfilePage: React.FC = () => {
                                         {staff.status}
                                     </Badge>
                                 </div>
-                                <p className="text-blue-600 font-black uppercase tracking-[0.2em] text-sm mt-1">{staff.designation} • {staff.department} Dept.</p>
+                                <p className="text-blue-600 font-medium text-sm mt-1">{staff.designation} • {staff.department} Dept.</p>
                             </div>
 
                             <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
@@ -291,7 +291,7 @@ const StaffProfilePage: React.FC = () => {
                             <button
                                 key={tab}
                                 onClick={() => setActiveTab(tab as any)}
-                                className={`py-4 text-xs font-black uppercase tracking-widest transition-all border-b-2 ${
+                                className={`py-4 text-xs font-semibold uppercase tracking-wide transition-all border-b-2 ${
                                     activeTab === tab 
                                         ? 'border-blue-600 text-blue-600' 
                                         : 'border-transparent text-gray-400 hover:text-gray-600'
@@ -389,9 +389,9 @@ const StaffProfilePage: React.FC = () => {
                             <div className="pt-6 border-t border-gray-100">
                                 <div className="bg-blue-600 rounded-3xl p-6 text-white shadow-xl shadow-blue-100 relative overflow-hidden group">
                                     <div className="relative z-10">
-                                        <p className="text-[10px] font-black uppercase tracking-widest opacity-80 mb-1">Total Collections</p>
+                                        <p className="text-xs font-semibold uppercase tracking-wide opacity-80 mb-1">Total Collections</p>
                                         <p className="text-3xl font-black">{formatCurrency(staff.basicSalary)}</p>
-                                        <p className="text-[10px] font-black uppercase tracking-widest mt-4 flex items-center gap-1 opacity-80">
+                                        <p className="text-xs font-semibold uppercase tracking-wide mt-4 flex items-center gap-1 opacity-80">
                                             Current Base Remuneration
                                         </p>
                                     </div>
@@ -410,7 +410,7 @@ const StaffProfilePage: React.FC = () => {
                                 <p className="text-gray-500 font-medium">Tracking vocational responsibilities and operational tasks</p>
                             </div>
                             <Button onClick={() => setIsDutyModalOpen(true)} className="bg-blue-600 hover:bg-blue-700 shadow-xl shadow-blue-100 px-6 rounded-2xl flex items-center gap-2">
-                                <Plus size={20} /> <span className="font-black uppercase tracking-widest text-[10px]">Assign New Duty</span>
+                                <Plus size={20} /> <span className="font-semibold text-[10px]">Assign New Duty</span>
                             </Button>
                         </div>
 
@@ -472,7 +472,7 @@ const StaffProfilePage: React.FC = () => {
                                 <p className="text-gray-500 font-medium">Historical record of monthly payments and financial disbursements</p>
                             </div>
                             <Button onClick={() => setIsSalaryModalOpen(true)} className="bg-green-600 hover:bg-green-700 shadow-xl shadow-green-100 px-6 rounded-2xl flex items-center gap-2">
-                                <DollarSign size={18} /> <span className="font-black uppercase tracking-widest text-[10px]">Record New Payment</span>
+                                <DollarSign size={18} /> <span className="font-semibold text-[10px]">Record New Payment</span>
                             </Button>
                         </div>
 
@@ -480,14 +480,14 @@ const StaffProfilePage: React.FC = () => {
                             <table className="w-full text-left">
                                 <thead className="bg-gray-50/50 border-b border-gray-100">
                                     <tr>
-                                        <th className="p-5 text-[10px] font-black uppercase tracking-widest text-gray-400">Payment Month</th>
-                                        <th className="p-5 text-[10px] font-black uppercase tracking-widest text-gray-400">Process Date</th>
-                                        <th className="p-5 text-right text-[10px] font-black uppercase tracking-widest text-gray-400">Basic</th>
-                                        <th className="p-5 text-right text-[10px] font-black uppercase tracking-widest text-gray-400 text-blue-600">Allowances</th>
-                                        <th className="p-5 text-right text-[10px] font-black uppercase tracking-widest text-gray-400 text-red-600">Deductions</th>
-                                        <th className="p-5 text-right text-[10px] font-black uppercase tracking-widest text-gray-400 font-bold">Net Salary</th>
-                                        <th className="p-5 text-center text-[10px] font-black uppercase tracking-widest text-gray-400">Audit Trail</th>
-                                        <th className="p-5 text-center text-[10px] font-black uppercase tracking-widest text-gray-400">Actions</th>
+                                        <th className="p-5 text-xs font-semibold uppercase tracking-wide text-gray-500">Payment Month</th>
+                                        <th className="p-5 text-xs font-semibold uppercase tracking-wide text-gray-500">Process Date</th>
+                                        <th className="p-5 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">Basic</th>
+                                        <th className="p-5 text-right text-xs font-semibold uppercase tracking-wide text-gray-500 text-blue-600">Allowances</th>
+                                        <th className="p-5 text-right text-xs font-semibold uppercase tracking-wide text-gray-500 text-red-600">Deductions</th>
+                                        <th className="p-5 text-right text-xs font-semibold uppercase tracking-wide text-gray-500 font-bold">Net Salary</th>
+                                        <th className="p-5 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">Audit Trail</th>
+                                        <th className="p-5 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-50">
@@ -560,7 +560,7 @@ const StaffProfilePage: React.FC = () => {
                                 <Card key={record.id} className={`p-4 text-center border shadow-sm rounded-2xl ${
                                     record.status === 'PRESENT' ? 'bg-green-50 border-green-100' : 'bg-red-50 border-red-100'
                                 }`}>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">{new Date(record.date).toLocaleDateString('en-US', { weekday: 'short' })}</p>
+                                    <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">{new Date(record.date).toLocaleDateString('en-US', { weekday: 'short' })}</p>
                                     <p className="text-xs font-black text-gray-900 mb-2">{formatDate(record.date)}</p>
                                     <Badge variant={record.status === 'PRESENT' ? 'success' : 'danger'} className="text-[8px] font-black px-2">
                                         {record.status}
@@ -673,7 +673,7 @@ const StaffProfilePage: React.FC = () => {
                 <form onSubmit={handleUpdateStaff} className="space-y-6 max-h-[75vh] overflow-y-auto px-1 custom-scrollbar">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-4">
-                            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 border-b border-blue-100 pb-2">Personal Specifics</h4>
+                            <h4 className="text-xs font-semibold uppercase tracking-wider text-blue-700 border-b border-blue-100 pb-2">Personal Specifics</h4>
                             <Input label="Full Name" name="fullName" defaultValue={staff.fullName} required />
                             <Input label="Name with Initials" name="nameWithInitials" defaultValue={staff.nameWithInitials} required />
                             <div className="grid grid-cols-2 gap-4">
@@ -695,7 +695,7 @@ const StaffProfilePage: React.FC = () => {
                         </div>
 
                         <div className="space-y-4">
-                            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 border-b border-blue-100 pb-2">Employment Parameters</h4>
+                            <h4 className="text-xs font-semibold uppercase tracking-wider text-blue-700 border-b border-blue-100 pb-2">Employment Parameters</h4>
                             <div className="grid grid-cols-2 gap-4">
                                 <Select 
                                     label="Department" 
@@ -753,7 +753,7 @@ const StaffProfilePage: React.FC = () => {
                     </div>
 
                     <div className="space-y-4">
-                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 border-b border-blue-100 pb-2">Contact Context</h4>
+                        <h4 className="text-xs font-semibold uppercase tracking-wider text-blue-700 border-b border-blue-100 pb-2">Contact Context</h4>
                         <div className="grid grid-cols-1 gap-4">
                             <MultiPhoneInput label="Phone Numbers" name="phoneNumbers" initialValues={staff.phoneNumbers} />
                             <Input label="Email Address (Optional)" name="email" type="email" defaultValue={staff.email || ''} />
@@ -770,7 +770,7 @@ const StaffProfilePage: React.FC = () => {
                     </div>
 
                     <div className="space-y-4">
-                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 border-b border-blue-100 pb-2">Additional Documents</h4>
+                        <h4 className="text-xs font-semibold uppercase tracking-wider text-blue-700 border-b border-blue-100 pb-2">Additional Documents</h4>
                         <FileUpload 
                             label="Upload Documents" 
                             multiple 
@@ -864,7 +864,7 @@ const StaffMarkAsLeftModal: React.FC<{
 
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div>
-                            <label className="text-[10px] font-black uppercase text-gray-400 tracking-[0.2em] mb-2 block ml-1">Leaving Date</label>
+                            <label className="text-xs font-medium text-gray-700 mb-1.5 block">Leaving Date</label>
                             <input
                                 type="date"
                                 value={leavingDate}
@@ -875,7 +875,7 @@ const StaffMarkAsLeftModal: React.FC<{
                         </div>
 
                         <div>
-                            <label className="text-[10px] font-black uppercase text-gray-400 tracking-[0.2em] mb-2 block ml-1">Termination Cause</label>
+                            <label className="text-xs font-medium text-gray-700 mb-1.5 block">Termination Cause</label>
                             <select
                                 value={leavingReason}
                                 onChange={(e) => setLeavingReason(e.target.value)}
@@ -894,7 +894,7 @@ const StaffMarkAsLeftModal: React.FC<{
 
                         {leavingReason === 'OTHER' && (
                             <div>
-                                <label className="text-[10px] font-black uppercase text-gray-400 tracking-[0.2em] mb-2 block ml-1">Detailed Description</label>
+                                <label className="text-xs font-medium text-gray-700 mb-1.5 block">Detailed Description</label>
                                 <textarea
                                     value={leavingReasonOther}
                                     onChange={(e) => setLeavingReasonOther(e.target.value)}
@@ -910,7 +910,7 @@ const StaffMarkAsLeftModal: React.FC<{
                             <Button 
                                 type="submit" 
                                 disabled={isSubmitting} 
-                                className="bg-red-600 hover:bg-red-700 shadow-xl shadow-red-100 px-8 h-12 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px]"
+                                className="bg-red-600 hover:bg-red-700 shadow-sm"
                             >
                                 {isSubmitting ? 'Updating...' : 'Confirm Departure'}
                             </Button>

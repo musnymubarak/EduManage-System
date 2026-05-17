@@ -76,7 +76,7 @@ const StaffPage: React.FC = () => {
                         className="bg-blue-600 hover:bg-blue-700 shadow-xl shadow-blue-100 flex items-center gap-2 h-12 px-6 rounded-2xl group transition-all transform hover:scale-105 whitespace-nowrap"
                     >
                         <Plus size={20} className="group-hover:rotate-90 transition-transform duration-300 shrink-0" />
-                        <span className="font-black uppercase tracking-widest text-[11px]">Register New Staff</span>
+                        <span className="font-medium text-sm">Register New Staff</span>
                     </Button>
                 </div>
             </div>
@@ -113,11 +113,11 @@ const StaffPage: React.FC = () => {
                     </div>
                     <div className="flex flex-wrap md:flex-nowrap gap-3 items-center">
                         <div className="flex items-center gap-2">
-                            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest whitespace-nowrap">Sort:</label>
+                            <label className="text-xs font-medium text-gray-500 whitespace-nowrap">Sort:</label>
                             <select
                                 value={sortBy}
                                 onChange={(e) => setSortBy(e.target.value as any)}
-                                className="h-11 px-4 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none min-w-[160px] text-xs font-black uppercase tracking-wider text-gray-600 cursor-pointer"
+                                className="h-11 px-4 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none min-w-[160px] text-xs font-medium text-gray-700 cursor-pointer"
                             >
                                 <option value="id_asc">Staff ID (A-Z)</option>
                                 <option value="id_desc">Staff ID (Z-A)</option>
@@ -158,18 +158,18 @@ const StaffPage: React.FC = () => {
                     <table className="w-full text-left">
                         <thead>
                             <tr className="bg-gray-50/50 border-b border-gray-100">
-                                <th className="p-5 text-[10px] font-black uppercase tracking-widest text-gray-400">Identity</th>
-                                <th className="p-5 text-[10px] font-black uppercase tracking-widest text-gray-400">Department & Role</th>
-                                <th className="p-5 text-[10px] font-black uppercase tracking-widest text-gray-400">Remuneration</th>
-                                <th className="p-5 text-[10px] font-black uppercase tracking-widest text-gray-400">Joined Date</th>
-                                <th className="p-5 text-[10px] font-black uppercase tracking-widest text-gray-400">Status</th>
-                                <th className="p-5 text-[10px] font-black uppercase tracking-widest text-gray-400 text-center w-[1%] whitespace-nowrap">Actions</th>
+                                <th className="p-5 text-xs font-semibold uppercase tracking-wide text-gray-500">Identity</th>
+                                <th className="p-5 text-xs font-semibold uppercase tracking-wide text-gray-500">Department & Role</th>
+                                <th className="p-5 text-xs font-semibold uppercase tracking-wide text-gray-500">Remuneration</th>
+                                <th className="p-5 text-xs font-semibold uppercase tracking-wide text-gray-500">Joined Date</th>
+                                <th className="p-5 text-xs font-semibold uppercase tracking-wide text-gray-500">Status</th>
+                                <th className="p-5 text-xs font-semibold uppercase tracking-wide text-gray-500 text-center w-[1%] whitespace-nowrap">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-50">
                             {isLoading ? (
                                 <tr>
-                                    <td colSpan={6} className="p-10 text-center animate-pulse text-gray-400 font-bold uppercase text-[10px] tracking-[0.2em]">Syncing Personnel Data...</td>
+                                    <td colSpan={6} className="p-10 text-center animate-pulse text-sm text-gray-500">Loading personnel data…</td>
                                 </tr>
                             ) : sortedStaff.length === 0 ? (
                                 <tr>
@@ -187,7 +187,7 @@ const StaffPage: React.FC = () => {
                                                 </div>
                                                 <div>
                                                     <p className="font-black text-gray-900 group-hover:text-blue-600 transition-colors">{s.fullName}</p>
-                                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">{s.employeeNumber}</p>
+                                                    <p className="text-xs text-gray-500">{s.employeeNumber}</p>
                                                 </div>
                                             </div>
                                         </td>
@@ -309,7 +309,7 @@ const StaffModal: React.FC<StaffModalProps> = ({ isOpen, onClose, initialData })
             <form onSubmit={handleSubmit} className="space-y-6 max-h-[75vh] overflow-y-auto px-1 custom-scrollbar">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-4">
-                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 border-b border-blue-100 pb-2">Personal Details</h4>
+                        <h4 className="text-xs font-semibold uppercase tracking-wider text-blue-700 border-b border-blue-100 pb-2">Personal Details</h4>
                         <Input label="Full Name" name="fullName" required defaultValue={initialData?.fullName} placeholder="e.g. John Doe" />
                         <Input label="Name with Initials" name="nameWithInitials" required defaultValue={initialData?.nameWithInitials} placeholder="e.g. J. Doe" />
                         <div className="grid grid-cols-2 gap-4">
@@ -339,7 +339,7 @@ const StaffModal: React.FC<StaffModalProps> = ({ isOpen, onClose, initialData })
                     </div>
 
                     <div className="space-y-4">
-                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 border-b border-blue-100 pb-2">Employment Details</h4>
+                        <h4 className="text-xs font-semibold uppercase tracking-wider text-blue-700 border-b border-blue-100 pb-2">Employment Details</h4>
                         <div className="grid grid-cols-2 gap-4">
                             <Select
                                 label="Department"
@@ -372,7 +372,7 @@ const StaffModal: React.FC<StaffModalProps> = ({ isOpen, onClose, initialData })
                         </div>
                         <Input label="Joined Date" name="joinedDate" type="date" required defaultValue={initialData?.joinedDate?.split('T')[0] || new Date().toISOString().split('T')[0]} />
                         
-                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 border-b border-blue-100 pb-2 pt-2">Contact Details</h4>
+                        <h4 className="text-xs font-semibold uppercase tracking-wider text-blue-700 border-b border-blue-100 pb-2 pt-2">Contact Details</h4>
                         <div className="grid grid-cols-1 gap-4">
                             <MultiPhoneInput label="Phone Numbers" name="phoneNumbers" initialValues={initialData?.phoneNumbers} />
                             <Input label="Email" name="email" type="email" defaultValue={initialData?.email} placeholder="staff@sumayamadrasa.com" />
@@ -381,7 +381,7 @@ const StaffModal: React.FC<StaffModalProps> = ({ isOpen, onClose, initialData })
                 </div>
 
                 <div className="space-y-4">
-                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 border-b border-blue-100 pb-2">Address Details</h4>
+                    <h4 className="text-xs font-semibold uppercase tracking-wider text-blue-700 border-b border-blue-100 pb-2">Address Details</h4>
                     <Input label="Physical Address" name="address" required defaultValue={initialData?.address} placeholder="House No, Street Name..." />
                     <div className="grid grid-cols-2 gap-4">
                         <Input label="City" name="city" required defaultValue={initialData?.city} />
@@ -398,7 +398,7 @@ const StaffModal: React.FC<StaffModalProps> = ({ isOpen, onClose, initialData })
                 </div>
 
                 <div className="space-y-4">
-                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 border-b border-blue-100 pb-2">Verification Documents</h4>
+                    <h4 className="text-xs font-semibold uppercase tracking-wider text-blue-700 border-b border-blue-100 pb-2">Verification Documents</h4>
                     <FileUpload
                         label="Identity / Verification Documents"
                         multiple
@@ -412,7 +412,7 @@ const StaffModal: React.FC<StaffModalProps> = ({ isOpen, onClose, initialData })
                     <Button 
                         type="submit" 
                         disabled={staffMutation.isPending} 
-                        className="bg-blue-600 hover:bg-blue-700 shadow-xl shadow-blue-100 px-10 h-11 rounded-xl font-black uppercase tracking-widest text-[11px]"
+                        className="bg-blue-600 hover:bg-blue-700 shadow-xl shadow-blue-100 px-10 h-11 rounded-xl font-medium text-sm"
                     >
                         {staffMutation.isPending ? 'Processing...' : (initialData ? 'Update Record' : 'Confirm Registration')}
                     </Button>

@@ -4,22 +4,73 @@ import { Link, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { DashboardStats } from '../types';
 import logo from '../logo.png';
-import { 
-  Users, GraduationCap, CalendarCheck, AlertCircle, 
-  DollarSign, ArrowRight, CheckCircle2, Clock, 
-  AlertTriangle, TrendingUp, BookOpen 
+import {
+  Users, GraduationCap, CalendarCheck, AlertCircle,
+  DollarSign, ArrowRight, CheckCircle2, Clock,
+  AlertTriangle, TrendingUp, BookOpen,
+  type LucideIcon,
 } from 'lucide-react';
-import { 
+import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line, Legend
 } from 'recharts';
 
 const FEE_COLORS = {
-  PAID: '#10b981',    // emerald
-  PARTIAL: '#f59e0b', // amber
-  PENDING: '#6366f1', // indigo
-  OVERDUE: '#ef4444'  // red
+  PAID: '#10b981',
+  PARTIAL: '#f59e0b',
+  PENDING: '#6366f1',
+  OVERDUE: '#ef4444',
 };
+
+const tooltipStyle = {
+  borderRadius: '10px',
+  border: '1px solid rgb(229 231 235)',
+  boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.08)',
+  fontSize: '12px',
+} as const;
+
+type StatCardProps = {
+  to: string;
+  label: string;
+  value: React.ReactNode;
+  sublabel: string;
+  icon: LucideIcon;
+  accent: 'blue' | 'emerald' | 'violet' | 'amber';
+};
+
+const ACCENTS: Record<StatCardProps['accent'], { tint: string; ring: string; iconBg: string; icon: string }> = {
+  blue:    { tint: 'from-blue-50 to-white',    ring: 'ring-blue-100',    iconBg: 'bg-blue-50',    icon: 'text-blue-600' },
+  emerald: { tint: 'from-emerald-50 to-white', ring: 'ring-emerald-100', iconBg: 'bg-emerald-50', icon: 'text-emerald-600' },
+  violet:  { tint: 'from-violet-50 to-white',  ring: 'ring-violet-100',  iconBg: 'bg-violet-50',  icon: 'text-violet-600' },
+  amber:   { tint: 'from-amber-50 to-white',   ring: 'ring-amber-100',   iconBg: 'bg-amber-50',   icon: 'text-amber-600' },
+};
+
+const StatCard: React.FC<StatCardProps> = ({ to, label, value, sublabel, icon: Icon, accent }) => {
+  const a = ACCENTS[accent];
+  return (
+    <Link
+      to={to}
+      className={`group relative overflow-hidden rounded-xl border border-gray-200/70 bg-gradient-to-br ${a.tint} p-5 shadow-sm ring-1 ${a.ring} transition-all hover:-translate-y-0.5 hover:shadow-md`}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-xs font-medium text-gray-500">{label}</p>
+          <p className="mt-1.5 text-2xl font-semibold tracking-tight text-gray-900">{value}</p>
+          <p className="mt-1 text-xs text-gray-500">{sublabel}</p>
+        </div>
+        <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg ${a.iconBg} ${a.icon}`}>
+          <Icon size={20} />
+        </div>
+      </div>
+    </Link>
+  );
+};
+
+const SectionCard: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className }) => (
+  <div className={`rounded-xl border border-gray-200/70 bg-white p-5 shadow-sm sm:p-6 ${className || ''}`}>
+    {children}
+  </div>
+);
 
 const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
@@ -34,209 +85,195 @@ const DashboardPage: React.FC = () => {
   if (isLoading) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <div className="text-lg font-medium text-gray-500 animate-pulse">Loading amazing dashboard...</div>
+        <div className="animate-pulse text-sm font-medium text-gray-500">Loading dashboard…</div>
       </div>
     );
   }
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'URGENT': return 'bg-red-100 text-red-800 border-red-200';
-      case 'HIGH': return 'bg-orange-100 text-orange-800 border-orange-200';
-      case 'MEDIUM': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'LOW': return 'bg-gray-100 text-gray-800 border-gray-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'URGENT': return 'bg-red-50 text-red-700 ring-red-600/20';
+      case 'HIGH':   return 'bg-orange-50 text-orange-700 ring-orange-600/20';
+      case 'MEDIUM': return 'bg-blue-50 text-blue-700 ring-blue-600/20';
+      case 'LOW':    return 'bg-gray-100 text-gray-700 ring-gray-500/20';
+      default:       return 'bg-gray-100 text-gray-700 ring-gray-500/20';
     }
   };
 
   return (
-    <div className="space-y-6 pb-8">
-      {/* Welcome Banner */}
-      <div className="flex items-center gap-4 rounded-2xl bg-white p-6 shadow-sm border border-gray-100">
-        <img src={logo} alt="SLAC Logo" className="h-16 w-16 object-contain" />
-        <div>
-          <h2 className="text-2xl font-bold text-gray-800">Welcome to Sumaiya Ladies Arabic College</h2>
-          <p className="text-gray-500 font-medium tracking-wide">Here's what's happening at SLAC today.</p>
+    <div className="space-y-6">
+      {/* Welcome banner */}
+      <div className="flex items-center gap-6 rounded-xl border border-gray-200/70 bg-white p-6 shadow-sm sm:p-8">
+        <img src={logo} alt="SLAC Logo" className="h-36 w-36 flex-shrink-0 object-contain" />
+        <div className="min-w-0 flex-1 text-center">
+          <h2 className="text-xl font-bold tracking-tight text-gray-900 sm:text-3xl">
+            Welcome to Sumaiya Ladies Arabic College
+          </h2>
+          <p className="mt-1 text-sm text-gray-500">
+            Here's a snapshot of what's happening at SLAC today.
+          </p>
         </div>
       </div>
-      {/* Overview Cards - Modern Gradient Style */}
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <Link to="/students" className="group transform transition-all duration-300 hover:-translate-y-1 hover:shadow-xl rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 p-6 text-white shadow-lg relative overflow-hidden">
-          <div className="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-white opacity-10 group-hover:scale-150 transition-transform duration-500"></div>
-          <div className="flex justify-between items-start relative z-10">
-            <div>
-              <p className="text-blue-100 text-sm font-medium mb-1">Total Students</p>
-              <h3 className="text-3xl font-bold">{stats?.overview.totalStudents || 0}</h3>
-              <p className="text-blue-100 text-sm mt-2">{stats?.overview.activeStudents || 0} active</p>
-            </div>
-            <div className="bg-white/20 p-3 rounded-xl"><Users size={24} /></div>
-          </div>
-        </Link>
 
-        <Link to="/teachers" className="group transform transition-all duration-300 hover:-translate-y-1 hover:shadow-xl rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-600 p-6 text-white shadow-lg relative overflow-hidden">
-          <div className="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-white opacity-10 group-hover:scale-150 transition-transform duration-500"></div>
-          <div className="flex justify-between items-start relative z-10">
-            <div>
-              <p className="text-teal-100 text-sm font-medium mb-1">Total Teachers</p>
-              <h3 className="text-3xl font-bold">{stats?.overview.totalTeachers || 0}</h3>
-              <p className="text-teal-100 text-sm mt-2">{stats?.overview.activeTeachers || 0} active</p>
-            </div>
-            <div className="bg-white/20 p-3 rounded-xl"><GraduationCap size={24} /></div>
-          </div>
-        </Link>
-
-        <Link to="/attendance" className="group transform transition-all duration-300 hover:-translate-y-1 hover:shadow-xl rounded-2xl bg-gradient-to-br from-violet-500 to-purple-700 p-6 text-white shadow-lg relative overflow-hidden">
-          <div className="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-white opacity-10 group-hover:scale-150 transition-transform duration-500"></div>
-          <div className="flex justify-between items-start relative z-10">
-            <div>
-              <p className="text-purple-100 text-sm font-medium mb-1">Today's Attendance</p>
-              <h3 className="text-3xl font-bold">{stats?.todayAttendance.students.percentage || 0}%</h3>
-              <p className="text-purple-100 text-sm mt-2">Student attendance</p>
-            </div>
-            <div className="bg-white/20 p-3 rounded-xl"><CalendarCheck size={24} /></div>
-          </div>
-        </Link>
-
-        <Link to="/fees" className="group transform transition-all duration-300 hover:-translate-y-1 hover:shadow-xl rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 p-6 text-white shadow-lg relative overflow-hidden">
-          <div className="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-white opacity-10 group-hover:scale-150 transition-transform duration-500"></div>
-          <div className="flex justify-between items-start relative z-10">
-            <div>
-              <p className="text-orange-100 text-sm font-medium mb-1">Monthly Collection</p>
-              <h3 className="text-2xl font-bold">LKR {(stats?.financial.monthlyCollection || 0).toLocaleString()}</h3>
-              <p className="text-orange-100 text-sm mt-2">{stats?.financial.pendingFees || 0} pending fees</p>
-            </div>
-            <div className="bg-white/20 p-3 rounded-xl"><DollarSign size={24} /></div>
-          </div>
-        </Link>
+      {/* Overview cards */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard
+          to="/students"
+          label="Total Students"
+          value={stats?.overview.totalStudents || 0}
+          sublabel={`${stats?.overview.activeStudents || 0} active`}
+          icon={Users}
+          accent="blue"
+        />
+        <StatCard
+          to="/teachers"
+          label="Total Teachers"
+          value={stats?.overview.totalTeachers || 0}
+          sublabel={`${stats?.overview.activeTeachers || 0} active`}
+          icon={GraduationCap}
+          accent="emerald"
+        />
+        <StatCard
+          to="/attendance"
+          label="Today's Attendance"
+          value={`${stats?.todayAttendance.students.percentage || 0}%`}
+          sublabel="Student attendance"
+          icon={CalendarCheck}
+          accent="violet"
+        />
+        <StatCard
+          to="/finance"
+          label="Monthly Collection"
+          value={`LKR ${(stats?.financial.monthlyCollection || 0).toLocaleString()}`}
+          sublabel={`${stats?.financial.pendingFees || 0} pending fees`}
+          icon={DollarSign}
+          accent="amber"
+        />
       </div>
 
-      {/* Main Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Financial Trend (Area Chart) */}
-        <div className="lg:col-span-2 rounded-2xl bg-white p-6 shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-              <TrendingUp className="text-emerald-500" size={20} />
-              6-Month Financial Trend
-            </h3>
-            <Link to="/finance" className="text-sm text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1">
-              View Finance <ArrowRight size={16} />
+      {/* Main charts row */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        {/* Financial trend */}
+        <SectionCard className="lg:col-span-2">
+          <div className="mb-5 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="text-emerald-500" size={18} />
+              <h3 className="text-base font-semibold text-gray-900">6-Month Financial Trend</h3>
+            </div>
+            <Link to="/finance" className="inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700">
+              View Finance <ArrowRight size={14} />
             </Link>
           </div>
           <div className="h-[300px] w-full">
             {stats?.financialTrends && stats.financialTrends.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={stats.financialTrends} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                <AreaChart data={stats.financialTrends} margin={{ top: 10, right: 16, left: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                     </linearGradient>
                     <linearGradient id="colorExpense" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#6b7280', fontSize: 12}} dy={10} />
-                  <YAxis axisLine={false} tickLine={false} tick={{fill: '#6b7280', fontSize: 12}} dx={-10} tickFormatter={(val) => `Rs ${val / 1000}k`} />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: 12 }} dy={10} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: 12 }} dx={-10} tickFormatter={(val) => `Rs ${val / 1000}k`} />
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
-                  <RechartsTooltip 
-                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                  <RechartsTooltip
+                    contentStyle={tooltipStyle}
                     formatter={(value: number) => [`LKR ${value.toLocaleString()}`, '']}
                   />
-                  <Legend verticalAlign="top" height={36} iconType="circle" />
-                  <Area type="monotone" name="Income" dataKey="income" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorIncome)" />
-                  <Area type="monotone" name="Expenses" dataKey="expense" stroke="#ef4444" strokeWidth={3} fillOpacity={1} fill="url(#colorExpense)" />
+                  <Legend verticalAlign="top" height={28} iconType="circle" wrapperStyle={{ fontSize: 12 }} />
+                  <Area type="monotone" name="Income" dataKey="income" stroke="#10b981" strokeWidth={2.5} fillOpacity={1} fill="url(#colorIncome)" />
+                  <Area type="monotone" name="Expenses" dataKey="expense" stroke="#ef4444" strokeWidth={2.5} fillOpacity={1} fill="url(#colorExpense)" />
                 </AreaChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex h-full items-center justify-center text-gray-400">No financial data available</div>
+              <div className="flex h-full items-center justify-center text-sm text-gray-400">No financial data available</div>
             )}
           </div>
-        </div>
+        </SectionCard>
 
-        {/* Top 3 Urgent Todos */}
-        <div className="rounded-2xl bg-white p-6 shadow-sm border border-gray-100 flex flex-col">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-              <CheckCircle2 className="text-indigo-500" size={20} />
-              Top Priority Tasks
-            </h3>
-            <Link to="/todos" className="text-sm text-indigo-600 hover:text-indigo-800 font-medium">View All</Link>
+        {/* Top priority tasks */}
+        <SectionCard className="flex flex-col">
+          <div className="mb-4 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="text-blue-500" size={18} />
+              <h3 className="text-base font-semibold text-gray-900">Top Priority Tasks</h3>
+            </div>
+            <Link to="/todos" className="text-sm font-medium text-blue-600 hover:text-blue-700">View all</Link>
           </div>
-          
-          <div className="flex-1 space-y-3">
+
+          <div className="flex-1 space-y-2.5">
             {stats?.topTodos && stats.topTodos.length > 0 ? (
               stats.topTodos.map((todo) => (
-                <div 
-                  key={todo.id} 
+                <div
+                  key={todo.id}
                   onClick={() => navigate('/todos')}
-                  className="group relative cursor-pointer rounded-xl border border-gray-100 bg-gray-50 p-4 transition-all hover:bg-white hover:shadow-md"
+                  className="group cursor-pointer rounded-lg border border-gray-200/70 bg-gray-50/60 p-3.5 transition-all hover:border-gray-300 hover:bg-white hover:shadow-sm"
                 >
-                  <div className="flex items-start justify-between">
-                    <h4 className="font-semibold text-gray-800 pr-4">{todo.title}</h4>
-                    <span className={`text-xs px-2 py-1 rounded-md font-medium border ${getPriorityColor(todo.priority)}`}>
+                  <div className="flex items-start justify-between gap-3">
+                    <h4 className="text-sm font-medium text-gray-900 line-clamp-2">{todo.title}</h4>
+                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ring-1 ring-inset ${getPriorityColor(todo.priority)}`}>
                       {todo.priority}
                     </span>
                   </div>
-                  <div className="mt-3 flex items-center text-xs text-gray-500">
-                    <Clock size={14} className="mr-1" />
+                  <div className="mt-2 flex items-center text-xs text-gray-500">
+                    <Clock size={12} className="mr-1" />
                     <span>Created {new Date(todo.createdAt).toLocaleDateString()}</span>
                   </div>
                 </div>
               ))
             ) : (
-              <div className="flex h-full flex-col items-center justify-center text-center p-6 border-2 border-dashed border-gray-200 rounded-xl">
-                <CheckCircle2 size={40} className="text-emerald-400 mb-2" />
-                <p className="text-gray-500 font-medium">All caught up!</p>
-                <p className="text-sm text-gray-400">No pending tasks found.</p>
+              <div className="flex h-full flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-200 p-6 text-center">
+                <CheckCircle2 size={32} className="mb-2 text-emerald-400" />
+                <p className="text-sm font-medium text-gray-600">All caught up!</p>
+                <p className="text-xs text-gray-400">No pending tasks found.</p>
               </div>
             )}
           </div>
-        </div>
+        </SectionCard>
       </div>
 
-      {/* Secondary Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Weekly Attendance */}
-        <div className="rounded-2xl bg-white p-6 shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-              <CalendarCheck className="text-purple-500" size={20} />
-              7-Day Attendance Trend
-            </h3>
+      {/* Secondary charts row */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {/* Weekly attendance */}
+        <SectionCard>
+          <div className="mb-5 flex items-center gap-2">
+            <CalendarCheck className="text-violet-500" size={18} />
+            <h3 className="text-base font-semibold text-gray-900">7-Day Attendance Trend</h3>
           </div>
           <div className="h-[250px] w-full">
             {stats?.attendanceTrends && stats.attendanceTrends.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={stats.attendanceTrends} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
-                  <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{fill: '#6b7280', fontSize: 12}} dy={10} />
-                  <YAxis domain={[0, 100]} axisLine={false} tickLine={false} tick={{fill: '#6b7280', fontSize: 12}} tickFormatter={(val) => `${val}%`} />
-                  <RechartsTooltip 
-                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                  <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: 12 }} dy={10} />
+                  <YAxis domain={[0, 100]} axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: 12 }} tickFormatter={(val) => `${val}%`} />
+                  <RechartsTooltip
+                    contentStyle={tooltipStyle}
                     formatter={(value: number) => [`${value}%`, '']}
                   />
-                  <Legend verticalAlign="top" height={36} iconType="circle" />
-                  <Line type="monotone" name="Students" dataKey="studentPercentage" stroke="#8b5cf6" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
-                  <Line type="monotone" name="Teachers" dataKey="teacherPercentage" stroke="#06b6d4" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
+                  <Legend verticalAlign="top" height={28} iconType="circle" wrapperStyle={{ fontSize: 12 }} />
+                  <Line type="monotone" name="Students" dataKey="studentPercentage" stroke="#8b5cf6" strokeWidth={2.5} dot={{ r: 3, strokeWidth: 2 }} activeDot={{ r: 5 }} />
+                  <Line type="monotone" name="Teachers" dataKey="teacherPercentage" stroke="#06b6d4" strokeWidth={2.5} dot={{ r: 3, strokeWidth: 2 }} activeDot={{ r: 5 }} />
                 </LineChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex h-full items-center justify-center text-gray-400">No attendance data available</div>
+              <div className="flex h-full items-center justify-center text-sm text-gray-400">No attendance data available</div>
             )}
           </div>
-        </div>
+        </SectionCard>
 
-        {/* Fee Status Donut */}
-        <div className="rounded-2xl bg-white p-6 shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-              <DollarSign className="text-amber-500" size={20} />
-              Current Fee Status Breakdown
-            </h3>
+        {/* Fee status donut */}
+        <SectionCard>
+          <div className="mb-2 flex items-center gap-2">
+            <DollarSign className="text-amber-500" size={18} />
+            <h3 className="text-base font-semibold text-gray-900">Current Fee Status</h3>
           </div>
-          <div className="flex h-[250px] flex-col md:flex-row items-center">
+          <div className="flex h-[250px] flex-col items-center md:flex-row">
             {stats?.feeStatusCounts && stats.feeStatusCounts.length > 0 ? (
               <>
                 <div className="h-full w-full md:w-1/2">
@@ -246,9 +283,9 @@ const DashboardPage: React.FC = () => {
                         data={stats.feeStatusCounts}
                         cx="50%"
                         cy="50%"
-                        innerRadius={60}
-                        outerRadius={80}
-                        paddingAngle={5}
+                        innerRadius={58}
+                        outerRadius={82}
+                        paddingAngle={4}
                         dataKey="value"
                         stroke="none"
                       >
@@ -256,111 +293,113 @@ const DashboardPage: React.FC = () => {
                           <Cell key={`cell-${index}`} fill={FEE_COLORS[entry.name as keyof typeof FEE_COLORS] || '#cbd5e1'} />
                         ))}
                       </Pie>
-                      <RechartsTooltip 
-                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                      />
+                      <RechartsTooltip contentStyle={tooltipStyle} />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
-                <div className="flex w-full md:w-1/2 flex-col justify-center space-y-3 px-4">
+                <div className="flex w-full flex-col justify-center space-y-2.5 px-2 md:w-1/2 md:px-4">
                   {stats.feeStatusCounts.map((entry, idx) => (
-                    <div key={idx} className="flex items-center justify-between">
+                    <div key={idx} className="flex items-center justify-between text-sm">
                       <div className="flex items-center gap-2">
-                        <div 
-                          className="h-3 w-3 rounded-full" 
+                        <span
+                          className="h-2.5 w-2.5 rounded-full"
                           style={{ backgroundColor: FEE_COLORS[entry.name as keyof typeof FEE_COLORS] || '#cbd5e1' }}
                         />
-                        <span className="text-sm font-medium text-gray-600">{entry.name}</span>
+                        <span className="text-gray-600">{entry.name}</span>
                       </div>
-                      <span className="font-bold text-gray-800">{entry.value}</span>
+                      <span className="font-semibold text-gray-900">{entry.value}</span>
                     </div>
                   ))}
                 </div>
               </>
             ) : (
-              <div className="flex w-full h-full items-center justify-center text-gray-400">No fee data available</div>
+              <div className="flex h-full w-full items-center justify-center text-sm text-gray-400">No fee data available</div>
             )}
           </div>
-        </div>
+        </SectionCard>
       </div>
 
-      {/* Alerts & Admissions Row */}
+      {/* Alerts & recent admissions */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* Alerts & Notifications */}
-        <div className="rounded-2xl bg-white p-6 shadow-sm border border-gray-100">
-          <h3 className="mb-4 text-lg font-bold text-gray-800 flex items-center gap-2">
-            <AlertTriangle className="text-rose-500" size={20} />
-            System Alerts
-          </h3>
-          <div className="space-y-4">
-            <Link to="/todos" className="flex items-center justify-between rounded-xl border border-red-100 bg-red-50 p-4 transition-colors hover:bg-red-100">
+        <SectionCard>
+          <div className="mb-4 flex items-center gap-2">
+            <AlertTriangle className="text-rose-500" size={18} />
+            <h3 className="text-base font-semibold text-gray-900">System Alerts</h3>
+          </div>
+          <div className="space-y-3">
+            <Link
+              to="/todos"
+              className="flex items-center justify-between rounded-lg border border-red-100 bg-red-50/70 p-4 transition-colors hover:bg-red-50"
+            >
               <div className="flex items-center gap-3">
-                <div className="bg-red-200 text-red-600 p-2 rounded-lg">
-                  <AlertCircle size={20} />
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-red-100 text-red-600">
+                  <AlertCircle size={18} />
                 </div>
                 <div>
-                  <p className="font-semibold text-red-900">Urgent Tasks Needed</p>
-                  <p className="text-sm text-red-700">Require immediate attention</p>
+                  <p className="text-sm font-semibold text-red-900">Urgent tasks needed</p>
+                  <p className="text-xs text-red-700/80">Require immediate attention</p>
                 </div>
               </div>
-              <span className="text-2xl font-black text-red-600">{stats?.alerts.urgentTodos || 0}</span>
+              <span className="text-xl font-semibold text-red-600">{stats?.alerts.urgentTodos || 0}</span>
             </Link>
 
-            <Link to="/inventory" className="flex items-center justify-between rounded-xl border border-orange-100 bg-orange-50 p-4 transition-colors hover:bg-orange-100">
+            <Link
+              to="/inventory"
+              className="flex items-center justify-between rounded-lg border border-orange-100 bg-orange-50/70 p-4 transition-colors hover:bg-orange-50"
+            >
               <div className="flex items-center gap-3">
-                <div className="bg-orange-200 text-orange-600 p-2 rounded-lg">
-                  <BookOpen size={20} />
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-orange-100 text-orange-600">
+                  <BookOpen size={18} />
                 </div>
                 <div>
-                  <p className="font-semibold text-orange-900">Low Stock Inventory</p>
-                  <p className="text-sm text-orange-700">Items below minimum threshold</p>
+                  <p className="text-sm font-semibold text-orange-900">Low stock inventory</p>
+                  <p className="text-xs text-orange-700/80">Items below minimum threshold</p>
                 </div>
               </div>
-              <span className="text-2xl font-black text-orange-600">{stats?.alerts.lowStockItems || 0}</span>
+              <span className="text-xl font-semibold text-orange-600">{stats?.alerts.lowStockItems || 0}</span>
             </Link>
           </div>
-        </div>
+        </SectionCard>
 
-        {/* Recent Admissions */}
-        <div className="rounded-2xl bg-white p-6 shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-              <Users className="text-blue-500" size={20} />
-              Recent Admissions
-            </h3>
-            <Link to="/students" className="text-sm text-indigo-600 hover:text-indigo-800 font-medium">View All</Link>
+        <SectionCard>
+          <div className="mb-4 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Users className="text-blue-500" size={18} />
+              <h3 className="text-base font-semibold text-gray-900">Recent Admissions</h3>
+            </div>
+            <Link to="/students" className="text-sm font-medium text-blue-600 hover:text-blue-700">View all</Link>
           </div>
           {stats?.recentAdmissions && stats.recentAdmissions.length > 0 ? (
-            <div className="space-y-3">
+            <div className="space-y-1.5">
               {stats.recentAdmissions.map((student: any) => (
-                <Link 
-                  key={student.id} 
+                <Link
+                  key={student.id}
                   to={`/students/${student.id}`}
-                  className="flex items-center justify-between rounded-xl p-3 hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100"
+                  className="flex items-center justify-between rounded-lg border border-transparent p-3 transition-colors hover:border-gray-200 hover:bg-gray-50"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-100 text-indigo-700 font-bold">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-semibold text-blue-700">
                       {student.fullName.charAt(0)}
                     </div>
-                    <div>
-                      <p className="font-semibold text-gray-800">{student.fullName}</p>
-                      <p className="text-xs text-gray-500 font-medium">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-gray-900">{student.fullName}</p>
+                      <p className="truncate text-xs text-gray-500">
                         {student.admissionNumber} • {student.class?.name || 'No Class'}
                       </p>
                     </div>
                   </div>
-                  <span className="text-xs font-medium text-gray-400 bg-gray-100 px-2 py-1 rounded-md">
+                  <span className="ml-3 flex-shrink-0 rounded-md bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-500">
                     {new Date(student.createdAt).toLocaleDateString()}
                   </span>
                 </Link>
               ))}
             </div>
           ) : (
-            <div className="flex h-32 items-center justify-center rounded-xl bg-gray-50 text-gray-500">
+            <div className="flex h-32 items-center justify-center rounded-lg bg-gray-50 text-sm text-gray-500">
               No recent admissions found
             </div>
           )}
-        </div>
+        </SectionCard>
       </div>
     </div>
   );

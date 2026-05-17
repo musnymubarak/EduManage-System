@@ -73,11 +73,11 @@ const StudentsPage: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between py-2">
-        <div className="flex-1 min-w-0">
-          <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight truncate">Student Management</h2>
-          <p className="text-gray-500 mt-1 font-medium flex items-center gap-2 truncate">
-            <GraduationCap size={16} className="text-blue-500" />
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="min-w-0 flex-1">
+          <h2 className="truncate text-2xl font-semibold tracking-tight text-gray-900">Student Management</h2>
+          <p className="mt-1 flex items-center gap-1.5 truncate text-sm text-gray-500">
+            <GraduationCap size={14} className="text-blue-500" />
             Comprehensive database of enrolled students and academic records
           </p>
         </div>
@@ -87,25 +87,26 @@ const StudentsPage: React.FC = () => {
               setEditingStudent(null);
               setIsModalOpen(true);
             }}
-            className="bg-blue-600 hover:bg-blue-700 shadow-xl shadow-blue-100 flex items-center gap-2 h-12 px-6 rounded-2xl group transition-all transform hover:scale-105 whitespace-nowrap"
+            className="gap-2 whitespace-nowrap"
+            size="lg"
           >
-            <Plus size={20} className="group-hover:rotate-90 transition-transform duration-300 shrink-0" />
-            <span className="font-black uppercase tracking-widest text-[11px]">Register New Student</span>
+            <Plus size={18} className="shrink-0 transition-transform duration-200 group-hover:rotate-90" />
+            <span>Register Student</span>
           </Button>
         </div>
       </div>
 
       {/* Analytics Grid */}
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (
-          <Card key={stat.label} className="bg-white border-none shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden group">
-            <div className="p-5 flex items-center gap-4">
-              <div className={`${stat.bg} ${stat.color} p-3 rounded-2xl transition-transform group-hover:scale-110 duration-300`}>
-                <stat.icon size={24} />
+          <Card key={stat.label} className="group transition-shadow hover:shadow-md" padding="none">
+            <div className="flex items-center gap-4 p-5">
+              <div className={`${stat.bg} ${stat.color} flex h-11 w-11 items-center justify-center rounded-lg`}>
+                <stat.icon size={20} />
               </div>
-              <div>
-                <p className="text-xs font-black text-gray-400 uppercase tracking-widest">{stat.label}</p>
-                <p className="text-2xl font-black text-gray-900">{stat.value}</p>
+              <div className="min-w-0">
+                <p className="text-xs font-medium text-gray-500">{stat.label}</p>
+                <p className="mt-0.5 text-2xl font-semibold tracking-tight text-gray-900">{stat.value}</p>
               </div>
             </div>
           </Card>
@@ -113,37 +114,34 @@ const StudentsPage: React.FC = () => {
       </div>
 
       {/* Search & Filters */}
-      <Card className="p-4 border-none shadow-md overflow-hidden bg-white/50 backdrop-blur-sm">
-        <div className="flex flex-col lg:flex-row gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+      <Card padding="sm">
+        <div className="flex flex-col gap-3 lg:flex-row">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
             <input
               type="text"
               placeholder="Search by name, admission number, or NIC..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 h-11 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm font-bold text-gray-700"
+              className="h-10 w-full rounded-lg border border-gray-300 bg-white pl-9 pr-3 text-sm text-gray-900 placeholder:text-gray-400 transition-shadow focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
             />
           </div>
-          <div className="flex flex-wrap md:flex-nowrap gap-3 items-center">
-            <div className="flex items-center gap-2">
-                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest whitespace-nowrap">Sort:</label>
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as any)}
-                  className="h-11 px-4 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none min-w-[160px] text-xs font-black uppercase tracking-wider text-gray-600 cursor-pointer"
-                >
-                  <option value="admission_asc">Admission (A-Z)</option>
-                  <option value="admission_desc">Admission (Z-A)</option>
-                  <option value="name_asc">Name (A-Z)</option>
-                  <option value="name_desc">Name (Z-A)</option>
-                </select>
-            </div>
+          <div className="flex flex-wrap items-center gap-2 md:flex-nowrap">
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as any)}
+              className="h-10 min-w-[160px] rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            >
+              <option value="admission_asc">Sort: Admission (A-Z)</option>
+              <option value="admission_desc">Sort: Admission (Z-A)</option>
+              <option value="name_asc">Sort: Name (A-Z)</option>
+              <option value="name_desc">Sort: Name (Z-A)</option>
+            </select>
 
             <select
               value={selectedClass}
               onChange={(e) => setSelectedClass(e.target.value)}
-              className="h-11 px-4 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none min-w-[160px] text-sm font-bold text-gray-600"
+              className="h-10 min-w-[150px] rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
             >
               <option value="">All Classes</option>
               {classes.map((cls) => (
@@ -155,7 +153,7 @@ const StudentsPage: React.FC = () => {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="h-11 px-4 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none min-w-[140px] text-sm font-bold text-gray-600"
+              className="h-10 min-w-[130px] rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
             >
               <option value="ALL">All Status</option>
               <option value="ACTIVE">Active</option>
@@ -166,62 +164,61 @@ const StudentsPage: React.FC = () => {
       </Card>
 
       {/* Students Table */}
-      <Card className="border-none shadow-xl overflow-hidden bg-white rounded-3xl">
+      <Card padding="none" className="overflow-hidden">
         {isLoading ? (
-          <div className="p-10 text-center animate-pulse text-gray-400 font-bold uppercase text-[10px] tracking-[0.2em]">Syncing Student Records...</div>
+          <div className="animate-pulse p-10 text-center text-sm text-gray-500">Loading student records…</div>
         ) : sortedStudents.length === 0 ? (
-          <div className="p-20 text-center text-gray-400 italic">No students found matching the criteria.</div>
+          <div className="p-16 text-center text-sm text-gray-500">No students found matching the criteria.</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
-                <tr className="bg-gray-50/50 border-b border-gray-100">
-                  <th className="p-5 text-[10px] font-black uppercase tracking-widest text-gray-400">Identity & Admission</th>
-                  <th className="p-5 text-[10px] font-black uppercase tracking-widest text-gray-400">Academic Details</th>
-                  <th className="p-5 text-[10px] font-black uppercase tracking-widest text-gray-400">Guardian & Contact</th>
-                  <th className="p-5 text-[10px] font-black uppercase tracking-widest text-gray-400">Status</th>
-                  <th className="p-5 text-[10px] font-black uppercase tracking-widest text-gray-400 text-center w-[1%] whitespace-nowrap">Actions</th>
+                <tr className="border-b border-gray-200 bg-gray-50/70">
+                  <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Identity & Admission</th>
+                  <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Class</th>
+                  <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Guardian & Contact</th>
+                  <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Status</th>
+                  <th className="w-[1%] whitespace-nowrap px-5 py-3 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-gray-100">
                 {sortedStudents.map((student: Student) => (
-                  <tr key={student.id} className="hover:bg-blue-50/20 transition-colors group">
-                    <td className="p-5">
+                  <tr key={student.id} className="group transition-colors hover:bg-blue-50/30">
+                    <td className="px-5 py-3.5">
                       <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-xl bg-gray-100 flex items-center justify-center overflow-hidden border border-gray-100 group-hover:border-blue-200 transition-colors">
+                        <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
                           {student.profilePhoto ? (
                             <img src={getFileUrl(student.profilePhoto)} alt="" className="h-full w-full object-cover" />
-                          ) : <Users size={20} className="text-gray-400" />}
+                          ) : <Users size={18} className="text-gray-400" />}
                         </div>
-                        <div>
-                          <p className="font-black text-gray-900 group-hover:text-blue-600 transition-colors">{student.fullName}</p>
-                          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">{student.admissionNumber}</p>
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-gray-900 transition-colors group-hover:text-blue-700">{student.fullName}</p>
+                          <p className="truncate text-xs text-gray-500">{student.admissionNumber}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="p-5">
-                      <div className="flex flex-col">
-                        <span className="text-xs font-black text-gray-900 uppercase tracking-tight">{student.class?.name}</span>
-                        <span className="text-[10px] font-bold text-blue-500 uppercase tracking-widest">Class Enrollment</span>
-                      </div>
+                    <td className="px-5 py-3.5">
+                      <span className="text-sm font-medium text-gray-700">{student.class?.name || '—'}</span>
                     </td>
-                    <td className="p-5">
-                      <p className="font-black text-gray-900 text-xs">{student.guardianName}</p>
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">
+                    <td className="px-5 py-3.5">
+                      <p className="text-sm font-medium text-gray-900">{student.guardianName}</p>
+                      <p className="text-xs text-gray-500">
                         {student.guardianPhones && student.guardianPhones.length > 0 ? student.guardianPhones[0] : 'N/A'}
                       </p>
                     </td>
-                    <td className="p-5">
-                      <Badge variant={student.status === 'ACTIVE' ? 'success' : 'danger'} className="text-[9px] font-black tracking-widest uppercase px-3 py-1">
+                    <td className="px-5 py-3.5">
+                      <Badge variant={student.status === 'ACTIVE' ? 'success' : 'danger'}>
                         {student.status}
                       </Badge>
                     </td>
-                    <td className="p-5 text-center w-[1%] whitespace-nowrap">
-                      <div className="flex items-center justify-center gap-2">
+                    <td className="w-[1%] whitespace-nowrap px-5 py-3.5 text-center">
+                      <div className="flex items-center justify-center gap-1.5">
                         <Button
                           onClick={() => handleViewStudent(student)}
                           variant="secondary"
-                          className="h-9 w-9 p-0 rounded-xl bg-gray-50 hover:bg-blue-50 hover:text-blue-600 transition-all shadow-sm border border-gray-100"
+                          size="icon"
+                          aria-label="View"
+                          className="hover:bg-blue-50 hover:text-blue-600"
                         >
                           <Eye size={16} />
                         </Button>
@@ -231,7 +228,9 @@ const StudentsPage: React.FC = () => {
                             setIsModalOpen(true);
                           }}
                           variant="secondary"
-                          className="h-9 w-9 p-0 rounded-xl bg-gray-50 hover:bg-amber-50 hover:text-amber-600 transition-all shadow-sm border border-gray-100"
+                          size="icon"
+                          aria-label="Edit"
+                          className="hover:bg-amber-50 hover:text-amber-600"
                         >
                           <Pencil size={16} />
                         </Button>
@@ -330,7 +329,7 @@ export const StudentModal: React.FC<StudentModalProps> = ({ isOpen, onClose, cla
       <form onSubmit={handleSubmit} className="space-y-6 max-h-[75vh] overflow-y-auto px-1 custom-scrollbar">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-4">
-            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 border-b border-blue-100 pb-2">Personal Information</h4>
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-blue-700 border-b border-blue-100 pb-2">Personal Information</h4>
             <Input label="Full Name" name="fullName" required defaultValue={initialData?.fullName} placeholder="e.g. John Doe" />
             <Input label="Name with Initials" name="nameWithInitials" required defaultValue={initialData?.nameWithInitials} placeholder="e.g. J. Doe" />
             <div className="grid grid-cols-2 gap-4">
@@ -373,7 +372,7 @@ export const StudentModal: React.FC<StudentModalProps> = ({ isOpen, onClose, cla
           </div>
 
           <div className="space-y-4">
-            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 border-b border-blue-100 pb-2">Academic & Contact</h4>
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-blue-700 border-b border-blue-100 pb-2">Academic & Contact</h4>
             <div className="grid grid-cols-2 gap-4">
               <Input label="Index Number" name="indexNumber" defaultValue={initialData?.indexNumber} placeholder="e.g. IDX-001" />
               <Select
@@ -410,7 +409,7 @@ export const StudentModal: React.FC<StudentModalProps> = ({ isOpen, onClose, cla
         </div>
 
         <div className="space-y-4">
-          <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 border-b border-blue-100 pb-2">Guardian Information</h4>
+          <h4 className="text-xs font-semibold uppercase tracking-wider text-blue-700 border-b border-blue-100 pb-2">Guardian Information</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input label="Guardian Name" name="guardianName" required defaultValue={initialData?.guardianName} placeholder="Full name of guardian" />
             <Input label="Relationship" name="guardianRelationship" required defaultValue={initialData?.guardianRelationship} placeholder="e.g. Father, Mother" />
@@ -424,7 +423,7 @@ export const StudentModal: React.FC<StudentModalProps> = ({ isOpen, onClose, cla
         </div>
 
         <div className="space-y-4">
-          <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 border-b border-blue-100 pb-2">Emergency Contact</h4>
+          <h4 className="text-xs font-semibold uppercase tracking-wider text-blue-700 border-b border-blue-100 pb-2">Emergency Contact</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input label="Emergency Contact Name" name="emergencyContactName" required defaultValue={initialData?.emergencyContactName} />
             <Input label="Emergency Contact Phone" name="emergencyContactPhone" required defaultValue={initialData?.emergencyContactPhone} />
@@ -433,7 +432,7 @@ export const StudentModal: React.FC<StudentModalProps> = ({ isOpen, onClose, cla
         </div>
 
         <div className="space-y-4">
-          <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 border-b border-blue-100 pb-2">Verification Documents</h4>
+          <h4 className="text-xs font-semibold uppercase tracking-wider text-blue-700 border-b border-blue-100 pb-2">Verification Documents</h4>
           <FileUpload
             label="Identity / Verification Documents"
             multiple
@@ -442,14 +441,13 @@ export const StudentModal: React.FC<StudentModalProps> = ({ isOpen, onClose, cla
           />
         </div>
 
-        <div className="flex justify-end gap-3 pt-4 sticky bottom-0 bg-white pb-2">
-          <Button variant="secondary" type="button" onClick={onClose} className="font-bold border-none h-11 px-8">Discard</Button>
-          <Button 
-            type="submit" 
-            disabled={studentMutation.isPending} 
-            className="bg-blue-600 hover:bg-blue-700 shadow-xl shadow-blue-100 px-10 h-11 rounded-xl font-black uppercase tracking-widest text-[11px]"
+        <div className="sticky bottom-0 flex justify-end gap-2 bg-white pb-1 pt-4">
+          <Button variant="secondary" type="button" onClick={onClose}>Discard</Button>
+          <Button
+            type="submit"
+            disabled={studentMutation.isPending}
           >
-            {studentMutation.isPending ? 'Processing...' : (initialData ? 'Update Student' : 'Confirm Registration')}
+            {studentMutation.isPending ? 'Processing…' : (initialData ? 'Update Student' : 'Confirm Registration')}
           </Button>
         </div>
       </form>

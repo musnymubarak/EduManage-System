@@ -126,7 +126,7 @@ const ClassesPage: React.FC = () => {
             />
           </div>
           <div className="flex items-center gap-3 w-full md:w-auto">
-            <label className="text-xs font-black uppercase text-gray-400 tracking-widest whitespace-nowrap">Sort By:</label>
+            <label className="text-xs font-medium text-gray-500 whitespace-nowrap">Sort By:</label>
             <select 
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}

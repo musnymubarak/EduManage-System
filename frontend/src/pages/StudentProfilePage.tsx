@@ -309,7 +309,7 @@ const StudentProfilePage: React.FC = () => {
                   <Button 
                     variant="secondary" 
                     size="sm" 
-                    className="h-7 px-2 text-[10px] font-black uppercase tracking-widest"
+                    className="h-7 px-2 text-xs font-medium"
                     onClick={() => setActiveTab('medical')}
                   >
                     View Full
@@ -580,7 +580,7 @@ const MarkAsLeftModal: React.FC<{
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1.5 block">Leaving Date</label>
+            <label className="text-xs font-medium text-gray-700 mb-1.5 block">Leaving Date</label>
             <input
               type="date"
               value={leavingDate}
@@ -591,7 +591,7 @@ const MarkAsLeftModal: React.FC<{
           </div>
 
           <div>
-            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1.5 block">Primary Reason for Leaving</label>
+            <label className="text-xs font-medium text-gray-700 mb-1.5 block">Primary Reason for Leaving</label>
             <select
               value={leavingReason}
               onChange={(e) => setLeavingReason(e.target.value)}
@@ -609,7 +609,7 @@ const MarkAsLeftModal: React.FC<{
 
           {leavingReason === 'OTHER' && (
             <div>
-              <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1.5 block">Specify Detailed Reason</label>
+              <label className="text-xs font-medium text-gray-700 mb-1.5 block">Specify Detailed Reason</label>
               <textarea
                 value={leavingReasonOther}
                 onChange={(e) => setLeavingReasonOther(e.target.value)}
@@ -626,7 +626,7 @@ const MarkAsLeftModal: React.FC<{
             <Button 
               type="submit" 
               disabled={leaveMutation.isPending} 
-              className="bg-red-600 hover:bg-red-700 shadow-xl shadow-red-100 px-8 h-12 rounded-xl font-black uppercase tracking-widest text-[11px]"
+              className="bg-red-600 hover:bg-red-700 shadow-xl shadow-red-100 px-8 h-12 rounded-xl font-medium text-sm"
             >
               {leaveMutation.isPending ? 'Processing...' : 'Confirm Leaving'}
             </Button>
@@ -769,7 +769,7 @@ const StudentFeeLedger: React.FC<{ studentId: string }> = ({ studentId }) => {
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
-              <tr className="bg-gray-50/50 text-[10px] font-black uppercase tracking-widest text-gray-400">
+              <tr className="bg-gray-50/50 text-xs font-semibold uppercase tracking-wide text-gray-500">
                 <th className="px-6 py-4">Month</th>
                 <th className="px-6 py-4 text-right">Expected</th>
                 <th className="px-6 py-4 text-right">Paid</th>
@@ -791,7 +791,7 @@ const StudentFeeLedger: React.FC<{ studentId: string }> = ({ studentId }) => {
                     {formatCurrency(entry.balance)}
                   </td>
                   <td className="px-6 py-4 text-center">
-                    <span className={`inline-block px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border ${getStatusStyle(entry.status)}`}>
+                    <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusStyle(entry.status)}`}>
                       {entry.status === 'MISSING' ? 'NOT PAID' : entry.status}
                     </span>
                   </td>
@@ -822,7 +822,7 @@ const StudentFeeLedger: React.FC<{ studentId: string }> = ({ studentId }) => {
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
-                <tr className="bg-gray-50/50 text-[10px] font-black uppercase tracking-widest text-gray-400">
+                <tr className="bg-gray-50/50 text-xs font-semibold uppercase tracking-wide text-gray-500">
                   <th className="px-6 py-4">Type</th>
                   <th className="px-6 py-4 text-right">Amount</th>
                   <th className="px-6 py-4 text-right">Paid</th>
@@ -856,7 +856,7 @@ const StudentFeeLedger: React.FC<{ studentId: string }> = ({ studentId }) => {
       <Card className="bg-gradient-to-br from-gray-900 to-gray-800 text-white p-6 rounded-2xl border-none">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs font-black uppercase tracking-widest text-gray-400">Grand Total Outstanding</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Grand Total Outstanding</p>
             <p className="text-3xl font-black mt-1">{formatCurrency(summary.grandTotalOwed)}</p>
             <p className="text-xs text-gray-400 mt-2">
               Monthly: {formatCurrency(summary.totalBalance)} + Other: {formatCurrency(summary.otherFeesBalance)}

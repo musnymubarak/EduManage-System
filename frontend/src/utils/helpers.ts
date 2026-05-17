@@ -33,21 +33,21 @@ export function getRoleName(role: string): string {
 
 export function getStatusColor(status: string): string {
   const colors: Record<string, string> = {
-    ACTIVE: 'bg-green-100 text-green-800',
-    INACTIVE: 'bg-gray-100 text-gray-800',
-    PAID: 'bg-green-100 text-green-800',
-    PENDING: 'bg-yellow-100 text-yellow-800',
-    PARTIAL: 'bg-orange-100 text-orange-800',
-    OVERDUE: 'bg-red-100 text-red-800',
-    PRESENT: 'bg-green-100 text-green-800',
-    ABSENT: 'bg-red-100 text-red-800',
-    LATE: 'bg-orange-100 text-orange-800',
-    RESIGNED: 'bg-red-100 text-red-800',
-    TERMINATED: 'bg-red-100 text-red-800',
-    RETIRED: 'bg-gray-100 text-gray-800',
-    CONTRACT_EXPIRED: 'bg-gray-100 text-gray-800',
+    ACTIVE: 'bg-emerald-50 text-emerald-700 ring-emerald-600/20',
+    INACTIVE: 'bg-gray-100 text-gray-700 ring-gray-500/20',
+    PAID: 'bg-emerald-50 text-emerald-700 ring-emerald-600/20',
+    PENDING: 'bg-amber-50 text-amber-700 ring-amber-600/20',
+    PARTIAL: 'bg-orange-50 text-orange-700 ring-orange-600/20',
+    OVERDUE: 'bg-red-50 text-red-700 ring-red-600/20',
+    PRESENT: 'bg-emerald-50 text-emerald-700 ring-emerald-600/20',
+    ABSENT: 'bg-red-50 text-red-700 ring-red-600/20',
+    LATE: 'bg-orange-50 text-orange-700 ring-orange-600/20',
+    RESIGNED: 'bg-red-50 text-red-700 ring-red-600/20',
+    TERMINATED: 'bg-red-50 text-red-700 ring-red-600/20',
+    RETIRED: 'bg-gray-100 text-gray-700 ring-gray-500/20',
+    CONTRACT_EXPIRED: 'bg-gray-100 text-gray-700 ring-gray-500/20',
   };
-  return colors[status] || 'bg-gray-100 text-gray-800';
+  return colors[status] || 'bg-gray-100 text-gray-700 ring-gray-500/20';
 }
 
 export function getFileUrl(path: string | null | undefined): string {

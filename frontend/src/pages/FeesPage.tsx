@@ -207,14 +207,14 @@ const FeesPage: React.FC = () => {
             className="h-12 px-6 rounded-2xl flex items-center gap-2 bg-amber-50 text-amber-700 hover:bg-amber-100 border-amber-100 shadow-sm transition-all hover:scale-105 whitespace-nowrap"
           >
             <Settings2 size={18} className="shrink-0" />
-            <span className="font-black uppercase tracking-widest text-[11px]">Manage Fee</span>
+            <span className="font-medium text-sm">Manage Fee</span>
           </Button>
           <Button 
             onClick={() => setIsGlobalPaymentModalOpen(true)} 
             className="bg-blue-600 hover:bg-blue-700 shadow-xl shadow-blue-100 flex items-center gap-2 h-12 px-6 rounded-2xl group transition-all transform hover:scale-105 whitespace-nowrap"
           >
             <Plus size={20} className="group-hover:rotate-90 transition-transform duration-300 shrink-0" />
-            <span className="font-black uppercase tracking-widest text-[11px]">Record Student Fee</span>
+            <span className="font-medium text-sm">Record Student Fee</span>
           </Button>
         </div>
       </div>
@@ -351,14 +351,14 @@ const FeesPage: React.FC = () => {
             <table className="w-full">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-100 text-left">
-                  <th className="px-8 py-5 text-xs font-black uppercase tracking-widest text-gray-400">Student Identity</th>
-                  <th className="px-6 py-5 text-xs font-black uppercase tracking-widest text-gray-400">Class</th>
-                  <th className="px-6 py-5 text-right text-xs font-black uppercase tracking-widest text-gray-400">Monthly Fee</th>
-                  <th className="px-6 py-5 text-right text-xs font-black uppercase tracking-widest text-gray-400">Paid</th>
-                  <th className="px-6 py-5 text-right text-xs font-black uppercase tracking-widest text-red-400 bg-red-50/30">Arrears</th>
-                  <th className="px-6 py-5 text-right text-xs font-black uppercase tracking-widest text-blue-600 bg-blue-50/30">Total Owed</th>
-                  <th className="px-6 py-5 text-center text-xs font-black uppercase tracking-widest text-gray-400">Status</th>
-                  <th className="px-8 py-5 text-right text-xs font-black uppercase tracking-widest text-gray-400">Control</th>
+                  <th className="px-8 py-5 text-xs font-semibold uppercase tracking-wide text-gray-500">Student Identity</th>
+                  <th className="px-6 py-5 text-xs font-semibold uppercase tracking-wide text-gray-500">Class</th>
+                  <th className="px-6 py-5 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">Monthly Fee</th>
+                  <th className="px-6 py-5 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">Paid</th>
+                  <th className="px-6 py-5 text-right text-xs font-semibold uppercase tracking-wide text-red-600 bg-red-50/30">Arrears</th>
+                  <th className="px-6 py-5 text-right text-xs font-semibold uppercase tracking-wide text-blue-700 bg-blue-50/30">Total Owed</th>
+                  <th className="px-6 py-5 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">Status</th>
+                  <th className="px-8 py-5 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">Control</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
@@ -426,7 +426,7 @@ const FeesPage: React.FC = () => {
                         )}
                         <button
                           onClick={() => handleRecordPayment(row)}
-                          className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-black uppercase tracking-wider transition-all shadow-sm hover:shadow-lg ${
+                          className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-medium transition-all shadow-sm hover:shadow-lg ${
                             row.paymentStatus === 'PAID'
                              ? 'bg-gray-100 text-gray-300 cursor-not-allowed border-none'
                              : 'bg-blue-600 text-white hover:bg-blue-700 active:scale-95'
@@ -539,7 +539,7 @@ const FeesPage: React.FC = () => {
             <Button 
               type="submit" 
               disabled={updateSettingMutation.isPending}
-              className="bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-100 font-black uppercase tracking-widest text-[11px] px-8 h-12 rounded-xl"
+              className="bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-100 font-medium text-sm px-8 h-12 rounded-xl"
             >
               {updateSettingMutation.isPending ? 'Updating...' : 'Update Fee Amount'}
             </Button>
@@ -598,12 +598,12 @@ const RecordPaymentModal: React.FC<{ isOpen: boolean; onClose: () => void; stude
     <Modal isOpen={isOpen} onClose={onClose} title="Entry Collection" size="md">
       <div className="mb-6 rounded-2xl bg-gray-50 p-6 border border-gray-100 flex justify-between items-center shadow-inner">
            <div>
-              <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Student</p>
+              <p className="text-xs font-medium text-gray-500">Student</p>
               <p className="text-xl font-black text-gray-900">{student.fullName}</p>
               <p className="text-xs font-bold text-blue-600 mt-1 uppercase tracking-wider">{student.className}</p>
            </div>
            <div className="text-right">
-              <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Target Period</p>
+              <p className="text-xs font-medium text-gray-500">Target Period</p>
               <p className="text-xl font-black text-blue-900">{defaultMonth}</p>
            </div>
       </div>
@@ -642,7 +642,7 @@ const RecordPaymentModal: React.FC<{ isOpen: boolean; onClose: () => void; stude
 
         <div className="mt-8 flex justify-end gap-3 pt-4 border-t border-gray-50">
           <Button variant="secondary" onClick={onClose} className="font-bold border-none hover:bg-gray-100">Cancel</Button>
-          <Button onClick={handleSubmit} disabled={recordMutation.isPending} className="bg-blue-600 hover:bg-blue-700 shadow-lg px-8 py-2.5 font-black uppercase tracking-widest">
+          <Button onClick={handleSubmit} disabled={recordMutation.isPending} className="bg-blue-600 hover:bg-blue-700 shadow-lg px-8 py-2.5 font-semibold">
             {recordMutation.isPending ? 'Verifying...' : 'Record Payment'}
           </Button>
         </div>

@@ -108,7 +108,7 @@ const PaymentsPage: React.FC = () => {
                         className="bg-blue-600 hover:bg-blue-700 shadow-xl shadow-blue-100 flex items-center gap-2 h-12 px-6 rounded-2xl group transition-all transform hover:scale-105 whitespace-nowrap"
                     >
                         <Plus size={20} className="group-hover:rotate-90 transition-transform duration-300 shrink-0" />
-                        <span className="font-black uppercase tracking-widest text-[11px]">Record Student Fee</span>
+                        <span className="font-medium text-sm">Record Student Fee</span>
                     </Button>
                 </div>
             </div>
@@ -118,7 +118,7 @@ const PaymentsPage: React.FC = () => {
                 <Card className="bg-white border-none shadow-lg border-l-4 border-l-blue-600">
                     <div className="flex justify-between items-start pt-1">
                         <div>
-                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Gross Collected</p>
+                            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Gross Collected</p>
                             <h3 className="text-2xl font-black text-gray-900 mt-1">{formatCurrency(transactions.reduce((acc: number, t: any) => acc + t.paidAmount, 0))}</h3>
                         </div>
                         <div className="bg-blue-50 p-3 rounded-2xl text-blue-600 shadow-inner">
@@ -129,7 +129,7 @@ const PaymentsPage: React.FC = () => {
                 <Card className="bg-white border-none shadow-lg border-l-4 border-l-indigo-600">
                     <div className="flex justify-between items-start pt-1">
                         <div>
-                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Total Volume</p>
+                            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Total Volume</p>
                             <h3 className="text-2xl font-black text-gray-900 mt-1">{transactions.length}</h3>
                         </div>
                         <div className="bg-indigo-50 p-3 rounded-2xl text-indigo-600 shadow-inner">
@@ -140,7 +140,7 @@ const PaymentsPage: React.FC = () => {
                 <Card className="bg-white border-none shadow-lg border-l-4 border-l-emerald-600">
                     <div className="flex justify-between items-start pt-1">
                         <div>
-                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Monthly Fees</p>
+                            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Monthly Fees</p>
                             <h3 className="text-2xl font-black text-gray-900 mt-1">
                                 {formatCurrency(transactions.filter((t: any) => t.feeType === 'MONTHLY').reduce((acc: number, t: any) => acc + t.paidAmount, 0))}
                             </h3>
@@ -153,7 +153,7 @@ const PaymentsPage: React.FC = () => {
                 <Card className="bg-white border-none shadow-lg border-l-4 border-l-orange-600">
                     <div className="flex justify-between items-start pt-1">
                         <div>
-                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Other Collections</p>
+                            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Other Collections</p>
                             <h3 className="text-2xl font-black text-gray-900 mt-1">
                                 {formatCurrency(transactions.filter((t: any) => t.feeType !== 'MONTHLY').reduce((acc: number, t: any) => acc + t.paidAmount, 0))}
                             </h3>
@@ -169,7 +169,7 @@ const PaymentsPage: React.FC = () => {
             <Card className="shadow-sm border-gray-100 p-0 overflow-hidden border-none shadow-xl rounded-2xl">
                 <div className="flex flex-col md:flex-row gap-4 items-end p-6 border-b border-gray-50 bg-white">
                     <div className="flex-1">
-                        <label className="mb-2 block text-[10px] font-black uppercase tracking-widest text-gray-400">Audit Search</label>
+                        <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-gray-500">Audit Search</label>
                         <div className="relative">
                             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                             <input
@@ -182,7 +182,7 @@ const PaymentsPage: React.FC = () => {
                         </div>
                     </div>
                     <div className="w-full md:w-64">
-                        <label className="mb-2 block text-[10px] font-black uppercase tracking-widest text-gray-400">Classification</label>
+                        <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-gray-500">Classification</label>
                         <Select
                             value={feeTypeFilter}
                             onChange={(e) => setFeeTypeFilter(e.target.value)}
@@ -208,12 +208,12 @@ const PaymentsPage: React.FC = () => {
                         <table className="w-full">
                             <thead>
                                 <tr className="bg-gray-50 text-left">
-                                    <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Timestamp</th>
-                                    <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Student</th>
-                                    <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Fee Type</th>
-                                    <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Receipt</th>
-                                    <th className="px-6 py-5 text-right text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Collected</th>
-                                    <th className="px-8 py-5 text-right text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Toolbox</th>
+                                    <th className="px-8 py-5 text-xs font-semibold uppercase tracking-wide text-gray-500">Timestamp</th>
+                                    <th className="px-6 py-5 text-xs font-semibold uppercase tracking-wide text-gray-500">Student</th>
+                                    <th className="px-6 py-5 text-xs font-semibold uppercase tracking-wide text-gray-500">Fee Type</th>
+                                    <th className="px-6 py-5 text-xs font-semibold uppercase tracking-wide text-gray-500">Receipt</th>
+                                    <th className="px-6 py-5 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">Collected</th>
+                                    <th className="px-8 py-5 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">Toolbox</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50 bg-white">
