@@ -38,11 +38,11 @@ type StatCardProps = {
   accent: 'blue' | 'emerald' | 'violet' | 'amber';
 };
 
-const ACCENTS: Record<StatCardProps['accent'], { tint: string; ring: string; iconBg: string; icon: string }> = {
-  blue:    { tint: 'from-blue-50 to-white',    ring: 'ring-blue-100',    iconBg: 'bg-blue-50',    icon: 'text-blue-600' },
-  emerald: { tint: 'from-emerald-50 to-white', ring: 'ring-emerald-100', iconBg: 'bg-emerald-50', icon: 'text-emerald-600' },
-  violet:  { tint: 'from-violet-50 to-white',  ring: 'ring-violet-100',  iconBg: 'bg-violet-50',  icon: 'text-violet-600' },
-  amber:   { tint: 'from-amber-50 to-white',   ring: 'ring-amber-100',   iconBg: 'bg-amber-50',   icon: 'text-amber-600' },
+const ACCENTS: Record<StatCardProps['accent'], { gradient: string }> = {
+  blue:    { gradient: 'from-[#2563eb] to-[#4f46e5]' },
+  emerald: { gradient: 'from-[#10b981] to-[#0d9488]' },
+  violet:  { gradient: 'from-[#8b5cf6] to-[#7c3aed]' },
+  amber:   { gradient: 'from-[#f59e0b] to-[#ea580c]' },
 };
 
 const StatCard: React.FC<StatCardProps> = ({ to, label, value, sublabel, icon: Icon, accent }) => {
@@ -50,16 +50,24 @@ const StatCard: React.FC<StatCardProps> = ({ to, label, value, sublabel, icon: I
   return (
     <Link
       to={to}
-      className={`group relative overflow-hidden rounded-xl border border-gray-200/70 bg-gradient-to-br ${a.tint} p-5 shadow-sm ring-1 ${a.ring} transition-all hover:-translate-y-0.5 hover:shadow-md`}
+      className={`group relative overflow-hidden rounded-2xl bg-gradient-to-r ${a.gradient} p-6 shadow-[0_8px_20px_rgba(0,0,0,0.04)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_24px_rgba(0,0,0,0.08)] active:scale-[0.98] border border-white/10`}
     >
-      <div className="flex items-start justify-between gap-3">
+      {/* Curved background accents matching screenshot's circles */}
+      <div className="absolute right-0 top-0 -mr-6 -mt-6 w-32 h-32 rounded-full bg-white/[0.07] pointer-events-none" />
+      <div className="absolute right-6 top-6 w-16 h-16 rounded-full bg-white/[0.04] pointer-events-none" />
+
+      <div className="flex items-center justify-between gap-3 relative z-10">
         <div className="min-w-0">
-          <p className="text-xs font-medium text-gray-500">{label}</p>
-          <p className="mt-1.5 text-2xl font-semibold tracking-tight text-gray-900">{value}</p>
-          <p className="mt-1 text-xs text-gray-500">{sublabel}</p>
+          <p className="text-[11px] font-semibold text-white/80 tracking-wider uppercase">{label}</p>
+          <p className="mt-1 text-3xl font-black text-white tracking-tight leading-none">{value}</p>
+          <p className="mt-2 text-[11px] font-medium text-white/70 tracking-wide">{sublabel}</p>
         </div>
-        <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg ${a.iconBg} ${a.icon}`}>
-          <Icon size={20} />
+        
+        <div className="relative flex-shrink-0 flex items-center justify-center h-14 w-14">
+          {/* Glassmorphic Rounded Box matching screenshot */}
+          <div className="h-12 w-12 rounded-2xl bg-white/15 backdrop-blur-md border border-white/20 flex items-center justify-center text-white shadow-[inset_0_1.5px_0_rgba(255,255,255,0.25),_0_8px_16px_rgba(0,0,0,0.06)] group-hover:scale-105 transition-all duration-300">
+            <Icon size={22} className="stroke-[2.5]" />
+          </div>
         </div>
       </div>
     </Link>
