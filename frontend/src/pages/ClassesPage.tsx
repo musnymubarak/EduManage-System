@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Search, Building, Users, Trash2, Edit } from 'lucide-react';
+import { Plus, Search, Building, Users, Trash2, Edit, RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import { Class } from '../types';
 import { Card } from '../components/UI/Card';
@@ -14,11 +15,14 @@ import { Badge } from '../components/UI/Badge';
 const ClassesPage: React.FC = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedClass, setSelectedClass] = useState<Class | null>(null);
   const [sortBy, setSortBy] = useState<'grade_asc' | 'grade_desc' | 'name_asc' | 'name_desc'>('grade_asc');
+
+  const canMigrate = user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN';
 
   // Fetch classes
   const { data: classesData, isLoading } = useQuery({
@@ -105,10 +109,25 @@ const ClassesPage: React.FC = () => {
       <Card>
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <h2 className="text-2xl font-bold text-gray-900">Class Management</h2>
-          <Button onClick={() => setIsAddModalOpen(true)}>
-            <Plus size={20} className="mr-2" />
-            Create Class
-          </Button>
+          <div className="flex flex-wrap items-center gap-3">
+            {canMigrate && (
+              <Button 
+                onClick={() => navigate('/migration')} 
+                variant="outline" 
+                className="hover:border-blue-500 hover:text-blue-600 active:scale-95 transition-all font-black text-xs uppercase tracking-wider h-10 px-4"
+              >
+                <RefreshCw size={16} className="mr-2 text-blue-600" />
+                Annual Migration
+              </Button>
+            )}
+            <Button 
+              onClick={() => setIsAddModalOpen(true)}
+              className="active:scale-95 transition-all font-black text-xs uppercase tracking-wider h-10 px-4"
+            >
+              <Plus size={20} className="mr-2" />
+              Create Class
+            </Button>
+          </div>
         </div>
       </Card>
 

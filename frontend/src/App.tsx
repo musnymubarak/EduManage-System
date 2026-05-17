@@ -24,6 +24,7 @@ import UsersPage from './pages/UsersPage';
 import ExpenditurePage from './pages/ExpenditurePage';
 import DonationsPage from './pages/DonationsPage';
 import ReportsPage from './pages/ReportsPage';
+import MigrationPage from './pages/MigrationPage';
 
 // Layout
 import MainLayout from './components/Layout/MainLayout';
@@ -92,6 +93,7 @@ function App() {
               <Route path="expenditures" element={<ExpenditurePage />} />
               <Route path="donations" element={<DonationsPage />} />
               <Route path="reports" element={<ReportsPage />} />
+              <Route path="migration" element={<MigrationPage />} />
             </Route>
           </Routes>
         </BrowserRouter>

@@ -21,6 +21,8 @@ router.post(
   studentController.registerStudent
 );
 router.get('/', studentController.getAllStudents);
+router.get('/migration/preview', authorize(...managers), studentController.getMigrationPreview);
+router.post('/migration/execute', authorize(...managers), studentController.executeMigration);
 router.get('/class/:classId', studentController.getStudentsByClass);
 router.get('/:id', studentController.getStudentById);
 router.put(

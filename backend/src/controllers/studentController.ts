@@ -553,3 +553,129 @@ export const upsertStudentMedicalHistory = async (req: AuthRequest, res: Respons
     res.status(500).json({ success: false, error: 'Failed to update medical history' });
   }
 };
+
+export const getMigrationPreview = async (_req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    // 1. Fetch all classes
+    const classes = await prisma.class.findMany({
+      orderBy: [
+        { grade: 'asc' },
+        { name: 'asc' }
+      ]
+    });
+
+    // 2. Fetch all active students
+    const students = await prisma.student.findMany({
+      where: { status: 'ACTIVE' },
+      select: {
+        id: true,
+        admissionNumber: true,
+        fullName: true,
+        classId: true
+      },
+      orderBy: { fullName: 'asc' }
+    });
+
+    // 3. Helper to determine the default target class
+    const getSuggestedNextClass = (currentClass: any, allClasses: any[]) => {
+      if (currentClass.grade === 9) {
+        return allClasses.find(c => c.grade === 10 && c.section === currentClass.section) || null;
+      }
+      if (currentClass.grade === 10) {
+        return allClasses.find(c => c.grade === 11 && c.section === currentClass.section) || null;
+      }
+      if (currentClass.grade === 11) {
+        return allClasses.find(c => c.name === 'A/L 1st Year') || null;
+      }
+      if (currentClass.grade === 12) {
+        if (currentClass.name === 'A/L 1st Year') {
+          return allClasses.find(c => c.name === 'A/L 2nd Year') || null;
+        }
+        if (currentClass.name === 'A/L 2nd Year') {
+          return allClasses.find(c => c.name === 'A/L 3rd Year') || null;
+        }
+        return null; // A/L 3rd Year defaults to graduation (null)
+      }
+      return null;
+    };
+
+    // 4. Group data by class
+    const migrationGroups = classes.map(currentClass => {
+      const classStudents = students.filter(s => s.classId === currentClass.id);
+      const defaultNextClass = getSuggestedNextClass(currentClass, classes);
+
+      // Determine available target classes (all other classes except the current one)
+      const availableTargetClasses = classes.filter(c => c.id !== currentClass.id);
+
+      return {
+        classId: currentClass.id,
+        className: currentClass.name,
+        grade: currentClass.grade,
+        section: currentClass.section,
+        academicYear: currentClass.academicYear,
+        students: classStudents,
+        studentCount: classStudents.length,
+        defaultNextClass: defaultNextClass ? { id: defaultNextClass.id, name: defaultNextClass.name } : null,
+        availableTargetClasses: availableTargetClasses.map(c => ({ id: c.id, name: c.name }))
+      };
+    });
+
+    res.json({
+      success: true,
+      data: {
+        classes: migrationGroups,
+        totalStudents: students.length
+      }
+    });
+  } catch (error: any) {
+    console.error('Error fetching migration preview:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch migration preview' });
+  }
+};
+
+export const executeMigration = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { migrations } = req.body; // Array of { studentId, action: 'PROMOTE' | 'RETAIN' | 'LEAVE', targetClassId }
+
+    if (!Array.isArray(migrations) || migrations.length === 0) {
+      res.status(400).json({ success: false, error: 'Invalid or empty migrations array' });
+      return;
+    }
+
+    // Execute bulk update in a transaction
+    await prisma.$transaction(async (tx) => {
+      for (const m of migrations) {
+        const { studentId, action, targetClassId } = m;
+
+        if (action === 'PROMOTE') {
+          if (!targetClassId) {
+            throw new Error(`Target class missing for promoted student: ${studentId}`);
+          }
+          await tx.student.update({
+            where: { id: studentId },
+            data: { classId: targetClassId }
+          });
+        } else if (action === 'LEAVE') {
+          await tx.student.update({
+            where: { id: studentId },
+            data: {
+              status: 'INACTIVE',
+              leavingDate: new Date(),
+              leavingReason: 'GRADUATED'
+            }
+          });
+        }
+        // 'RETAIN' action does nothing (keeps student in current class)
+      }
+    });
+
+    res.json({
+      success: true,
+      message: 'Student migration completed successfully'
+    });
+  } catch (error: any) {
+    console.error('Error executing student migration:', error);
+    res.status(500).json({ success: false, error: error.message || 'Failed to execute migration' });
+  }
+};
+
