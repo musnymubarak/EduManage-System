@@ -73,16 +73,15 @@ export const getDashboardStats = async (_req: AuthRequest, res: Response): Promi
 
     // Get fee collection summary for current month
     const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-    const feePaymentsMonth = await prisma.feePayment.findMany({
+    const partialPaymentsMonth = await prisma.partialPayment.findMany({
       where: {
         paymentDate: {
           gte: firstDayOfMonth,
-          lte: today,
         },
       },
     });
 
-    const monthlyFeeCollection = feePaymentsMonth.reduce((sum, p) => sum + p.paidAmount, 0);
+    const monthlyFeeCollection = partialPaymentsMonth.reduce((sum, p) => sum + p.amount, 0);
 
     // Get urgent todos count
     const urgentTodos = await prisma.todo.count({
@@ -122,9 +121,9 @@ export const getDashboardStats = async (_req: AuthRequest, res: Response): Promi
     sixMonthsAgo.setHours(0, 0, 0, 0);
 
     const [recentFees, recentDonations, recentExpenditures] = await Promise.all([
-      prisma.feePayment.findMany({
+      prisma.partialPayment.findMany({
         where: { paymentDate: { gte: sixMonthsAgo } },
-        select: { paymentDate: true, paidAmount: true }
+        select: { paymentDate: true, amount: true }
       }),
       prisma.donation.findMany({
         where: { date: { gte: sixMonthsAgo } },
@@ -150,7 +149,7 @@ export const getDashboardStats = async (_req: AuthRequest, res: Response): Promi
     recentFees.forEach(f => {
       if (!f.paymentDate) return;
       const key = `${f.paymentDate.getFullYear()}-${String(f.paymentDate.getMonth() + 1).padStart(2, '0')}`;
-      if (financialTrendMap.has(key)) financialTrendMap.get(key)!.income += f.paidAmount;
+      if (financialTrendMap.has(key)) financialTrendMap.get(key)!.income += f.amount;
     });
     recentDonations.forEach(d => {
       const key = `${d.date.getFullYear()}-${String(d.date.getMonth() + 1).padStart(2, '0')}`;
