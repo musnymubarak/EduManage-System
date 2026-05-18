@@ -275,7 +275,7 @@ const StudentAttendanceMarking: React.FC<StudentAttendanceMarkingProps> = ({
                 {students.map((student) => (
                   <tr key={student.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3 text-sm font-semibold text-blue-600">
-                      {student.indexNumber ? `${student.indexNumber} (${student.admissionNumber})` : student.admissionNumber}
+                      {student.indexNumber || student.admissionNumber}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-900">{student.fullName}</td>
                     <td className="px-4 py-3 text-center">

@@ -232,7 +232,7 @@ const PaymentsPage: React.FC = () => {
                                                 <div>
                                                     <p className="text-sm font-bold text-gray-900 leading-none">{t.student?.fullName}</p>
                                                     <p className="text-[10px] text-blue-600 mt-1 uppercase font-bold tracking-tighter">
-                                                        ID: {t.student?.indexNumber ? `${t.student.indexNumber} (${t.student.admissionNumber})` : t.student?.admissionNumber}
+                                                        ID: {t.student?.indexNumber || t.student?.admissionNumber}
                                                     </p>
                                                 </div>
                                             </div>

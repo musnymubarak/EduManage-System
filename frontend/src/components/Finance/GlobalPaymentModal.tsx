@@ -116,7 +116,7 @@ const GlobalPaymentModal: React.FC<GlobalPaymentModalProps> = ({
               <div>
                 <p className="font-black text-blue-900">{selectedStudent.fullName}</p>
                 <p className="text-xs text-blue-600 font-bold uppercase">
-                  {selectedStudent.class?.name} | {selectedStudent.indexNumber ? `${selectedStudent.indexNumber} (${selectedStudent.admissionNumber})` : selectedStudent.admissionNumber}
+                  {selectedStudent.class?.name} | {selectedStudent.indexNumber || selectedStudent.admissionNumber}
                 </p>
               </div>
               <button 
@@ -147,7 +147,7 @@ const GlobalPaymentModal: React.FC<GlobalPaymentModalProps> = ({
                   <div>
                     <p className="font-bold text-gray-900 leading-none">{s.fullName}</p>
                     <p className="text-[10px] text-blue-600 uppercase font-black mt-1 tracking-wider">
-                      {s.indexNumber ? `${s.indexNumber} (${s.admissionNumber})` : s.admissionNumber}
+                      {s.indexNumber || s.admissionNumber}
                     </p>
                   </div>
                   <Plus size={14} className="ml-auto text-gray-300" />
