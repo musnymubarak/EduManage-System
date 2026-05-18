@@ -144,8 +144,8 @@ const DashboardPage: React.FC = () => {
         <StatCard
           to="/attendance"
           label="Today's Attendance"
-          value={`${stats?.todayAttendance.students.present || 0}/${stats?.todayAttendance.students.total || 0}`}
-          sublabel={`${stats?.todayAttendance.students.percentage || 0}% student attendance`}
+          value={`${stats?.todayAttendance.students.percentage || 0}%`}
+          sublabel={`${stats?.todayAttendance.students.present || 0}/${stats?.todayAttendance.students.total || 0} present today`}
           icon={CalendarCheck}
           accent="violet"
         />

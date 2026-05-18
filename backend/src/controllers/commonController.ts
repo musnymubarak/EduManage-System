@@ -5,7 +5,16 @@ import prisma from '../utils/prisma';
 // Classes
 export const getAllClasses = async (_req: AuthRequest, res: Response): Promise<void> => {
   try {
+    // Get active academic year
+    const activeYear = await prisma.academicYear.findFirst({
+      where: { isCurrent: true },
+    });
+    const activeYearStr = activeYear?.year || new Date().getFullYear().toString();
+
     const classes = await prisma.class.findMany({
+      where: {
+        academicYear: activeYearStr,
+      },
       include: {
         _count: {
           select: { students: true },

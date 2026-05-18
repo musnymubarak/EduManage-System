@@ -8,6 +8,12 @@ export const getDashboardStats = async (_req: AuthRequest, res: Response): Promi
     today.setHours(0, 0, 0, 0);
     const currentMonthStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
 
+    // Get active academic year first
+    const activeYear = await prisma.academicYear.findFirst({
+      where: { isCurrent: true },
+    });
+    const activeYearStr = activeYear?.year || new Date().getFullYear().toString();
+
     // Get counts
     const [
       totalStudents,
@@ -23,7 +29,7 @@ export const getDashboardStats = async (_req: AuthRequest, res: Response): Promi
     ] = await Promise.all([
       prisma.student.count(),
       prisma.teacher.count(),
-      prisma.class.count(),
+      prisma.class.count({ where: { academicYear: activeYearStr } }),
       prisma.student.count({ where: { status: 'ACTIVE' } }),
       prisma.teacher.count({ where: { status: 'ACTIVE' } }),
       prisma.studentAttendance.count({
