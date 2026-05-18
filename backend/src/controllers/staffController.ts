@@ -449,6 +449,24 @@ export const deleteStaffDuty = async (req: AuthRequest, res: Response): Promise<
     }
 };
 
+export const deleteStaff = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const { id } = req.params;
+
+        await prisma.staff.delete({
+            where: { id },
+        });
+
+        res.json({ success: true, message: 'Staff member deleted successfully' });
+    } catch (error: any) {
+        if (error.code === 'P2003') {
+            res.status(400).json({ error: 'Cannot delete staff with associated records. Consider marking as left instead.' });
+            return;
+        }
+        res.status(500).json({ error: 'Failed to delete staff member' });
+    }
+};
+
 export const markStaffAsLeft = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         const { id } = req.params;

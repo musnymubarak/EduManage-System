@@ -22,6 +22,7 @@ router.delete('/classes/:id/students/:studentId', authorize(...managers), common
 // Exams
 router.get('/exams', commonController.getAllExams);
 router.post('/exams', authorize(...managers), commonController.createExam);
+router.delete('/exams/:examId', authorize(...managers), commonController.deleteExam);
 router.get('/exams/:examId/marks', commonController.getExamMarks);
 router.post('/exams/:examId/marks', authorize(...managers), commonController.enterExamMarks);
 router.get('/exams/:examId/report', commonController.getExamReport);
@@ -30,6 +31,7 @@ router.get('/exams/:examId/report', commonController.getExamReport);
 router.get('/inventory', commonController.getAllInventory);
 router.post('/inventory', authorize(...managers), commonController.addInventoryItem);
 router.put('/inventory/:id', authorize(...managers), commonController.updateInventoryItem);
+router.delete('/inventory/:id', authorize(...managers), commonController.deleteInventoryItem);
 router.patch('/inventory/:id/quantity', authorize(...managers), commonController.updateInventoryStock);
 router.get('/inventory/low-stock', commonController.getLowStockItems);
 
@@ -41,6 +43,7 @@ router.delete('/schedules/:id', authorize(...managers), commonController.deleteT
 // Donations
 router.get('/donations', commonController.getAllDonations);
 router.post('/donations', authorize(...managers), commonController.recordDonation);
+router.delete('/donations/:id', authorize(...managers), commonController.deleteDonation);
 router.get('/donations/report', commonController.getDonationReport);
 
 // Expenditures - Only Expenditure Receptionist
@@ -49,6 +52,7 @@ router.post(
   authorize('FINANCE_OFFICER', 'SUPER_ADMIN'),
   commonController.recordExpenditure
 );
+router.delete('/expenditures/:id', authorize('FINANCE_OFFICER', 'SUPER_ADMIN'), commonController.deleteExpenditure);
 router.get('/expenditures', commonController.getAllExpenditures);
 router.get('/expenditures/report', commonController.getExpenditureReport);
 

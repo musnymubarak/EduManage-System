@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Search, Eye, HardHat, TrendingUp, Users, Building2, Briefcase, Pencil } from 'lucide-react';
+import { Plus, Search, Eye, HardHat, TrendingUp, Users, Building2, Briefcase, Pencil, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import api from '../services/api';
@@ -12,6 +12,7 @@ import { Badge } from '../components/UI/Badge';
 import { SingleImageUpload, FileUpload } from '../components/UI/FileUpload';
 import { formatDate, formatCurrency, getFileUrl } from '../utils/helpers';
 import { MultiPhoneInput } from '../components/UI/MultiPhoneInput';
+import { ActionMenu } from '../components/UI/ActionMenu';
 
 const StaffPage: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState('');
@@ -21,6 +22,7 @@ const StaffPage: React.FC = () => {
     const [editingStaff, setEditingStaff] = useState<any | null>(null);
     const [sortBy, setSortBy] = useState<'id_asc' | 'id_desc' | 'name_asc' | 'name_desc'>('id_asc');
     const navigate = useNavigate();
+    const queryClient = useQueryClient();
 
     // Fetch staff
     const { data: staffData, isLoading } = useQuery({
@@ -49,11 +51,35 @@ const StaffPage: React.FC = () => {
 
 
 
+    const deleteMutation = useMutation({
+        mutationFn: (id: string) => api.delete(`/staff/${id}`),
+        onSuccess: () => {
+            toast.success('Staff member deleted successfully');
+            queryClient.invalidateQueries({ queryKey: ['staff'] });
+        },
+        onError: (error: any) => {
+            toast.error(error.response?.data?.error || 'Failed to delete staff member');
+        },
+    });
+
+    const handleDeleteStaff = (s: any) => {
+        if (window.confirm(`Are you sure you want to delete "${s.fullName}"? This action cannot be undone.`)) {
+            deleteMutation.mutate(s.id);
+        }
+    };
+
+    const ACCENTS = {
+        blue:    { gradient: 'from-[#2563eb] to-[#4f46e5]' },
+        emerald: { gradient: 'from-[#10b981] to-[#0d9488]' },
+        violet:  { gradient: 'from-[#8b5cf6] to-[#7c3aed]' },
+        amber:   { gradient: 'from-[#f59e0b] to-[#ea580c]' },
+    };
+
     const stats = [
-        { label: 'Total Personnel', value: staff.length, icon: Users, color: 'text-blue-600', bg: 'bg-blue-50' },
-        { label: 'Active Duty', value: staff.filter((s: any) => s.status === 'ACTIVE').length, icon: TrendingUp, color: 'text-green-600', bg: 'bg-green-50' },
-        { label: 'Departments', value: new Set(staff.map((s: any) => s.department)).size, icon: Building2, color: 'text-purple-600', bg: 'bg-purple-50' },
-        { label: 'Avg Salary', value: formatCurrency(staff.reduce((acc: number, s: any) => acc + s.basicSalary, 0) / (staff.length || 1)), icon: Briefcase, color: 'text-orange-600', bg: 'bg-orange-50' },
+        { label: 'Total Personnel', value: staff.length, icon: Users, accent: 'blue' as const },
+        { label: 'Active Duty', value: staff.filter((s: any) => s.status === 'ACTIVE').length, icon: TrendingUp, accent: 'emerald' as const },
+        { label: 'Departments', value: new Set(staff.map((s: any) => s.department)).size, icon: Building2, accent: 'violet' as const },
+        { label: 'Avg Salary', value: formatCurrency(staff.reduce((acc: number, s: any) => acc + s.basicSalary, 0) / (staff.length || 1)), icon: Briefcase, accent: 'amber' as const },
     ];
 
     return (
@@ -83,19 +109,34 @@ const StaffPage: React.FC = () => {
 
             {/* Analytics Grid */}
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                {stats.map((stat) => (
-                    <Card key={stat.label} className="bg-white border-none shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden group">
-                        <div className="p-5 flex items-center gap-4">
-                            <div className={`${stat.bg} ${stat.color} p-3 rounded-2xl transition-transform group-hover:scale-110 duration-300`}>
-                                <stat.icon size={24} />
+                {stats.map((stat) => {
+                    const a = ACCENTS[stat.accent];
+                    return (
+                        <Card
+                            key={stat.label}
+                            className={`group relative overflow-hidden bg-gradient-to-r ${a.gradient} border-none shadow-[0_8px_20px_rgba(0,0,0,0.04)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_24px_rgba(0,0,0,0.08)] active:scale-[0.98] border border-white/10`}
+                            padding="none"
+                        >
+                            {/* Curved background accents matching screenshot's circles */}
+                            <div className="absolute right-0 top-0 -mr-6 -mt-6 w-24 h-24 rounded-full bg-white/[0.07] pointer-events-none" />
+                            <div className="absolute right-4 top-4 w-12 h-12 rounded-full bg-white/[0.04] pointer-events-none" />
+
+                            <div className="flex items-center justify-between gap-3 relative z-10 p-5">
+                                <div className="min-w-0">
+                                    <p className="text-[11px] font-semibold text-white/80 tracking-wider uppercase">{stat.label}</p>
+                                    <p className="mt-1 text-2xl font-black text-white tracking-tight leading-none">{stat.value}</p>
+                                </div>
+                                
+                                <div className="relative flex-shrink-0 flex items-center justify-center h-12 w-12">
+                                    {/* Glassmorphic Rounded Box matching screenshot */}
+                                    <div className="h-10 w-10 rounded-xl bg-white/15 backdrop-blur-md border border-white/20 flex items-center justify-center text-white shadow-[inset_0_1.5px_0_rgba(255,255,255,0.25),_0_8px_16px_rgba(0,0,0,0.06)] group-hover:scale-105 transition-all duration-300">
+                                        <stat.icon size={18} className="stroke-[2.5]" />
+                                    </div>
+                                </div>
                             </div>
-                            <div>
-                                <p className="text-xs font-black text-gray-400 uppercase tracking-widest">{stat.label}</p>
-                                <p className="text-2xl font-black text-gray-900">{stat.value}</p>
-                            </div>
-                        </div>
-                    </Card>
-                ))}
+                        </Card>
+                    );
+                })}
             </div>
 
             {/* Search & Filters */}
@@ -154,29 +195,25 @@ const StaffPage: React.FC = () => {
 
             {/* Staff Table */}
             <Card className="border-none shadow-xl overflow-hidden bg-white rounded-3xl">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left">
-                        <thead>
-                            <tr className="bg-gray-50/50 border-b border-gray-100">
-                                <th className="p-5 text-xs font-semibold uppercase tracking-wide text-gray-500">Identity</th>
-                                <th className="p-5 text-xs font-semibold uppercase tracking-wide text-gray-500">Department & Role</th>
-                                <th className="p-5 text-xs font-semibold uppercase tracking-wide text-gray-500">Remuneration</th>
-                                <th className="p-5 text-xs font-semibold uppercase tracking-wide text-gray-500">Joined Date</th>
-                                <th className="p-5 text-xs font-semibold uppercase tracking-wide text-gray-500">Status</th>
-                                <th className="p-5 text-xs font-semibold uppercase tracking-wide text-gray-500 text-center w-[1%] whitespace-nowrap">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-50">
-                            {isLoading ? (
-                                <tr>
-                                    <td colSpan={6} className="p-10 text-center animate-pulse text-sm text-gray-500">Loading personnel data…</td>
+                {isLoading ? (
+                    <div className="p-10 text-center animate-pulse text-sm text-gray-500">Loading personnel data…</div>
+                ) : sortedStaff.length === 0 ? (
+                    <div className="p-20 text-center text-gray-400 italic">No personnel found matching the criteria.</div>
+                ) : (
+                    <div className="overflow-x-auto min-h-[240px]">
+                        <table className="w-full text-left">
+                            <thead>
+                                <tr className="bg-gray-50/50 border-b border-gray-100">
+                                    <th className="p-5 text-xs font-semibold uppercase tracking-wide text-gray-500">Identity</th>
+                                    <th className="p-5 text-xs font-semibold uppercase tracking-wide text-gray-500">Department & Role</th>
+                                    <th className="p-5 text-xs font-semibold uppercase tracking-wide text-gray-500">Remuneration</th>
+                                    <th className="p-5 text-xs font-semibold uppercase tracking-wide text-gray-500">Joined Date</th>
+                                    <th className="p-5 text-xs font-semibold uppercase tracking-wide text-gray-500">Status</th>
+                                    <th className="p-5 text-xs font-semibold uppercase tracking-wide text-gray-500 text-center w-[1%] whitespace-nowrap">Actions</th>
                                 </tr>
-                            ) : sortedStaff.length === 0 ? (
-                                <tr>
-                                    <td colSpan={6} className="p-20 text-center text-gray-400 italic">No personnel found matching the criteria.</td>
-                                </tr>
-                            ) : (
-                                sortedStaff.map((s: any) => (
+                            </thead>
+                            <tbody className="divide-y divide-gray-50">
+                                {sortedStaff.map((s: any) => (
                                     <tr key={s.id} className="hover:bg-blue-50/20 transition-colors group">
                                         <td className="p-5">
                                             <div className="flex items-center gap-3">
@@ -197,12 +234,14 @@ const StaffPage: React.FC = () => {
                                                 <span className="text-[10px] font-bold text-blue-500 uppercase tracking-widest">{s.department}</span>
                                             </div>
                                         </td>
-                                        <td className="p-5 font-black text-gray-900">
-                                            {formatCurrency(s.basicSalary)}
-                                            <span className="block text-[9px] text-gray-400 font-bold tracking-tighter uppercase">{s.employmentType}</span>
+                                        <td className="p-5">
+                                            <div className="flex flex-col">
+                                                <span className="text-xs font-black text-gray-900 uppercase tracking-tight">{formatCurrency(s.basicSalary)}</span>
+                                                <span className="text-[10px] font-bold text-blue-500 uppercase tracking-widest">{s.employmentType}</span>
+                                            </div>
                                         </td>
-                                        <td className="p-5 text-gray-500 font-medium text-sm">
-                                            {formatDate(s.joinedDate)}
+                                        <td className="p-5">
+                                            <span className="text-sm font-semibold text-gray-700">{formatDate(s.joinedDate)}</span>
                                         </td>
                                         <td className="p-5">
                                             <Badge variant={s.status === 'ACTIVE' ? 'success' : 'danger'} className="text-[9px] font-black tracking-widest uppercase px-3 py-1">
@@ -210,32 +249,18 @@ const StaffPage: React.FC = () => {
                                             </Badge>
                                         </td>
                                         <td className="p-5 text-center w-[1%] whitespace-nowrap">
-                                            <div className="flex items-center justify-center gap-2">
-                                                <Button
-                                                    onClick={() => navigate(`/staff/${s.id}`)}
-                                                    variant="secondary"
-                                                    className="h-9 w-9 p-0 rounded-xl bg-gray-50 hover:bg-blue-50 hover:text-blue-600 transition-all shadow-sm border border-gray-100"
-                                                >
-                                                    <Eye size={16} />
-                                                </Button>
-                                                <Button
-                                                    onClick={() => {
-                                                        setEditingStaff(s);
-                                                        setIsModalOpen(true);
-                                                    }}
-                                                    variant="secondary"
-                                                    className="h-9 w-9 p-0 rounded-xl bg-gray-50 hover:bg-amber-50 hover:text-amber-600 transition-all shadow-sm border border-gray-100"
-                                                >
-                                                    <Pencil size={16} />
-                                                </Button>
-                                            </div>
+                                            <ActionMenu items={[
+                                                { label: 'View', icon: <Eye size={15} />, onClick: () => navigate(`/staff/${s.id}`) },
+                                                { label: 'Edit', icon: <Pencil size={15} />, onClick: () => { setEditingStaff(s); setIsModalOpen(true); } },
+                                                { label: 'Delete', icon: <Trash2 size={15} />, onClick: () => handleDeleteStaff(s), variant: 'danger' },
+                                            ]} />
                                         </td>
                                     </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
             </Card>
 
             <StaffModal

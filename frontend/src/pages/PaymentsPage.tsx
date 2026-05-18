@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
 import { 
   DollarSign, 
   Search, 
   Plus, 
-  Printer, 
+  Printer,
   Calendar,
   ArrowDownLeft,
   LayoutGrid,
-  History
+  History,
+  Trash2
 } from 'lucide-react';
 import api from '../services/api';
 import { generateLedgerReportPDF } from '../utils/generateLedgerReport';
@@ -21,6 +23,7 @@ import { formatDate, formatCurrency } from '../utils/helpers';
 import logo from '../logo.png';
 import GlobalPaymentModal from '../components/Finance/GlobalPaymentModal';
 import GlobalHistoryModal from '../components/Finance/GlobalHistoryModal';
+import { ActionMenu } from '../components/UI/ActionMenu';
 
 const PaymentsPage: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState('');
@@ -64,6 +67,23 @@ const PaymentsPage: React.FC = () => {
     });
 
     const transactions = ledgerData || [];
+
+    const deletePaymentMutation = useMutation({
+        mutationFn: (id: string) => api.delete(`/fees/payments/${id}`),
+        onSuccess: () => {
+            toast.success('Payment record deleted successfully');
+            queryClient.invalidateQueries({ queryKey: ['feeLedger'] });
+        },
+        onError: (error: any) => {
+            toast.error(error.response?.data?.error || 'Failed to delete payment');
+        },
+    });
+
+    const handleDeletePayment = (payment: any) => {
+        if (window.confirm(`Are you sure you want to delete this payment for "${payment.student?.fullName}"? This action cannot be undone.`)) {
+            deletePaymentMutation.mutate(payment.id);
+        }
+    };
 
     const handlePrintReceipt = (payment: any) => {
         setSelectedReceipt(payment);
@@ -116,51 +136,94 @@ const PaymentsPage: React.FC = () => {
 
             {/* Summary Stats */}
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                <Card className="bg-white border-none shadow-lg border-l-4 border-l-blue-600">
-                    <div className="flex justify-between items-start pt-1">
-                        <div>
-                            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Gross Collected</p>
-                            <h3 className="text-2xl font-black text-gray-900 mt-1">{formatCurrency(transactions.reduce((acc: number, t: any) => acc + t.paidAmount, 0))}</h3>
+                {/* Gross Collected */}
+                <Card
+                    className="group relative overflow-hidden bg-gradient-to-r from-[#2563eb] to-[#4f46e5] border-none shadow-[0_8px_20px_rgba(0,0,0,0.04)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_24px_rgba(0,0,0,0.08)] active:scale-[0.98] border border-white/10"
+                    padding="none"
+                >
+                    <div className="absolute right-0 top-0 -mr-6 -mt-6 w-24 h-24 rounded-full bg-white/[0.07] pointer-events-none" />
+                    <div className="absolute right-4 top-4 w-12 h-12 rounded-full bg-white/[0.04] pointer-events-none" />
+                    
+                    <div className="flex items-center justify-between gap-3 relative z-10 p-5">
+                        <div className="min-w-0">
+                            <p className="text-[11px] font-semibold text-white/80 tracking-wider uppercase">Gross Collected</p>
+                            <h3 className="mt-1 text-2xl font-black text-white tracking-tight leading-none">
+                                {formatCurrency(transactions.reduce((acc: number, t: any) => acc + t.paidAmount, 0))}
+                            </h3>
                         </div>
-                        <div className="bg-blue-50 p-3 rounded-2xl text-blue-600 shadow-inner">
-                            <ArrowDownLeft size={24} />
+                        <div className="relative flex-shrink-0 flex items-center justify-center h-12 w-12">
+                            <div className="h-10 w-10 rounded-xl bg-white/15 backdrop-blur-md border border-white/20 flex items-center justify-center text-white shadow-[inset_0_1.5px_0_rgba(255,255,255,0.25),_0_8px_16px_rgba(0,0,0,0.06)] group-hover:scale-105 transition-all duration-300">
+                                <ArrowDownLeft size={20} className="stroke-[2.5]" />
+                            </div>
                         </div>
                     </div>
                 </Card>
-                <Card className="bg-white border-none shadow-lg border-l-4 border-l-indigo-600">
-                    <div className="flex justify-between items-start pt-1">
-                        <div>
-                            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Total Volume</p>
-                            <h3 className="text-2xl font-black text-gray-900 mt-1">{transactions.length}</h3>
+
+                {/* Total Volume */}
+                <Card
+                    className="group relative overflow-hidden bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] border-none shadow-[0_8px_20px_rgba(0,0,0,0.04)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_24px_rgba(0,0,0,0.08)] active:scale-[0.98] border border-white/10"
+                    padding="none"
+                >
+                    <div className="absolute right-0 top-0 -mr-6 -mt-6 w-24 h-24 rounded-full bg-white/[0.07] pointer-events-none" />
+                    <div className="absolute right-4 top-4 w-12 h-12 rounded-full bg-white/[0.04] pointer-events-none" />
+                    
+                    <div className="flex items-center justify-between gap-3 relative z-10 p-5">
+                        <div className="min-w-0">
+                            <p className="text-[11px] font-semibold text-white/80 tracking-wider uppercase">Total Volume</p>
+                            <h3 className="mt-1 text-2xl font-black text-white tracking-tight leading-none">
+                                {transactions.length}
+                            </h3>
                         </div>
-                        <div className="bg-indigo-50 p-3 rounded-2xl text-indigo-600 shadow-inner">
-                            <LayoutGrid size={24} />
+                        <div className="relative flex-shrink-0 flex items-center justify-center h-12 w-12">
+                            <div className="h-10 w-10 rounded-xl bg-white/15 backdrop-blur-md border border-white/20 flex items-center justify-center text-white shadow-[inset_0_1.5px_0_rgba(255,255,255,0.25),_0_8px_16px_rgba(0,0,0,0.06)] group-hover:scale-105 transition-all duration-300">
+                                <LayoutGrid size={20} className="stroke-[2.5]" />
+                            </div>
                         </div>
                     </div>
                 </Card>
-                <Card className="bg-white border-none shadow-lg border-l-4 border-l-emerald-600">
-                    <div className="flex justify-between items-start pt-1">
-                        <div>
-                            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Monthly Fees</p>
-                            <h3 className="text-2xl font-black text-gray-900 mt-1">
+
+                {/* Monthly Fees */}
+                <Card
+                    className="group relative overflow-hidden bg-gradient-to-r from-[#10b981] to-[#0d9488] border-none shadow-[0_8px_20px_rgba(0,0,0,0.04)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_24px_rgba(0,0,0,0.08)] active:scale-[0.98] border border-white/10"
+                    padding="none"
+                >
+                    <div className="absolute right-0 top-0 -mr-6 -mt-6 w-24 h-24 rounded-full bg-white/[0.07] pointer-events-none" />
+                    <div className="absolute right-4 top-4 w-12 h-12 rounded-full bg-white/[0.04] pointer-events-none" />
+                    
+                    <div className="flex items-center justify-between gap-3 relative z-10 p-5">
+                        <div className="min-w-0">
+                            <p className="text-[11px] font-semibold text-white/80 tracking-wider uppercase">Monthly Tuition</p>
+                            <h3 className="mt-1 text-2xl font-black text-white tracking-tight leading-none">
                                 {formatCurrency(transactions.filter((t: any) => t.feeType === 'MONTHLY').reduce((acc: number, t: any) => acc + t.paidAmount, 0))}
                             </h3>
                         </div>
-                        <div className="bg-teal-50 p-3 rounded-2xl text-emerald-600 shadow-inner">
-                            <Calendar size={24} />
+                        <div className="relative flex-shrink-0 flex items-center justify-center h-12 w-12">
+                            <div className="h-10 w-10 rounded-xl bg-white/15 backdrop-blur-md border border-white/20 flex items-center justify-center text-white shadow-[inset_0_1.5px_0_rgba(255,255,255,0.25),_0_8px_16px_rgba(0,0,0,0.06)] group-hover:scale-105 transition-all duration-300">
+                                <Calendar size={20} className="stroke-[2.5]" />
+                            </div>
                         </div>
                     </div>
                 </Card>
-                <Card className="bg-white border-none shadow-lg border-l-4 border-l-orange-600">
-                    <div className="flex justify-between items-start pt-1">
-                        <div>
-                            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Other Collections</p>
-                            <h3 className="text-2xl font-black text-gray-900 mt-1">
+
+                {/* Other Collections */}
+                <Card
+                    className="group relative overflow-hidden bg-gradient-to-r from-[#f59e0b] to-[#ea580c] border-none shadow-[0_8px_20px_rgba(0,0,0,0.04)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_24px_rgba(0,0,0,0.08)] active:scale-[0.98] border border-white/10"
+                    padding="none"
+                >
+                    <div className="absolute right-0 top-0 -mr-6 -mt-6 w-24 h-24 rounded-full bg-white/[0.07] pointer-events-none" />
+                    <div className="absolute right-4 top-4 w-12 h-12 rounded-full bg-white/[0.04] pointer-events-none" />
+                    
+                    <div className="flex items-center justify-between gap-3 relative z-10 p-5">
+                        <div className="min-w-0">
+                            <p className="text-[11px] font-semibold text-white/80 tracking-wider uppercase">Other Collections</p>
+                            <h3 className="mt-1 text-2xl font-black text-white tracking-tight leading-none">
                                 {formatCurrency(transactions.filter((t: any) => t.feeType !== 'MONTHLY').reduce((acc: number, t: any) => acc + t.paidAmount, 0))}
                             </h3>
                         </div>
-                        <div className="bg-orange-50 p-3 rounded-2xl text-orange-600 shadow-inner">
-                            <DollarSign size={24} />
+                        <div className="relative flex-shrink-0 flex items-center justify-center h-12 w-12">
+                            <div className="h-10 w-10 rounded-xl bg-white/15 backdrop-blur-md border border-white/20 flex items-center justify-center text-white shadow-[inset_0_1.5px_0_rgba(255,255,255,0.25),_0_8px_16px_rgba(0,0,0,0.06)] group-hover:scale-105 transition-all duration-300">
+                                <DollarSign size={20} className="stroke-[2.5]" />
+                            </div>
                         </div>
                     </div>
                 </Card>
@@ -255,13 +318,12 @@ const PaymentsPage: React.FC = () => {
                                             {formatCurrency(t.paidAmount)}
                                         </td>
                                         <td className="px-8 py-4 text-right">
-                                            <button
-                                                onClick={() => handlePrintReceipt(t)}
-                                                className="p-2 rounded-lg hover:bg-white hover:text-blue-600 transition-all text-gray-300 hover:shadow-sm"
-                                                title="Print Secure Receipt"
-                                            >
-                                                <Printer size={16} />
-                                            </button>
+                                            <div className="flex justify-end">
+                                                <ActionMenu items={[
+                                                    { label: 'Print Receipt', icon: <Printer size={15} />, onClick: () => handlePrintReceipt(t) },
+                                                    { label: 'Delete', icon: <Trash2 size={15} />, onClick: () => handleDeletePayment(t), variant: 'danger' },
+                                                ]} />
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}

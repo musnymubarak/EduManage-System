@@ -381,6 +381,21 @@ export const getExamReport = async (req: AuthRequest, res: Response): Promise<vo
   }
 };
 
+export const deleteExam = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { examId } = req.params;
+
+    // Delete associated marks first
+    await prisma.examMark.deleteMany({ where: { examId } });
+
+    await prisma.exam.delete({ where: { id: examId } });
+
+    res.json({ success: true, message: 'Exam deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete exam' });
+  }
+};
+
 // Inventory
 export const getAllInventory = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -493,6 +508,18 @@ export const updateInventoryItem = async (req: AuthRequest, res: Response): Prom
   } catch (error) {
     console.error('Error updating inventory item:', error);
     res.status(500).json({ error: 'Failed to update inventory item' });
+  }
+};
+
+export const deleteInventoryItem = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+
+    await prisma.inventory.delete({ where: { id } });
+
+    res.json({ success: true, message: 'Inventory item deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete inventory item' });
   }
 };
 
@@ -642,6 +669,18 @@ export const recordDonation = async (req: AuthRequest, res: Response): Promise<v
   }
 };
 
+export const deleteDonation = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+
+    await prisma.donation.delete({ where: { id } });
+
+    res.json({ success: true, message: 'Donation record deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete donation' });
+  }
+};
+
 export const getDonationReport = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { startDate, endDate } = req.query;
@@ -716,6 +755,18 @@ export const recordExpenditure = async (req: AuthRequest, res: Response): Promis
     res.status(201).json({ success: true, data: expenditure });
   } catch (error) {
     res.status(500).json({ error: 'Failed to record expenditure' });
+  }
+};
+
+export const deleteExpenditure = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+
+    await prisma.expenditure.delete({ where: { id } });
+
+    res.json({ success: true, message: 'Expenditure record deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete expenditure' });
   }
 };
 

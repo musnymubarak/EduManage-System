@@ -11,6 +11,18 @@ import { Button } from '../components/UI/Button';
 import { Input } from '../components/UI/Input';
 import { Modal } from '../components/UI/Modal';
 import { Badge } from '../components/UI/Badge';
+import { ActionMenu } from '../components/UI/ActionMenu';
+
+const GRADIENTS = [
+  { gradient: 'from-[#2563eb] to-[#4f46e5]' }, // blue
+  { gradient: 'from-[#10b981] to-[#0d9488]' }, // emerald
+  { gradient: 'from-[#8b5cf6] to-[#7c3aed]' }, // violet
+  { gradient: 'from-[#f59e0b] to-[#ea580c]' }, // amber
+  { gradient: 'from-[#ef4444] to-[#db2777]' }, // rose
+  { gradient: 'from-[#06b6d4] to-[#0891b2]' }, // teal
+  { gradient: 'from-[#ec4899] to-[#be185d]' }, // pink
+  { gradient: 'from-[#6366f1] to-[#4f46e5]' }, // indigo
+];
 
 const ClassesPage: React.FC = () => {
   const navigate = useNavigate();
@@ -117,12 +129,6 @@ const ClassesPage: React.FC = () => {
       return 0;
     });
 
-  const handleDelete = (e: React.MouseEvent, id: string) => {
-    e.stopPropagation();
-    if (window.confirm('Are you sure you want to delete this class? This action cannot be undone.')) {
-      deleteMutation.mutate(id);
-    }
-  };
 
   if (isLoading) {
     return (
@@ -231,65 +237,67 @@ const ClassesPage: React.FC = () => {
       {/* Classes Grid */}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {filteredClasses.length > 0 ? (
-          filteredClasses.map((c) => (
-            <div 
-              key={c.id} 
-              className="group cursor-pointer active:scale-[0.98] transition-all"
-              onClick={() => navigate(`/classes/${c.id}`)}
-            >
-              <Card 
-                className="h-full hover:border-blue-500 hover:shadow-md transition-all border border-transparent"
+          filteredClasses.map((c, index) => {
+            const g = GRADIENTS[index % GRADIENTS.length];
+            return (
+              <div 
+                key={c.id} 
+                className="group cursor-pointer active:scale-[0.98] transition-all"
+                onClick={() => navigate(`/classes/${c.id}`)}
               >
-                <div className="space-y-4">
-                  <div className="flex items-start justify-between">
-                    <div className="rounded-full bg-blue-100 p-3 text-blue-600">
-                      <Building size={24} />
-                    </div>
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedClass(c);
-                          setIsEditModalOpen(true);
-                        }}
-                        className="p-1 text-gray-400 hover:text-blue-600"
-                      >
-                        <Edit size={16} />
-                      </button>
-                      <button 
-                        onClick={(e) => handleDelete(e, c.id)}
-                        className="p-1 text-gray-400 hover:text-red-600"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <h3 className="text-xl font-bold text-gray-900">{c.name}</h3>
-                    <p className="text-sm font-medium text-gray-500">Grade {c.grade}{c.section ? ` - Section ${c.section}` : ''}</p>
-                  </div>
+                <Card 
+                  className={`h-full relative overflow-hidden bg-gradient-to-r ${g.gradient} border-none shadow-[0_8px_20px_rgba(0,0,0,0.04)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_24px_rgba(0,0,0,0.08)] border border-white/10`}
+                  padding="none"
+                >
+                  {/* Curved background accents matching screenshot's circles */}
+                  <div className="absolute right-0 top-0 -mr-6 -mt-6 w-28 h-28 rounded-full bg-white/[0.07] pointer-events-none" />
+                  <div className="absolute right-4 top-4 w-14 h-14 rounded-full bg-white/[0.04] pointer-events-none" />
 
-                  <div className="flex items-center gap-4 py-2 border-t border-gray-50">
-                    <div className="flex items-center text-sm text-gray-600">
-                      <Users size={16} className="mr-1.5 text-gray-400" />
-                      <span className="font-medium text-gray-900">{(c as any)._count?.students || 0}</span>
-                      <span className="ml-1">/ {c.capacity}</span>
+                  <div className="p-6 space-y-4 relative z-10 flex flex-col justify-between h-full min-h-[220px]">
+                    <div>
+                      <div className="flex items-start justify-between">
+                        <div className="h-12 w-12 rounded-2xl bg-white/15 backdrop-blur-md border border-white/20 flex items-center justify-center text-white shadow-[inset_0_1.5px_0_rgba(255,255,255,0.25),_0_8px_16px_rgba(0,0,0,0.06)] group-hover:scale-105 transition-all duration-300">
+                          <Building size={22} className="stroke-[2.5]" />
+                        </div>
+                        <div onClick={(e) => e.stopPropagation()} className="relative z-20">
+                          <div className="bg-white/10 hover:bg-white/20 text-white rounded-xl transition-all">
+                            <ActionMenu items={[
+                              { label: 'Edit', icon: <Edit size={15} />, onClick: () => { setSelectedClass(c); setIsEditModalOpen(true); } },
+                              { label: 'Delete', icon: <Trash2 size={15} />, onClick: () => { if (window.confirm('Are you sure you want to delete this class? This action cannot be undone.')) { deleteMutation.mutate(c.id); } }, variant: 'danger' },
+                            ]} />
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="mt-4">
+                        <h3 className="text-xl font-black text-white tracking-tight leading-tight">{c.name}</h3>
+                        <p className="text-xs font-bold text-white/80 mt-1 uppercase tracking-wider">Grade {c.grade}{c.section ? ` • Section ${c.section}` : ''}</p>
+                      </div>
                     </div>
-                    <Badge variant="info" className="ml-auto">
-                      {c.academicYear}
-                    </Badge>
-                  </div>
 
-                  <div className="flex justify-end pt-2">
-                    <span className="text-xs font-semibold text-blue-600 uppercase tracking-wider group-hover:translate-x-1 transition-transform">
-                      View Details →
-                    </span>
+                    <div>
+                      <div className="flex items-center gap-4 py-3 border-t border-white/15 mt-2">
+                        <div className="flex items-center text-sm text-white/80">
+                          <Users size={16} className="mr-1.5 text-white/60 stroke-[2.5]" />
+                          <span className="font-black text-white">{(c as any)._count?.students || 0}</span>
+                          <span className="ml-1 text-white/60 font-semibold">/ {c.capacity}</span>
+                        </div>
+                        <Badge className="ml-auto bg-white/15 border-none text-white font-black text-[10px] tracking-wider px-2.5 py-0.5 rounded-lg shadow-inner ring-0">
+                          {c.academicYear}
+                        </Badge>
+                      </div>
+
+                      <div className="flex justify-end pt-1">
+                        <span className="text-[10px] font-black text-white uppercase tracking-widest group-hover:translate-x-1 transition-transform duration-300">
+                          View Details →
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </Card>
-            </div>
-          ))
+                </Card>
+              </div>
+            );
+          })
         ) : (
           <div className="col-span-full py-12 text-center text-gray-500">
             No classes found matching your search.

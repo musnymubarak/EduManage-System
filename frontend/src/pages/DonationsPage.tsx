@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
-import { Plus, Search, Heart, Calendar } from 'lucide-react';
+import { Plus, Search, Heart, Calendar, Trash2 } from 'lucide-react';
 import api from '../services/api';
 import { Donation } from '../types';
 import { Card } from '../components/UI/Card';
@@ -10,6 +10,7 @@ import { Input, Select, TextArea } from '../components/UI/Input';
 import { Modal } from '../components/UI/Modal';
 import { Badge } from '../components/UI/Badge';
 import { formatDate, formatCurrency } from '../utils/helpers';
+import { ActionMenu } from '../components/UI/ActionMenu';
 
 const DonationsPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -17,6 +18,7 @@ const DonationsPage: React.FC = () => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const queryClient = useQueryClient();
 
   // Fetch donations
   const { data: donationsData, isLoading } = useQuery({
@@ -34,6 +36,23 @@ const DonationsPage: React.FC = () => {
   });
 
   const donations: Donation[] = donationsData?.data || [];
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => api.delete(`/donations/${id}`),
+    onSuccess: () => {
+      toast.success('Donation record deleted successfully');
+      queryClient.invalidateQueries({ queryKey: ['donations'] });
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.error || 'Failed to delete donation');
+    },
+  });
+
+  const handleDeleteDonation = (donation: Donation) => {
+    if (window.confirm(`Are you sure you want to delete this donation from "${donation.donorName}"? This action cannot be undone.`)) {
+      deleteMutation.mutate(donation.id);
+    }
+  };
 
   // Calculate total
   const totalDonations = donations.reduce((sum, don) => sum + don.amount, 0);
@@ -135,6 +154,7 @@ const DonationsPage: React.FC = () => {
                   <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Type</th>
                   <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">Amount</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Receipt No.</th>
+                  <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -162,6 +182,13 @@ const DonationsPage: React.FC = () => {
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-600">
                       {donation.receiptNumber || '-'}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <div className="flex justify-end">
+                        <ActionMenu items={[
+                          { label: 'Delete', icon: <Trash2 size={15} />, onClick: () => handleDeleteDonation(donation), variant: 'danger' },
+                        ]} />
+                      </div>
                     </td>
                   </tr>
                 ))}

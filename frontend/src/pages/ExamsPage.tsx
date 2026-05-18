@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
-import { Plus, BookOpen, Award, FileText } from 'lucide-react';
+import { Plus, BookOpen, Award, FileText, Trash2 } from 'lucide-react';
 import api from '../services/api';
 import { Exam, Class, Student } from '../types';
 import { Card } from '../components/UI/Card';
@@ -10,6 +10,7 @@ import { Input, Select } from '../components/UI/Input';
 import { Modal } from '../components/UI/Modal';
 import { Badge } from '../components/UI/Badge';
 import { formatDate, formatCurrency } from '../utils/helpers';
+import { ActionMenu } from '../components/UI/ActionMenu';
 
 const ExamsPage: React.FC = () => {
   const [termFilter, setTermFilter] = useState('');
@@ -44,9 +45,28 @@ const ExamsPage: React.FC = () => {
   const exams: Exam[] = examsData?.data || [];
   const classes: Class[] = classesData?.data || [];
 
+  const queryClient = useQueryClient();
+
+  const deleteMutation = useMutation({
+    mutationFn: (examId: string) => api.delete(`/exams/${examId}`),
+    onSuccess: () => {
+      toast.success('Exam deleted successfully');
+      queryClient.invalidateQueries({ queryKey: ['exams'] });
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.error || 'Failed to delete exam');
+    },
+  });
+
   const handleEnterMarks = (exam: Exam) => {
     setSelectedExam(exam);
     setIsMarksEntryModalOpen(true);
+  };
+
+  const handleDeleteExam = (exam: Exam) => {
+    if (window.confirm(`Are you sure you want to delete "${exam.name}"? All marks will be deleted too.`)) {
+      deleteMutation.mutate(exam.id);
+    }
   };
 
   return (
@@ -141,21 +161,12 @@ const ExamsPage: React.FC = () => {
                       {exam.examFee ? formatCurrency(exam.examFee) : '-'}
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <div className="flex justify-end gap-2">
-                        <button
-                          onClick={() => handleEnterMarks(exam)}
-                          className="rounded p-1 hover:bg-gray-100"
-                          title="Enter Marks"
-                        >
-                          <Award size={18} className="text-blue-600" />
-                        </button>
-                        <button
-                          onClick={() => {/* TODO: Generate report */}}
-                          className="rounded p-1 hover:bg-gray-100"
-                          title="Generate Report"
-                        >
-                          <FileText size={18} className="text-green-600" />
-                        </button>
+                      <div className="flex justify-end">
+                        <ActionMenu items={[
+                          { label: 'Enter Marks', icon: <Award size={15} />, onClick: () => handleEnterMarks(exam) },
+                          { label: 'Report', icon: <FileText size={15} />, onClick: () => {} },
+                          { label: 'Delete', icon: <Trash2 size={15} />, onClick: () => handleDeleteExam(exam), variant: 'danger' },
+                        ]} />
                       </div>
                     </td>
                   </tr>

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Search, Eye, GraduationCap, TrendingUp, Users, BookOpen, School, Pencil } from 'lucide-react';
+import { Plus, Search, Eye, GraduationCap, TrendingUp, Users, BookOpen, School, Pencil, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../services/api';
 import { Student, Class } from '../types';
@@ -13,10 +13,12 @@ import { Badge } from '../components/UI/Badge';
 import { SingleImageUpload, FileUpload } from '../components/UI/FileUpload';
 import { getFileUrl } from '../utils/helpers';
 import { MultiPhoneInput } from '../components/UI/MultiPhoneInput';
+import { ActionMenu } from '../components/UI/ActionMenu';
 
 
 const StudentsPage: React.FC = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedClass, setSelectedClass] = useState('');
   const [statusFilter, setStatusFilter] = useState('ACTIVE');
@@ -59,15 +61,39 @@ const StudentsPage: React.FC = () => {
     return 0;
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => api.delete(`/students/${id}`),
+    onSuccess: () => {
+      toast.success('Student deleted successfully');
+      queryClient.invalidateQueries({ queryKey: ['students'] });
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.error || 'Failed to delete student');
+    },
+  });
+
   const handleViewStudent = (student: Student) => {
     navigate(`/students/${student.id}`);
   };
 
+  const handleDeleteStudent = (student: Student) => {
+    if (window.confirm(`Are you sure you want to delete "${student.fullName}"? This action cannot be undone.`)) {
+      deleteMutation.mutate(student.id);
+    }
+  };
+
+  const ACCENTS = {
+    blue:    { gradient: 'from-[#2563eb] to-[#4f46e5]' },
+    emerald: { gradient: 'from-[#10b981] to-[#0d9488]' },
+    violet:  { gradient: 'from-[#8b5cf6] to-[#7c3aed]' },
+    amber:   { gradient: 'from-[#f59e0b] to-[#ea580c]' },
+  };
+
   const stats = [
-    { label: 'Total Students', value: students.length, icon: Users, color: 'text-blue-600', bg: 'bg-blue-50' },
-    { label: 'Active Students', value: students.filter((s: any) => s.status === 'ACTIVE').length, icon: TrendingUp, color: 'text-green-600', bg: 'bg-green-50' },
-    { label: 'Total Classes', value: classes.length, icon: School, color: 'text-purple-600', bg: 'bg-purple-50' },
-    { label: 'Enrollments', value: students.length, icon: BookOpen, color: 'text-orange-600', bg: 'bg-orange-50' },
+    { label: 'Total Students', value: students.length, icon: Users, accent: 'blue' as const },
+    { label: 'Active Students', value: students.filter((s: any) => s.status === 'ACTIVE').length, icon: TrendingUp, accent: 'emerald' as const },
+    { label: 'Total Classes', value: classes.length, icon: School, accent: 'violet' as const },
+    { label: 'Enrollments', value: students.length, icon: BookOpen, accent: 'amber' as const },
   ];
 
   return (
@@ -98,19 +124,34 @@ const StudentsPage: React.FC = () => {
 
       {/* Analytics Grid */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => (
-          <Card key={stat.label} className="group transition-shadow hover:shadow-md" padding="none">
-            <div className="flex items-center gap-4 p-5">
-              <div className={`${stat.bg} ${stat.color} flex h-11 w-11 items-center justify-center rounded-lg`}>
-                <stat.icon size={20} />
+        {stats.map((stat) => {
+          const a = ACCENTS[stat.accent];
+          return (
+            <Card
+              key={stat.label}
+              className={`group relative overflow-hidden bg-gradient-to-r ${a.gradient} border-none shadow-[0_8px_20px_rgba(0,0,0,0.04)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_24px_rgba(0,0,0,0.08)] active:scale-[0.98] border border-white/10`}
+              padding="none"
+            >
+              {/* Curved background accents matching screenshot's circles */}
+              <div className="absolute right-0 top-0 -mr-6 -mt-6 w-24 h-24 rounded-full bg-white/[0.07] pointer-events-none" />
+              <div className="absolute right-4 top-4 w-12 h-12 rounded-full bg-white/[0.04] pointer-events-none" />
+
+              <div className="flex items-center justify-between gap-3 relative z-10 p-5">
+                <div className="min-w-0">
+                  <p className="text-[11px] font-semibold text-white/80 tracking-wider uppercase">{stat.label}</p>
+                  <p className="mt-1 text-2xl font-black text-white tracking-tight leading-none">{stat.value}</p>
+                </div>
+                
+                <div className="relative flex-shrink-0 flex items-center justify-center h-12 w-12">
+                  {/* Glassmorphic Rounded Box matching screenshot */}
+                  <div className="h-10 w-10 rounded-xl bg-white/15 backdrop-blur-md border border-white/20 flex items-center justify-center text-white shadow-[inset_0_1.5px_0_rgba(255,255,255,0.25),_0_8px_16px_rgba(0,0,0,0.06)] group-hover:scale-105 transition-all duration-300">
+                    <stat.icon size={18} className="stroke-[2.5]" />
+                  </div>
+                </div>
               </div>
-              <div className="min-w-0">
-                <p className="text-xs font-medium text-gray-500">{stat.label}</p>
-                <p className="mt-0.5 text-2xl font-semibold tracking-tight text-gray-900">{stat.value}</p>
-              </div>
-            </div>
-          </Card>
-        ))}
+            </Card>
+          );
+        })}
       </div>
 
       {/* Search & Filters */}
@@ -164,79 +205,61 @@ const StudentsPage: React.FC = () => {
       </Card>
 
       {/* Students Table */}
-      <Card padding="none" className="overflow-hidden">
+      <Card className="border-none shadow-xl overflow-hidden bg-white rounded-3xl">
         {isLoading ? (
           <div className="animate-pulse p-10 text-center text-sm text-gray-500">Loading student records…</div>
         ) : sortedStudents.length === 0 ? (
           <div className="p-16 text-center text-sm text-gray-500">No students found matching the criteria.</div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto min-h-[240px]">
             <table className="w-full text-left">
               <thead>
-                <tr className="border-b border-gray-200 bg-gray-50/70">
-                  <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Identity & Admission</th>
-                  <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Class</th>
-                  <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Guardian & Contact</th>
-                  <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Status</th>
-                  <th className="w-[1%] whitespace-nowrap px-5 py-3 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">Actions</th>
+                <tr className="bg-gray-50/50 border-b border-gray-100">
+                  <th className="p-5 text-xs font-semibold uppercase tracking-wide text-gray-500">Identity & Admission</th>
+                  <th className="p-5 text-xs font-semibold uppercase tracking-wide text-gray-500">Class</th>
+                  <th className="p-5 text-xs font-semibold uppercase tracking-wide text-gray-500">Guardian & Contact</th>
+                  <th className="p-5 text-xs font-semibold uppercase tracking-wide text-gray-500">Status</th>
+                  <th className="p-5 text-xs font-semibold uppercase tracking-wide text-gray-500 text-center w-[1%] whitespace-nowrap">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-gray-50">
                 {sortedStudents.map((student: Student) => (
-                  <tr key={student.id} className="group transition-colors hover:bg-blue-50/30">
-                    <td className="px-5 py-3.5">
+                  <tr key={student.id} className="hover:bg-blue-50/20 transition-colors group">
+                    <td className="p-5">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
+                        <div className="h-10 w-10 rounded-xl bg-gray-100 flex items-center justify-center overflow-hidden border border-gray-100 group-hover:border-blue-200 transition-colors">
                           {student.profilePhoto ? (
                             <img src={getFileUrl(student.profilePhoto)} alt="" className="h-full w-full object-cover" />
-                          ) : <Users size={18} className="text-gray-400" />}
+                          ) : <Users size={20} className="text-gray-400" />}
                         </div>
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold text-gray-900 transition-colors group-hover:text-blue-700">{student.fullName}</p>
-                          <p className="truncate text-xs font-semibold text-blue-600">
-                            {student.indexNumber || student.admissionNumber}
-                          </p>
+                        <div>
+                          <p className="font-black text-gray-900 group-hover:text-blue-600 transition-colors">{student.fullName}</p>
+                          <p className="text-xs text-gray-500">{student.indexNumber || student.admissionNumber}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-5 py-3.5">
-                      <span className="text-sm font-medium text-gray-700">{student.class?.name || '—'}</span>
+                    <td className="p-5">
+                      <span className="text-sm font-semibold text-gray-700">{student.class?.name || '—'}</span>
                     </td>
-                    <td className="px-5 py-3.5">
-                      <p className="text-sm font-medium text-gray-900">{student.guardianName}</p>
-                      <p className="text-xs text-gray-500">
-                        {student.guardianPhones && student.guardianPhones.length > 0 ? student.guardianPhones[0] : 'N/A'}
-                      </p>
+                    <td className="p-5">
+                      <div className="flex flex-col">
+                        <span className="text-xs font-black text-gray-900 uppercase tracking-tight">{student.guardianName}</span>
+                        <span className="text-[10px] font-bold text-blue-500 uppercase tracking-widest">
+                          {student.guardianPhones && student.guardianPhones.length > 0 ? student.guardianPhones[0] : 'N/A'}
+                        </span>
+                      </div>
                     </td>
-                    <td className="px-5 py-3.5">
-                      <Badge variant={student.status === 'ACTIVE' ? 'success' : 'danger'}>
+                    <td className="p-5">
+                      <Badge variant={student.status === 'ACTIVE' ? 'success' : 'danger'} className="text-[9px] font-black tracking-widest uppercase px-3 py-1">
                         {student.status}
                       </Badge>
                     </td>
-                    <td className="w-[1%] whitespace-nowrap px-5 py-3.5 text-center">
-                      <div className="flex items-center justify-center gap-1.5">
-                        <Button
-                          onClick={() => handleViewStudent(student)}
-                          variant="secondary"
-                          size="icon"
-                          aria-label="View"
-                          className="hover:bg-blue-50 hover:text-blue-600"
-                        >
-                          <Eye size={16} />
-                        </Button>
-                        <Button
-                          onClick={() => {
-                            setEditingStudent(student);
-                            setIsModalOpen(true);
-                          }}
-                          variant="secondary"
-                          size="icon"
-                          aria-label="Edit"
-                          className="hover:bg-amber-50 hover:text-amber-600"
-                        >
-                          <Pencil size={16} />
-                        </Button>
-                      </div>
+                    <td className="p-5 text-center w-[1%] whitespace-nowrap">
+                      <ActionMenu items={[
+                        { label: 'View', icon: <Eye size={15} />, onClick: () => handleViewStudent(student) },
+                        { label: 'Edit', icon: <Pencil size={15} />, onClick: () => { setEditingStudent(student); setIsModalOpen(true); } },
+                        { label: 'Delete', icon: <Trash2 size={15} />, onClick: () => handleDeleteStudent(student), variant: 'danger' },
+                      ]} />
                     </td>
                   </tr>
                 ))}

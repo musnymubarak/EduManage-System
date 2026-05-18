@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
-import { Plus, Package, AlertTriangle, TrendingUp, TrendingDown, Pencil } from 'lucide-react';
+import { Plus, Package, AlertTriangle, TrendingUp, TrendingDown, Pencil, Trash2 } from 'lucide-react';
 import api from '../services/api';
 import { Inventory } from '../types';
 import { Card } from '../components/UI/Card';
@@ -9,6 +9,7 @@ import { Button } from '../components/UI/Button';
 import { Input, Select } from '../components/UI/Input';
 import { Modal } from '../components/UI/Modal';
 import { Badge } from '../components/UI/Badge';
+import { ActionMenu } from '../components/UI/ActionMenu';
 
 
 const InventoryPage: React.FC = () => {
@@ -46,9 +47,26 @@ const InventoryPage: React.FC = () => {
   // Separate low stock items
   const lowStockItems = items.filter((item) => item.enableAlert && item.quantity <= item.minQuantity);
 
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => api.delete(`/inventory/${id}`),
+    onSuccess: () => {
+      toast.success('Item deleted successfully');
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.error || 'Failed to delete item');
+    },
+  });
+
   const handleUpdateQuantity = (item: Inventory) => {
     setSelectedItem(item);
     setIsUpdateModalOpen(true);
+  };
+
+  const handleDeleteItem = (item: Inventory) => {
+    if (window.confirm(`Are you sure you want to delete "${item.itemName}"? This action cannot be undone.`)) {
+      deleteMutation.mutate(item.id);
+    }
   };
 
   return (
@@ -194,24 +212,12 @@ const InventoryPage: React.FC = () => {
                         </button>
                       </td>
                       <td className="px-4 py-3 text-right">
-                        <div className="flex justify-end gap-2">
-                          <button
-                            onClick={() => handleUpdateQuantity(item)}
-                            className="rounded p-1 text-blue-600 hover:bg-blue-50"
-                            title="Update Quantity"
-                          >
-                            <TrendingUp size={18} />
-                          </button>
-                          <button
-                            onClick={() => {
-                              setSelectedItem(item);
-                              setIsEditModalOpen(true);
-                            }}
-                            className="rounded p-1 text-gray-600 hover:bg-gray-100"
-                            title="Edit Item Details"
-                          >
-                            <Pencil size={18} />
-                          </button>
+                        <div className="flex justify-end">
+                          <ActionMenu items={[
+                            { label: 'Update Quantity', icon: <TrendingUp size={15} />, onClick: () => handleUpdateQuantity(item) },
+                            { label: 'Edit Details', icon: <Pencil size={15} />, onClick: () => { setSelectedItem(item); setIsEditModalOpen(true); } },
+                            { label: 'Delete', icon: <Trash2 size={15} />, onClick: () => handleDeleteItem(item), variant: 'danger' },
+                          ]} />
                         </div>
                       </td>
                     </tr>

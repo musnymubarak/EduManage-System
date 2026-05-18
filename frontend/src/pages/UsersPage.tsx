@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
-import { Plus, Search, Edit, Lock, UserX, UserCheck } from 'lucide-react';
+import { Plus, Search, Edit, Lock, UserX, UserCheck, Trash2 } from 'lucide-react';
 import api from '../services/api';
 import { User } from '../types';
 import { Card } from '../components/UI/Card';
@@ -10,6 +10,7 @@ import { Input, Select } from '../components/UI/Input';
 import { Modal } from '../components/UI/Modal';
 import { Badge } from '../components/UI/Badge';
 import { getRoleName, formatDate } from '../utils/helpers';
+import { ActionMenu } from '../components/UI/ActionMenu';
 
 const UsersPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -63,6 +64,23 @@ const UsersPage: React.FC = () => {
   const handleChangePassword = (user: User) => {
     setSelectedUser(user);
     setIsChangePasswordModalOpen(true);
+  };
+
+  const deleteUserMutation = useMutation({
+    mutationFn: (id: string) => api.delete(`/users/${id}`),
+    onSuccess: () => {
+      toast.success('User deleted successfully');
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.error || 'Failed to delete user');
+    },
+  });
+
+  const handleDeleteUser = (user: User) => {
+    if (window.confirm(`Are you sure you want to delete user "${user.username}"? This action cannot be undone.`)) {
+      deleteUserMutation.mutate(user.id);
+    }
   };
 
   return (
@@ -151,32 +169,13 @@ const UsersPage: React.FC = () => {
                       {user.lastLogin ? formatDate(user.lastLogin) : 'Never'}
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <div className="flex justify-end gap-2">
-                        <button
-                          onClick={() => handleEdit(user)}
-                          className="rounded p-1 hover:bg-gray-100"
-                          title="Edit User"
-                        >
-                          <Edit size={18} className="text-blue-600" />
-                        </button>
-                        <button
-                          onClick={() => handleChangePassword(user)}
-                          className="rounded p-1 hover:bg-gray-100"
-                          title="Change Password"
-                        >
-                          <Lock size={18} className="text-yellow-600" />
-                        </button>
-                        <button
-                          onClick={() => handleToggleStatus(user)}
-                          className="rounded p-1 hover:bg-gray-100"
-                          title={user.status === 'ACTIVE' ? 'Deactivate' : 'Activate'}
-                        >
-                          {user.status === 'ACTIVE' ? (
-                            <UserX size={18} className="text-red-600" />
-                          ) : (
-                            <UserCheck size={18} className="text-green-600" />
-                          )}
-                        </button>
+                      <div className="flex justify-end">
+                        <ActionMenu items={[
+                          { label: 'Edit', icon: <Edit size={15} />, onClick: () => handleEdit(user) },
+                          { label: 'Change Password', icon: <Lock size={15} />, onClick: () => handleChangePassword(user) },
+                          { label: user.status === 'ACTIVE' ? 'Deactivate' : 'Activate', icon: user.status === 'ACTIVE' ? <UserX size={15} /> : <UserCheck size={15} />, onClick: () => handleToggleStatus(user) },
+                          { label: 'Delete', icon: <Trash2 size={15} />, onClick: () => handleDeleteUser(user), variant: 'danger' },
+                        ]} />
                       </div>
                     </td>
                   </tr>

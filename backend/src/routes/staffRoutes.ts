@@ -39,6 +39,9 @@ router.post('/:id/duties', authorize(...managers), staffController.assignStaffDu
 router.put('/:id/duties/:dutyId', authorize(...managers), staffController.updateDutyStatus);
 router.delete('/:id/duties/:dutyId', authorize(...managers), staffController.deleteStaffDuty);
 
+// Delete
+router.delete('/:id', authorize('SUPER_ADMIN'), staffController.deleteStaff);
+
 // Leaving
 router.put('/:id/leave', authorize(...managers), staffController.markStaffAsLeft);
 

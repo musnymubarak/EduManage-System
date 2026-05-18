@@ -502,6 +502,18 @@ export const updateFeePayment = async (req: AuthRequest, res: Response): Promise
   }
 };
 
+export const deleteFeePayment = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+
+    await prisma.feePayment.delete({ where: { id } });
+
+    res.json({ success: true, message: 'Payment record deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete payment' });
+  }
+};
+
 export const getMonthlyFeeStatus = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { month, classId, search, status } = req.query;

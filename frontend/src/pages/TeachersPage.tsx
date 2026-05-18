@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Search, Eye, GraduationCap, Users, BookOpen, Pencil, UserCheck } from 'lucide-react';
+import { Plus, Search, Eye, GraduationCap, Users, BookOpen, Pencil, UserCheck, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import api from '../services/api';
@@ -13,6 +13,7 @@ import { Badge } from '../components/UI/Badge';
 import { SingleImageUpload, FileUpload } from '../components/UI/FileUpload';
 import { getFileUrl } from '../utils/helpers';
 import { MultiPhoneInput } from '../components/UI/MultiPhoneInput';
+import { ActionMenu } from '../components/UI/ActionMenu';
 
 
 const TeachersPage: React.FC = () => {
@@ -22,6 +23,7 @@ const TeachersPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTeacher, setEditingTeacher] = useState<any | null>(null);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   // Fetch teachers
   const { data: teachersData, isLoading } = useQuery({
@@ -47,15 +49,39 @@ const TeachersPage: React.FC = () => {
     return 0;
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => api.delete(`/teachers/${id}`),
+    onSuccess: () => {
+      toast.success('Teacher deleted successfully');
+      queryClient.invalidateQueries({ queryKey: ['teachers'] });
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.error || 'Failed to delete teacher');
+    },
+  });
+
   const handleViewTeacher = (id: string) => {
     navigate(`/teachers/${id}`);
   };
 
+  const handleDeleteTeacher = (teacher: Teacher) => {
+    if (window.confirm(`Are you sure you want to delete "${teacher.fullName}"? This action cannot be undone.`)) {
+      deleteMutation.mutate(teacher.id);
+    }
+  };
+
+  const ACCENTS = {
+    blue:    { gradient: 'from-[#2563eb] to-[#4f46e5]' },
+    emerald: { gradient: 'from-[#10b981] to-[#0d9488]' },
+    violet:  { gradient: 'from-[#8b5cf6] to-[#7c3aed]' },
+    amber:   { gradient: 'from-[#f59e0b] to-[#ea580c]' },
+  };
+
   const stats = [
-    { label: 'Total Teachers', value: teachers.length, icon: Users, color: 'text-blue-600', bg: 'bg-blue-50' },
-    { label: 'Active Faculty', value: teachers.filter((t: any) => t.status === 'ACTIVE').length, icon: UserCheck, color: 'text-green-600', bg: 'bg-green-50' },
-    { label: 'Qualifications', value: teachers.reduce((acc: number, t: any) => acc + (t.qualifications?.length || 0), 0), icon: GraduationCap, color: 'text-purple-600', bg: 'bg-purple-50' },
-    { label: 'Academic Staff', value: teachers.length, icon: BookOpen, color: 'text-orange-600', bg: 'bg-orange-50' },
+    { label: 'Total Teachers', value: teachers.length, icon: Users, accent: 'blue' as const },
+    { label: 'Active Faculty', value: teachers.filter((t: any) => t.status === 'ACTIVE').length, icon: UserCheck, accent: 'emerald' as const },
+    { label: 'Qualifications', value: teachers.reduce((acc: number, t: any) => acc + (t.qualifications?.length || 0), 0), icon: GraduationCap, accent: 'violet' as const },
+    { label: 'Academic Staff', value: teachers.length, icon: BookOpen, accent: 'amber' as const },
   ];
 
   return (
@@ -85,19 +111,34 @@ const TeachersPage: React.FC = () => {
 
       {/* Analytics Grid */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => (
-          <Card key={stat.label} className="bg-white border-none shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden group">
-            <div className="p-5 flex items-center gap-4">
-              <div className={`${stat.bg} ${stat.color} p-3 rounded-2xl transition-transform group-hover:scale-110 duration-300`}>
-                <stat.icon size={24} />
+        {stats.map((stat) => {
+          const a = ACCENTS[stat.accent];
+          return (
+            <Card
+              key={stat.label}
+              className={`group relative overflow-hidden bg-gradient-to-r ${a.gradient} border-none shadow-[0_8px_20px_rgba(0,0,0,0.04)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_24px_rgba(0,0,0,0.08)] active:scale-[0.98] border border-white/10`}
+              padding="none"
+            >
+              {/* Curved background accents matching screenshot's circles */}
+              <div className="absolute right-0 top-0 -mr-6 -mt-6 w-24 h-24 rounded-full bg-white/[0.07] pointer-events-none" />
+              <div className="absolute right-4 top-4 w-12 h-12 rounded-full bg-white/[0.04] pointer-events-none" />
+
+              <div className="flex items-center justify-between gap-3 relative z-10 p-5">
+                <div className="min-w-0">
+                  <p className="text-[11px] font-semibold text-white/80 tracking-wider uppercase">{stat.label}</p>
+                  <p className="mt-1 text-2xl font-black text-white tracking-tight leading-none">{stat.value}</p>
+                </div>
+                
+                <div className="relative flex-shrink-0 flex items-center justify-center h-12 w-12">
+                  {/* Glassmorphic Rounded Box matching screenshot */}
+                  <div className="h-10 w-10 rounded-xl bg-white/15 backdrop-blur-md border border-white/20 flex items-center justify-center text-white shadow-[inset_0_1.5px_0_rgba(255,255,255,0.25),_0_8px_16px_rgba(0,0,0,0.06)] group-hover:scale-105 transition-all duration-300">
+                    <stat.icon size={18} className="stroke-[2.5]" />
+                  </div>
+                </div>
               </div>
-              <div>
-                <p className="text-xs font-black text-gray-400 uppercase tracking-widest">{stat.label}</p>
-                <p className="text-2xl font-black text-gray-900">{stat.value}</p>
-              </div>
-            </div>
-          </Card>
-        ))}
+            </Card>
+          );
+        })}
       </div>
 
       {/* Search & Filters */}
@@ -191,25 +232,11 @@ const TeachersPage: React.FC = () => {
                       </Badge>
                     </td>
                     <td className="p-5 text-center w-[1%] whitespace-nowrap">
-                      <div className="flex items-center justify-center gap-2">
-                        <Button
-                          onClick={() => handleViewTeacher(teacher.id)}
-                          variant="secondary"
-                          className="h-9 w-9 p-0 rounded-xl bg-gray-50 hover:bg-blue-50 hover:text-blue-600 transition-all shadow-sm border border-gray-100"
-                        >
-                          <Eye size={16} />
-                        </Button>
-                        <Button
-                          onClick={() => {
-                            setEditingTeacher(teacher);
-                            setIsModalOpen(true);
-                          }}
-                          variant="secondary"
-                          className="h-9 w-9 p-0 rounded-xl bg-gray-50 hover:bg-amber-50 hover:text-amber-600 transition-all shadow-sm border border-gray-100"
-                        >
-                          <Pencil size={16} />
-                        </Button>
-                      </div>
+                      <ActionMenu items={[
+                        { label: 'View', icon: <Eye size={15} />, onClick: () => handleViewTeacher(teacher.id) },
+                        { label: 'Edit', icon: <Pencil size={15} />, onClick: () => { setEditingTeacher(teacher); setIsModalOpen(true); } },
+                        { label: 'Delete', icon: <Trash2 size={15} />, onClick: () => handleDeleteTeacher(teacher), variant: 'danger' },
+                      ]} />
                     </td>
                   </tr>
                 ))}

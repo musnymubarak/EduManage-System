@@ -17,11 +17,12 @@ import {
     Plus,
     History,
     Download,
-    ExternalLink,
     Edit,
     Trash2,
     LogOut,
-    AlertTriangle
+    AlertTriangle,
+    Eye,
+    X
 } from 'lucide-react';
 import api from '../services/api';
 import { StaffDetail, StaffDuty, StaffSalary } from '../types';
@@ -43,6 +44,8 @@ const StaffProfilePage: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'overview' | 'duties' | 'salary' | 'attendance' | 'documents'>('overview');
     const [isDutyModalOpen, setIsDutyModalOpen] = useState(false);
     const [isSalaryModalOpen, setIsSalaryModalOpen] = useState(false);
+    const [previewDoc, setPreviewDoc] = useState<{ fileUrl: string; fileName: string } | null>(null);
+    const [isPreviewOpen, setIsPreviewOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
     const [editProfilePhoto, setEditProfilePhoto] = useState<File | null>(null);
@@ -589,9 +592,16 @@ const StaffProfilePage: React.FC = () => {
                                         </div>
                                     </div>
                                     <div className="flex gap-1">
-                                        <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer" className="p-2 text-gray-400 hover:text-blue-600 transition-colors">
-                                            <ExternalLink size={16} />
-                                        </a>
+                                        <button 
+                                            onClick={() => {
+                                                setPreviewDoc({ fileUrl: doc.fileUrl, fileName: doc.fileName });
+                                                setIsPreviewOpen(true);
+                                            }}
+                                            className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
+                                            title="Preview Document"
+                                        >
+                                            <Eye size={16} />
+                                        </button>
                                         <a href={doc.fileUrl} download className="p-2 text-gray-400 hover:text-blue-600 transition-colors">
                                             <Download size={16} />
                                         </a>
@@ -798,6 +808,74 @@ const StaffProfilePage: React.FC = () => {
                     queryClient.invalidateQueries({ queryKey: ['staff', id] });
                 }}
             />
+
+            {/* ===== DOCUMENT PREVIEW MODAL ===== */}
+            {isPreviewOpen && previewDoc && (
+                <div className="fixed inset-0 z-[9999] flex flex-col bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+                    {/* Top bar */}
+                    <div className="flex items-center justify-between bg-gradient-to-r from-gray-900 to-gray-800 px-6 py-3 shadow-lg">
+                        <div className="flex items-center gap-3">
+                            <FileText size={20} className="text-blue-400" />
+                            <div>
+                                <h3 className="text-sm font-bold text-white">Document Preview</h3>
+                                <p className="text-[11px] text-gray-400 font-medium">{previewDoc.fileName}</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <a
+                                href={previewDoc.fileUrl}
+                                download
+                                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold uppercase tracking-wider px-5 py-2.5 rounded-xl transition-all active:scale-95 shadow-lg shadow-blue-600/20"
+                            >
+                                <Download size={16} />
+                                Download
+                            </a>
+                            <button
+                                onClick={() => {
+                                    setIsPreviewOpen(false);
+                                    setPreviewDoc(null);
+                                }}
+                                className="flex items-center justify-center h-9 w-9 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-all active:scale-95"
+                            >
+                                <X size={18} />
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Viewer */}
+                    <div className="flex-1 p-4 overflow-hidden flex items-center justify-center">
+                        {/\.(png|jpe?g|webp|gif)$/i.test(previewDoc.fileUrl) ? (
+                            <img
+                                src={previewDoc.fileUrl}
+                                alt={previewDoc.fileName}
+                                className="max-w-full max-h-full object-contain rounded-xl shadow-2xl bg-white"
+                            />
+                        ) : /\.pdf$/i.test(previewDoc.fileUrl) ? (
+                            <iframe
+                                src={previewDoc.fileUrl}
+                                title="Document Preview"
+                                className="w-full h-full rounded-xl border border-white/10 shadow-2xl bg-white"
+                            />
+                        ) : (
+                            <div className="text-center bg-white/10 backdrop-blur-md p-8 rounded-2xl border border-white/10 max-w-md text-white">
+                                <FileText className="mx-auto mb-4 h-16 w-16 text-blue-400" />
+                                <h4 className="text-lg font-bold">No Inline Preview Available</h4>
+                                <p className="text-xs text-gray-300 mt-2 mb-6">
+                                    We can't preview this file format inline. You can download it directly.
+                                </p>
+                                <a
+                                    href={previewDoc.fileUrl}
+                                    download
+                                    className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold uppercase tracking-wider px-6 py-3 rounded-xl transition-all"
+                                >
+                                    <Download size={16} />
+                                    Download File
+                                </a>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

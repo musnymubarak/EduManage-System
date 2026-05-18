@@ -12,6 +12,7 @@ const managers: UserRole[] = ['ADMIN', 'SUPER_ADMIN'];
 router.get('/payments', feeController.getAllFeePayments);
 router.post('/payments', authorize(...managers), feeController.recordPayment);
 router.put('/payments/:id', authorize(...managers), feeController.updateFeePayment);
+router.delete('/payments/:id', authorize(...managers), feeController.deleteFeePayment);
 router.post('/partial-payment', authorize(...managers), feeController.recordPartialPayment);
 router.get('/student/:studentId', feeController.getStudentFeeHistory);
 router.get('/student/:studentId/ledger', feeController.getStudentFeeLedger);

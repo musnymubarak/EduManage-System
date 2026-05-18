@@ -13,7 +13,8 @@ import {
   Calendar,
   History,
   Pencil,
-  Settings2
+  Settings2,
+  Trash2
 } from 'lucide-react';
 import api from '../services/api';
 import { generatePaymentReportPDF } from '../utils/generatePaymentReport';
@@ -25,7 +26,8 @@ import { Badge } from '../components/UI/Badge';
 import { formatDate, formatCurrency } from '../utils/helpers';
 import GlobalPaymentModal from '../components/Finance/GlobalPaymentModal';
 import GlobalHistoryModal from '../components/Finance/GlobalHistoryModal';
-import logo from '../logo.png'; 
+import { ActionMenu } from '../components/UI/ActionMenu';
+import logo from '../logo.png';
 
 const FeesPage: React.FC = () => {
   // --- States ---
@@ -137,6 +139,23 @@ const FeesPage: React.FC = () => {
       grandTotalOutstanding: 0
   };
 
+  const deleteFeePaymentMutation = useMutation({
+    mutationFn: (id: string) => api.delete(`/fees/payments/${id}`),
+    onSuccess: () => {
+      toast.success('Payment record deleted successfully');
+      queryClient.invalidateQueries({ queryKey: ['feesMonthlyStatus'] });
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.error || 'Failed to delete payment');
+    },
+  });
+
+  const handleDeleteFeePayment = (row: any) => {
+    if (window.confirm(`Are you sure you want to delete this payment for "${row.fullName}"? This action cannot be undone.`)) {
+      deleteFeePaymentMutation.mutate(row.paymentId);
+    }
+  };
+
   // --- Handlers ---
   const handleRecordPayment = (row: any) => {
     setSelectedStudent(row);
@@ -221,54 +240,90 @@ const FeesPage: React.FC = () => {
 
       {/* Dynamic Summary Stats Grid */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        <Card className="bg-gradient-to-br from-blue-50 to-white border-none shadow-lg transform transition-transform hover:scale-[1.02]">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-blue-500">Total Expected</p>
-              <h3 className="text-2xl font-black text-gray-900 mt-1">{formatCurrency(summary.totalExpectedAmount)}</h3>
-              <p className="text-xs text-gray-400 mt-1">For {summary.totalStudents} Active Students</p>
+        {/* Total Expected */}
+        <Card
+          className="group relative overflow-hidden bg-gradient-to-r from-[#2563eb] to-[#4f46e5] border-none shadow-[0_8px_20px_rgba(0,0,0,0.04)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_24px_rgba(0,0,0,0.08)] active:scale-[0.98] border border-white/10"
+          padding="none"
+        >
+          <div className="absolute right-0 top-0 -mr-6 -mt-6 w-24 h-24 rounded-full bg-white/[0.07] pointer-events-none" />
+          <div className="absolute right-4 top-4 w-12 h-12 rounded-full bg-white/[0.04] pointer-events-none" />
+          
+          <div className="flex items-center justify-between gap-3 relative z-10 p-5">
+            <div className="min-w-0">
+              <p className="text-[11px] font-semibold text-white/80 tracking-wider uppercase">Total Expected</p>
+              <h3 className="mt-1 text-2xl font-black text-white tracking-tight">{formatCurrency(summary.totalExpectedAmount)}</h3>
+              <p className="text-xs text-white/70 mt-1 font-medium">For {summary.totalStudents} Active Students</p>
             </div>
-            <div className="bg-blue-100 p-3 rounded-2xl text-blue-600 shadow-inner">
-              <DollarSign size={24} />
-            </div>
-          </div>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-green-50 to-white border-none shadow-lg transform transition-transform hover:scale-[1.02]">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-green-500">Total Collected</p>
-              <h3 className="text-2xl font-black text-gray-900 mt-1">{formatCurrency(summary.totalCollectedAmount)}</h3>
-              <p className="text-xs text-gray-400 mt-1">{summary.paid} Fully Paid</p>
-            </div>
-            <div className="bg-green-100 p-3 rounded-2xl text-green-600 shadow-inner">
-              <CheckCircle2 size={24} />
+            <div className="relative flex-shrink-0 flex items-center justify-center h-12 w-12">
+              <div className="h-10 w-10 rounded-xl bg-white/15 backdrop-blur-md border border-white/20 flex items-center justify-center text-white shadow-[inset_0_1.5px_0_rgba(255,255,255,0.25),_0_8px_16px_rgba(0,0,0,0.06)] group-hover:scale-105 transition-all duration-300">
+                <DollarSign size={20} className="stroke-[2.5]" />
+              </div>
             </div>
           </div>
         </Card>
 
-        <Card className="bg-gradient-to-br from-red-50 to-white border-none shadow-lg transform transition-transform hover:scale-[1.02]">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-red-500">Outstanding</p>
-              <h3 className="text-2xl font-black text-gray-900 mt-1">{formatCurrency(summary.totalOutstandingAmount)}</h3>
-              <p className="text-xs text-gray-400 mt-1">{summary.partial + summary.pending} Pending</p>
+        {/* Total Collected */}
+        <Card
+          className="group relative overflow-hidden bg-gradient-to-r from-[#10b981] to-[#0d9488] border-none shadow-[0_8px_20px_rgba(0,0,0,0.04)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_24px_rgba(0,0,0,0.08)] active:scale-[0.98] border border-white/10"
+          padding="none"
+        >
+          <div className="absolute right-0 top-0 -mr-6 -mt-6 w-24 h-24 rounded-full bg-white/[0.07] pointer-events-none" />
+          <div className="absolute right-4 top-4 w-12 h-12 rounded-full bg-white/[0.04] pointer-events-none" />
+          
+          <div className="flex items-center justify-between gap-3 relative z-10 p-5">
+            <div className="min-w-0">
+              <p className="text-[11px] font-semibold text-white/80 tracking-wider uppercase">Total Collected</p>
+              <h3 className="mt-1 text-2xl font-black text-white tracking-tight">{formatCurrency(summary.totalCollectedAmount)}</h3>
+              <p className="text-xs text-white/70 mt-1 font-medium">{summary.paid} Fully Paid</p>
             </div>
-            <div className="bg-red-100 p-3 rounded-2xl text-red-600 shadow-inner">
-              <AlertCircle size={24} />
+            <div className="relative flex-shrink-0 flex items-center justify-center h-12 w-12">
+              <div className="h-10 w-10 rounded-xl bg-white/15 backdrop-blur-md border border-white/20 flex items-center justify-center text-white shadow-[inset_0_1.5px_0_rgba(255,255,255,0.25),_0_8px_16px_rgba(0,0,0,0.06)] group-hover:scale-105 transition-all duration-300">
+                <CheckCircle2 size={20} className="stroke-[2.5]" />
+              </div>
             </div>
           </div>
         </Card>
 
-        <Card className="bg-gradient-to-br from-purple-50 to-white border-none shadow-lg transform transition-transform hover:scale-[1.02]">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-purple-500">Grand Total Owed</p>
-              <h3 className="text-2xl font-black text-gray-900 mt-1">{formatCurrency(summary.grandTotalOutstanding || summary.totalOutstandingAmount)}</h3>
-              <p className="text-xs text-gray-400 mt-1">Incl. {formatCurrency(summary.totalArrears || 0)} Arrears</p>
+        {/* Outstanding */}
+        <Card
+          className="group relative overflow-hidden bg-gradient-to-r from-[#ef4444] to-[#db2777] border-none shadow-[0_8px_20px_rgba(0,0,0,0.04)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_24px_rgba(0,0,0,0.08)] active:scale-[0.98] border border-white/10"
+          padding="none"
+        >
+          <div className="absolute right-0 top-0 -mr-6 -mt-6 w-24 h-24 rounded-full bg-white/[0.07] pointer-events-none" />
+          <div className="absolute right-4 top-4 w-12 h-12 rounded-full bg-white/[0.04] pointer-events-none" />
+          
+          <div className="flex items-center justify-between gap-3 relative z-10 p-5">
+            <div className="min-w-0">
+              <p className="text-[11px] font-semibold text-white/80 tracking-wider uppercase">Outstanding</p>
+              <h3 className="mt-1 text-2xl font-black text-white tracking-tight">{formatCurrency(summary.totalOutstandingAmount)}</h3>
+              <p className="text-xs text-white/70 mt-1 font-medium">{summary.partial + summary.pending} Pending</p>
             </div>
-            <div className="bg-purple-100 p-3 rounded-2xl text-purple-600 shadow-inner">
-              <TrendingUp size={24} />
+            <div className="relative flex-shrink-0 flex items-center justify-center h-12 w-12">
+              <div className="h-10 w-10 rounded-xl bg-white/15 backdrop-blur-md border border-white/20 flex items-center justify-center text-white shadow-[inset_0_1.5px_0_rgba(255,255,255,0.25),_0_8px_16px_rgba(0,0,0,0.06)] group-hover:scale-105 transition-all duration-300">
+                <AlertCircle size={20} className="stroke-[2.5]" />
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        {/* Grand Total Owed */}
+        <Card
+          className="group relative overflow-hidden bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] border-none shadow-[0_8px_20px_rgba(0,0,0,0.04)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_24px_rgba(0,0,0,0.08)] active:scale-[0.98] border border-white/10"
+          padding="none"
+        >
+          <div className="absolute right-0 top-0 -mr-6 -mt-6 w-24 h-24 rounded-full bg-white/[0.07] pointer-events-none" />
+          <div className="absolute right-4 top-4 w-12 h-12 rounded-full bg-white/[0.04] pointer-events-none" />
+          
+          <div className="flex items-center justify-between gap-3 relative z-10 p-5">
+            <div className="min-w-0">
+              <p className="text-[11px] font-semibold text-white/80 tracking-wider uppercase">Grand Total Owed</p>
+              <h3 className="mt-1 text-2xl font-black text-white tracking-tight">{formatCurrency(summary.grandTotalOutstanding || summary.totalOutstandingAmount)}</h3>
+              <p className="text-xs text-white/70 mt-1 font-medium">Incl. {formatCurrency(summary.totalArrears || 0)} Arrears</p>
+            </div>
+            <div className="relative flex-shrink-0 flex items-center justify-center h-12 w-12">
+              <div className="h-10 w-10 rounded-xl bg-white/15 backdrop-blur-md border border-white/20 flex items-center justify-center text-white shadow-[inset_0_1.5px_0_rgba(255,255,255,0.25),_0_8px_16px_rgba(0,0,0,0.06)] group-hover:scale-105 transition-all duration-300">
+                <TrendingUp size={20} className="stroke-[2.5]" />
+              </div>
             </div>
           </div>
         </Card>
@@ -405,37 +460,13 @@ const FeesPage: React.FC = () => {
                       </Badge>
                     </td>
                     <td className="px-8 py-5 text-right">
-                      <div className="flex justify-end gap-2.5">
-                        {row.paymentId && (
-                           <>
-                             <button
-                               onClick={() => handleViewReceipt(row)}
-                               className="p-2.5 rounded-xl bg-white border border-gray-100 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm hover:shadow-md"
-                               title="Receipt"
-                             >
-                               <FileText size={16} />
-                             </button>
-                             <button
-                               onClick={() => handleEditPayment(row)}
-                               className="p-2.5 rounded-xl bg-white border border-gray-100 text-orange-600 hover:bg-orange-600 hover:text-white transition-all shadow-sm hover:shadow-md"
-                               title="Correction"
-                             >
-                               <Pencil size={16} />
-                             </button>
-                           </>
-                        )}
-                        <button
-                          onClick={() => handleRecordPayment(row)}
-                          className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-medium transition-all shadow-sm hover:shadow-lg ${
-                            row.paymentStatus === 'PAID'
-                             ? 'bg-gray-100 text-gray-300 cursor-not-allowed border-none'
-                             : 'bg-blue-600 text-white hover:bg-blue-700 active:scale-95'
-                          }`}
-                          disabled={row.paymentStatus === 'PAID'}
-                        >
-                          <DollarSign size={14} />
-                          {row.paymentStatus === 'PENDING' ? 'Collect' : 'Resume'}
-                        </button>
+                      <div className="flex justify-end">
+                        <ActionMenu items={[
+                          { label: row.paymentStatus === 'PENDING' ? 'Collect' : 'Resume', icon: <DollarSign size={15} />, onClick: () => handleRecordPayment(row), disabled: row.paymentStatus === 'PAID' },
+                          { label: 'Receipt', icon: <FileText size={15} />, onClick: () => handleViewReceipt(row), hidden: !row.paymentId },
+                          { label: 'Correction', icon: <Pencil size={15} />, onClick: () => handleEditPayment(row), hidden: !row.paymentId },
+                          { label: 'Delete', icon: <Trash2 size={15} />, onClick: () => handleDeleteFeePayment(row), variant: 'danger', hidden: !row.paymentId },
+                        ]} />
                       </div>
                     </td>
                   </tr>

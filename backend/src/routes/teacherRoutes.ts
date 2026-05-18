@@ -34,6 +34,9 @@ router.post(
 router.post('/:id/memos', authorize(...managers), teacherController.addTeacherMemo);
 router.delete('/:id/memos/:memoId', authorize(...managers), teacherController.deleteTeacherMemo);
 
+// Delete
+router.delete('/:id', authorize('SUPER_ADMIN'), teacherController.deleteTeacher);
+
 // Leaving
 router.put('/:id/leave', authorize(...managers), teacherController.markTeacherAsLeft);
 

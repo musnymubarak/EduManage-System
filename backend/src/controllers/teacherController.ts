@@ -427,6 +427,24 @@ export const deleteTeacherMemo = async (req: AuthRequest, res: Response): Promis
   }
 };
 
+export const deleteTeacher = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+
+    await prisma.teacher.delete({
+      where: { id },
+    });
+
+    res.json({ success: true, message: 'Teacher deleted successfully' });
+  } catch (error: any) {
+    if (error.code === 'P2003') {
+      res.status(400).json({ error: 'Cannot delete teacher with associated records. Consider marking as left instead.' });
+      return;
+    }
+    res.status(500).json({ error: 'Failed to delete teacher' });
+  }
+};
+
 export const markTeacherAsLeft = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;

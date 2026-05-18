@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
-import { Plus, Search, Calendar, DollarSign } from 'lucide-react';
+import { Plus, Search, Calendar, DollarSign, Trash2 } from 'lucide-react';
 import api from '../services/api';
 import { Expenditure } from '../types';
 import { Card } from '../components/UI/Card';
@@ -9,6 +9,7 @@ import { Button } from '../components/UI/Button';
 import { Input, Select, TextArea } from '../components/UI/Input';
 import { Modal } from '../components/UI/Modal';
 import { formatDate, formatCurrency } from '../utils/helpers';
+import { ActionMenu } from '../components/UI/ActionMenu';
 
 const CATEGORY_LABELS: Record<string, string> = {
   SALARIES: 'Salary',
@@ -33,7 +34,24 @@ const ExpenditurePage: React.FC = () => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const queryClient = useQueryClient();
 
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => api.delete(`/expenditures/${id}`),
+    onSuccess: () => {
+      toast.success('Expenditure deleted successfully');
+      queryClient.invalidateQueries({ queryKey: ['expenditures'] });
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.error || 'Failed to delete expenditure');
+    },
+  });
+
+  const handleDeleteExpenditure = (expenditure: Expenditure) => {
+    if (window.confirm(`Are you sure you want to delete this expenditure? This action cannot be undone.`)) {
+      deleteMutation.mutate(expenditure.id);
+    }
+  };
 
   // Fetch expenditures
   const { data: expendituresData, isLoading } = useQuery({
@@ -155,6 +173,7 @@ const ExpenditurePage: React.FC = () => {
                   <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Bill No.</th>
                   <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">Amount</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Payment Method</th>
+                  <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -181,6 +200,13 @@ const ExpenditurePage: React.FC = () => {
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-600">
                       {PAYMENT_METHOD_LABELS[expenditure.paymentMethod] || expenditure.paymentMethod}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <div className="flex justify-end">
+                        <ActionMenu items={[
+                          { label: 'Delete', icon: <Trash2 size={15} />, onClick: () => handleDeleteExpenditure(expenditure), variant: 'danger' },
+                        ]} />
+                      </div>
                     </td>
                   </tr>
                 ))}
