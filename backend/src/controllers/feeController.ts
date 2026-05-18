@@ -527,6 +527,7 @@ export const getMonthlyFeeStatus = async (req: AuthRequest, res: Response): Prom
       studentWhere.OR = [
         { fullName: { contains: search as string, mode: 'insensitive' } },
         { admissionNumber: { contains: search as string, mode: 'insensitive' } },
+        { indexNumber: { contains: search as string, mode: 'insensitive' } },
       ];
     }
 
@@ -606,6 +607,7 @@ export const getMonthlyFeeStatus = async (req: AuthRequest, res: Response): Prom
       return {
         studentId: student.id,
         admissionNumber: student.admissionNumber,
+        indexNumber: student.indexNumber,
         fullName: student.fullName,
         className: student.class?.name || 'Unassigned',
         month: month,

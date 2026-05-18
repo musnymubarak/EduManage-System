@@ -54,7 +54,8 @@ const PaymentsPage: React.FC = () => {
                 data = data.filter((p: any) => 
                     p.student?.fullName?.toLowerCase().includes(s) || 
                     p.receiptNumber?.toLowerCase().includes(s) ||
-                    p.student?.admissionNumber?.toLowerCase().includes(s)
+                    p.student?.admissionNumber?.toLowerCase().includes(s) ||
+                    p.student?.indexNumber?.toLowerCase().includes(s)
                 );
             }
 
@@ -230,7 +231,9 @@ const PaymentsPage: React.FC = () => {
                                                 </div>
                                                 <div>
                                                     <p className="text-sm font-bold text-gray-900 leading-none">{t.student?.fullName}</p>
-                                                    <p className="text-[10px] text-gray-400 mt-1 uppercase font-bold tracking-tighter">ID: {t.student?.admissionNumber}</p>
+                                                    <p className="text-[10px] text-blue-600 mt-1 uppercase font-bold tracking-tighter">
+                                                        ID: {t.student?.indexNumber ? `${t.student.indexNumber} (${t.student.admissionNumber})` : t.student?.admissionNumber}
+                                                    </p>
                                                 </div>
                                             </div>
                                         </td>
@@ -329,7 +332,9 @@ const ReceiptContent: React.FC<{ fee: any; copyLabel?: string }> = ({ fee, copyL
             <div className="flex-1">
                 <p className="text-[8px] font-bold text-slate-400 uppercase tracking-wider mb-1">Receipt To :</p>
                 <p className="text-[10px] font-black text-slate-900 uppercase">{fee.student?.fullName}</p>
-                <p className="text-[9px] font-medium text-slate-500">ID: {fee.student?.admissionNumber}</p>
+                <p className="text-[9px] font-semibold text-blue-850">
+                    ID: {fee.student?.indexNumber ? `${fee.student.indexNumber} (${fee.student.admissionNumber})` : fee.student?.admissionNumber}
+                </p>
             </div>
             <div className="text-right">
                 <p className="text-[8px] font-bold text-slate-400 uppercase tracking-wider mb-1">Receipt Details</p>

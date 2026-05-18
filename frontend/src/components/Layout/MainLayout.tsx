@@ -123,7 +123,7 @@ const MainLayout: React.FC = () => {
 
   const SidebarContent = (
     <>
-      <div className="flex h-16 flex-shrink-0 items-center gap-3 border-b border-gray-100 px-5">
+      <div className="flex h-16 flex-shrink-0 items-center gap-3 border-b border-slate-800 px-5">
         <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600">
           <img
             src={logo}
@@ -132,12 +132,12 @@ const MainLayout: React.FC = () => {
           />
         </div>
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold text-gray-900">SLAC</p>
-          <p className="truncate text-xs text-gray-500">Management Suite</p>
+          <p className="truncate text-sm font-semibold text-white">SLAC</p>
+          <p className="truncate text-xs text-slate-400">Management Suite</p>
         </div>
         <button
           onClick={() => setMobileOpen(false)}
-          className="ml-auto rounded-md p-1.5 text-gray-500 hover:bg-gray-100 lg:hidden"
+          className="ml-auto rounded-md p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white lg:hidden"
           aria-label="Close sidebar"
         >
           <X size={18} />
@@ -148,7 +148,7 @@ const MainLayout: React.FC = () => {
         <nav className="space-y-5">
           {visibleGroups.map((group) => (
             <div key={group.label} className="space-y-1">
-              <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+              <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
                 {group.label}
               </p>
               {group.items.map((item) => {
@@ -161,16 +161,16 @@ const MainLayout: React.FC = () => {
                     className={
                       'group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ' +
                       (active
-                        ? 'bg-blue-50 text-blue-700'
-                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900')
+                        ? 'bg-blue-600 text-white'
+                        : 'text-slate-300 hover:bg-slate-800/60 hover:text-white')
                     }
                   >
                     {active && (
-                      <span className="absolute inset-y-1.5 left-0 w-1 rounded-r-full bg-blue-600" />
+                      <span className="absolute inset-y-1.5 left-0 w-1 rounded-r-full bg-white" />
                     )}
                     <Icon
                       size={18}
-                      className={active ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-700'}
+                      className={active ? 'text-white' : 'text-slate-400 group-hover:text-slate-200'}
                     />
                     <span className="truncate">{item.label}</span>
                   </Link>
@@ -186,7 +186,7 @@ const MainLayout: React.FC = () => {
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50">
       {/* Desktop sidebar */}
-      <aside className="hidden w-64 flex-shrink-0 flex-col border-r border-gray-200 bg-white lg:flex">
+      <aside className="hidden w-64 flex-shrink-0 flex-col border-r border-slate-800 bg-slate-900 lg:flex">
         {SidebarContent}
       </aside>
 
@@ -197,7 +197,7 @@ const MainLayout: React.FC = () => {
             className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm animate-overlay-in"
             onClick={() => setMobileOpen(false)}
           />
-          <aside className="relative flex h-full w-72 flex-col bg-white shadow-xl animate-modal-in">
+          <aside className="relative flex h-full w-72 flex-col border-r border-slate-800 bg-slate-900 shadow-xl animate-modal-in">
             {SidebarContent}
           </aside>
         </div>

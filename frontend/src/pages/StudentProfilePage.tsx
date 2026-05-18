@@ -165,7 +165,11 @@ const StudentProfilePage: React.FC = () => {
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                   <h1 className="text-3xl font-bold text-gray-900">{student.fullName}</h1>
-                  <p className="text-gray-500 font-medium">Admission No: <span className="text-blue-600 font-bold">{student.admissionNumber}</span></p>
+                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-500 font-medium mt-1">
+                    <p>Index No: <span className="text-blue-600 font-black">{student.indexNumber || '—'}</span></p>
+                    <span className="text-gray-300 hidden sm:inline">|</span>
+                    <p>Admission No: <span className="text-gray-700 font-bold">{student.admissionNumber}</span></p>
+                  </div>
                 </div>
               </div>
 
@@ -238,6 +242,8 @@ const StudentProfilePage: React.FC = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-8">
                 <DetailItem label="Full Name" value={student.fullName} />
                 <DetailItem label="Name with Initials" value={student.nameWithInitials} />
+                <DetailItem label="Index Number" value={student.indexNumber || 'Not Provided'} />
+                <DetailItem label="Admission Number" value={student.admissionNumber} />
                 <DetailItem label="Religion" value={student.religion} />
                 <DetailItem label="Nationality" value={student.nationality} />
                 <DetailItem label="NIC Number" value={student.nic || 'Not Provided'} />

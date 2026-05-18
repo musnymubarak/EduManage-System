@@ -30,12 +30,18 @@ export const getDashboardStats = async (_req: AuthRequest, res: Response): Promi
         where: {
           date: today,
           status: 'PRESENT',
+          student: {
+            status: 'ACTIVE',
+          },
         },
       }),
       prisma.teacherAttendance.count({
         where: {
           date: today,
           status: 'PRESENT',
+          teacher: {
+            status: 'ACTIVE',
+          },
         },
       }),
       prisma.feePayment.count({
@@ -71,6 +77,7 @@ export const getDashboardStats = async (_req: AuthRequest, res: Response): Promi
       select: {
         id: true,
         admissionNumber: true,
+        indexNumber: true,
         fullName: true,
         createdAt: true,
         class: {
@@ -180,11 +187,17 @@ export const getDashboardStats = async (_req: AuthRequest, res: Response): Promi
 
     const [studentAtt, teacherAtt] = await Promise.all([
       prisma.studentAttendance.findMany({
-        where: { date: { gte: sevenDaysAgo } },
+        where: {
+          date: { gte: sevenDaysAgo },
+          student: { status: 'ACTIVE' }
+        },
         select: { date: true, status: true }
       }),
       prisma.teacherAttendance.findMany({
-        where: { date: { gte: sevenDaysAgo } },
+        where: {
+          date: { gte: sevenDaysAgo },
+          teacher: { status: 'ACTIVE' }
+        },
         select: { date: true, status: true }
       })
     ]);

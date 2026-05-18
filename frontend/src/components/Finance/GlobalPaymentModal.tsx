@@ -115,7 +115,9 @@ const GlobalPaymentModal: React.FC<GlobalPaymentModalProps> = ({
             <div className="mt-3 p-4 bg-blue-50 border border-blue-100 rounded-2xl flex justify-between items-center animate-in fade-in slide-in-from-top-2">
               <div>
                 <p className="font-black text-blue-900">{selectedStudent.fullName}</p>
-                <p className="text-xs text-blue-600 font-bold uppercase">{selectedStudent.class?.name} | {selectedStudent.admissionNumber}</p>
+                <p className="text-xs text-blue-600 font-bold uppercase">
+                  {selectedStudent.class?.name} | {selectedStudent.indexNumber ? `${selectedStudent.indexNumber} (${selectedStudent.admissionNumber})` : selectedStudent.admissionNumber}
+                </p>
               </div>
               <button 
                 onClick={() => setSelectedStudent(null)}
@@ -144,7 +146,9 @@ const GlobalPaymentModal: React.FC<GlobalPaymentModalProps> = ({
                   </div>
                   <div>
                     <p className="font-bold text-gray-900 leading-none">{s.fullName}</p>
-                    <p className="text-[10px] text-gray-400 uppercase font-black mt-1 tracking-wider">{s.admissionNumber}</p>
+                    <p className="text-[10px] text-blue-600 uppercase font-black mt-1 tracking-wider">
+                      {s.indexNumber ? `${s.indexNumber} (${s.admissionNumber})` : s.admissionNumber}
+                    </p>
                   </div>
                   <Plus size={14} className="ml-auto text-gray-300" />
                 </button>

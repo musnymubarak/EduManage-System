@@ -13,6 +13,7 @@ interface Transaction {
   student?: {
     fullName: string;
     admissionNumber: string;
+    indexNumber?: string;
   };
 }
 
@@ -72,11 +73,11 @@ export function generateLedgerReportPDF(
   // Transaction Details Table
   autoTable(doc, {
     startY: (doc as any).lastAutoTable.finalY + 10,
-    head: [['Date', 'Student Name', 'ID', 'Fee Type', 'Receipt', 'Amount']],
+    head: [['Date', 'Student Name', 'Index / Adm. No', 'Fee Type', 'Receipt', 'Amount']],
     body: transactions.map((t) => [
       formatDate(t.paymentDate || t.createdAt),
       t.student?.fullName || 'N/A',
-      t.student?.admissionNumber || 'N/A',
+      t.student?.indexNumber ? `${t.student.indexNumber} (${t.student.admissionNumber})` : (t.student?.admissionNumber || 'N/A'),
       t.feeType,
       t.receiptNumber || '—',
       formatCurrency(t.paidAmount)

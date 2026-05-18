@@ -193,7 +193,9 @@ const StudentsPage: React.FC = () => {
                         </div>
                         <div className="min-w-0">
                           <p className="truncate text-sm font-semibold text-gray-900 transition-colors group-hover:text-blue-700">{student.fullName}</p>
-                          <p className="truncate text-xs text-gray-500">{student.admissionNumber}</p>
+                          <p className="truncate text-xs font-semibold text-blue-600">
+                            {student.indexNumber ? `${student.indexNumber} (${student.admissionNumber})` : student.admissionNumber}
+                          </p>
                         </div>
                       </div>
                     </td>

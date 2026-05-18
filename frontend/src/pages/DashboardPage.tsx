@@ -111,13 +111,13 @@ const DashboardPage: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Welcome banner */}
-      <div className="flex items-center gap-6 rounded-xl border border-gray-200/70 bg-white p-6 shadow-sm sm:p-8">
-        <img src={logo} alt="SLAC Logo" className="h-36 w-36 flex-shrink-0 object-contain" />
+      <div className="flex items-center gap-6 rounded-xl border border-[#b89200]/20 bg-[#CCA300] py-0 px-6 shadow-sm sm:py-0 sm:px-8">
+        <img src={logo} alt="SLAC Logo" className="h-52 w-52 flex-shrink-0 object-contain brightness-0 invert" />
         <div className="min-w-0 flex-1 text-center">
-          <h2 className="text-xl font-bold tracking-tight text-gray-900 sm:text-3xl">
+          <h2 className="text-xl font-bold tracking-tight text-white sm:text-3xl">
             Welcome to Sumaiya Ladies Arabic College
           </h2>
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="mt-1 text-sm text-amber-50/90">
             Here's a snapshot of what's happening at SLAC today.
           </p>
         </div>
@@ -128,24 +128,24 @@ const DashboardPage: React.FC = () => {
         <StatCard
           to="/students"
           label="Total Students"
-          value={stats?.overview.totalStudents || 0}
-          sublabel={`${stats?.overview.activeStudents || 0} active`}
+          value={stats?.overview.activeStudents || 0}
+          sublabel={`${stats?.todayAttendance.students.present || 0}/${stats?.todayAttendance.students.total || 0} present today`}
           icon={Users}
           accent="blue"
         />
         <StatCard
           to="/teachers"
           label="Total Teachers"
-          value={stats?.overview.totalTeachers || 0}
-          sublabel={`${stats?.overview.activeTeachers || 0} active`}
+          value={stats?.overview.activeTeachers || 0}
+          sublabel={`${stats?.todayAttendance.teachers.present || 0}/${stats?.todayAttendance.teachers.total || 0} present today`}
           icon={GraduationCap}
           accent="emerald"
         />
         <StatCard
           to="/attendance"
           label="Today's Attendance"
-          value={`${stats?.todayAttendance.students.percentage || 0}%`}
-          sublabel="Student attendance"
+          value={`${stats?.todayAttendance.students.present || 0}/${stats?.todayAttendance.students.total || 0}`}
+          sublabel={`${stats?.todayAttendance.students.percentage || 0}% student attendance`}
           icon={CalendarCheck}
           accent="violet"
         />
@@ -391,8 +391,8 @@ const DashboardPage: React.FC = () => {
                     </div>
                     <div className="min-w-0">
                       <p className="truncate text-sm font-medium text-gray-900">{student.fullName}</p>
-                      <p className="truncate text-xs text-gray-500">
-                        {student.admissionNumber} • {student.class?.name || 'No Class'}
+                      <p className="truncate text-xs font-semibold text-blue-600">
+                        {student.indexNumber ? `${student.indexNumber} (${student.admissionNumber})` : student.admissionNumber} • {student.class?.name || 'No Class'}
                       </p>
                     </div>
                   </div>

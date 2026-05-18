@@ -14,6 +14,7 @@ import { Modal } from '../components/UI/Modal';
 interface Student {
   id: string;
   admissionNumber: string;
+  indexNumber?: string;
   fullName: string;
   classId: string;
 }
@@ -492,7 +493,7 @@ const MigrationPage: React.FC = () => {
                     <table className="w-full text-left border-collapse">
                       <thead>
                         <tr className="border-b border-gray-200 bg-gray-50/80">
-                          <th className="px-5 py-3.5 text-xs font-black uppercase text-gray-500 tracking-wider">Admission No</th>
+                          <th className="px-5 py-3.5 text-xs font-black uppercase text-gray-500 tracking-wider">Index / Adm. No</th>
                           <th className="px-5 py-3.5 text-xs font-black uppercase text-gray-500 tracking-wider">Student Name</th>
                           <th className="px-5 py-3.5 text-xs font-black uppercase text-gray-500 tracking-wider text-center">Migration Choice</th>
                           <th className="px-5 py-3.5 text-xs font-black uppercase text-gray-500 tracking-wider">Destination Class</th>
@@ -504,8 +505,8 @@ const MigrationPage: React.FC = () => {
                           
                           return (
                             <tr key={student.id} className="hover:bg-gray-50/30 transition-colors">
-                              <td className="px-5 py-4 text-sm font-bold text-gray-600">
-                                {student.admissionNumber}
+                              <td className="px-5 py-4 text-sm font-semibold text-blue-600">
+                                {student.indexNumber ? `${student.indexNumber} (${student.admissionNumber})` : student.admissionNumber}
                               </td>
                               <td className="px-5 py-4 text-sm font-black text-gray-900">
                                 {student.fullName}

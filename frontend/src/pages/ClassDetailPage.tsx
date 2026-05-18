@@ -205,7 +205,9 @@ const StudentsTab: React.FC<{ classId: string; students: any[] }> = ({ classId, 
                       <span className="font-bold text-gray-900">{student.fullName}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500">{student.admissionNumber}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-blue-600">
+                    {student.indexNumber ? `${student.indexNumber} (${student.admissionNumber})` : student.admissionNumber}
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
                       student.gender === 'MALE' ? 'bg-blue-100 text-blue-700' : 'bg-pink-100 text-pink-700'
@@ -297,7 +299,9 @@ const AddStudentToClassModal: React.FC<{ isOpen: boolean; onClose: () => void; c
             <div key={s.id} className="flex items-center justify-between p-3 rounded-lg border border-gray-100 hover:bg-gray-50">
               <div>
                 <p className="text-sm font-bold text-gray-900">{s.fullName}</p>
-                <p className="text-xs text-gray-500">{s.admissionNumber}</p>
+                <p className="text-xs font-semibold text-blue-600">
+                  {s.indexNumber ? `${s.indexNumber} (${s.admissionNumber})` : s.admissionNumber}
+                </p>
               </div>
               <Button size="sm" onClick={() => addMutation.mutate(s.id)}>Add</Button>
             </div>

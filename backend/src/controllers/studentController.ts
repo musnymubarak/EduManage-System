@@ -188,6 +188,7 @@ export const getAllStudents = async (req: AuthRequest, res: Response): Promise<v
       where.OR = [
         { fullName: { contains: search as string, mode: 'insensitive' } },
         { admissionNumber: { contains: search as string, mode: 'insensitive' } },
+        { indexNumber: { contains: search as string, mode: 'insensitive' } },
         { nic: { contains: search as string, mode: 'insensitive' } },
       ];
     }
@@ -570,6 +571,7 @@ export const getMigrationPreview = async (_req: AuthRequest, res: Response): Pro
       select: {
         id: true,
         admissionNumber: true,
+        indexNumber: true,
         fullName: true,
         classId: true
       },

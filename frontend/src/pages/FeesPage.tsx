@@ -371,7 +371,7 @@ const FeesPage: React.FC = () => {
                         </div>
                         <div>
                           <div className="text-base font-bold text-gray-900 group-hover:text-blue-700 transition-colors">{row.fullName}</div>
-                          <div className="text-[11px] font-bold text-gray-400 tracking-wider">ID: {row.admissionNumber}</div>
+                          <div className="text-[11px] font-bold text-blue-600 tracking-wider">ID: {row.indexNumber ? `${row.indexNumber} (${row.admissionNumber})` : row.admissionNumber}</div>
                         </div>
                       </div>
                     </td>
@@ -791,7 +791,7 @@ const ReceiptContent: React.FC<{ fee: any; nextDueDateLabel: string; copyLabel?:
             <div className="flex-1">
                 <p className="text-[8px] font-bold text-slate-400 uppercase tracking-wider mb-1">Receipt To :</p>
                 <p className="text-[10px] font-black text-slate-900 uppercase">{fee.student.fullName}</p>
-                <p className="text-[9px] font-medium text-slate-500">ID: {fee.student.admissionNumber}</p>
+                <p className="text-[9px] font-semibold text-blue-800">ID: {fee.student.indexNumber ? `${fee.student.indexNumber} (${fee.student.admissionNumber})` : fee.student.admissionNumber}</p>
                 <p className="text-[9px] font-medium text-slate-500">Class: {fee.student.class?.name || 'N/A'}</p>
             </div>
             <div className="text-right">

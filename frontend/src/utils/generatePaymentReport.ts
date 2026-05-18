@@ -5,6 +5,7 @@ import { formatCurrency } from './helpers';
 interface StudentFeeStatus {
   studentId: string;
   admissionNumber: string;
+  indexNumber?: string;
   fullName: string;
   className: string;
   month: string;
@@ -86,11 +87,11 @@ export function generatePaymentReportPDF(
   // Student Details Table
   autoTable(doc, {
     startY: (doc as any).lastAutoTable.finalY + 10,
-    head: [['#', 'Student Name', 'Adm. No', 'Class', 'Monthly Fee', 'Paid', 'Bal.', 'Arrears', 'TOTAL OWED', 'Status']],
+    head: [['#', 'Student Name', 'Index / Adm. No', 'Class', 'Monthly Fee', 'Paid', 'Bal.', 'Arrears', 'TOTAL OWED', 'Status']],
     body: students.map((s, index) => [
       (index + 1).toString(),
       s.fullName,
-      s.admissionNumber,
+      s.indexNumber ? `${s.indexNumber} (${s.admissionNumber})` : s.admissionNumber,
       s.className,
       formatCurrency(s.totalAmount),
       formatCurrency(s.paidAmount),

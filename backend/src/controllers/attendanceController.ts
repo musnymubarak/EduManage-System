@@ -160,6 +160,7 @@ export const getStudentAttendance = async (req: AuthRequest, res: Response): Pro
           select: {
             id: true,
             admissionNumber: true,
+            indexNumber: true,
             fullName: true,
           },
         },
