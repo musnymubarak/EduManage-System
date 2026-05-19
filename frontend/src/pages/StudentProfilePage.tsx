@@ -22,7 +22,8 @@ import {
   Edit,
   CheckCircle,
   Eye,
-  X
+  X,
+  Trash2
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../services/api';
@@ -62,6 +63,20 @@ const StudentProfilePage: React.FC = () => {
     onError: (error: any) => {
       toast.error(error.response?.data?.error || 'Failed to reactivate student');
     }
+  });
+
+  const deleteDocumentMutation = useMutation({
+    mutationFn: async (documentId: string) => {
+      const response = await api.delete(`/students/${id}/documents/${documentId}`);
+      return response.data;
+    },
+    onSuccess: () => {
+      toast.success('Document deleted successfully!');
+      queryClient.invalidateQueries({ queryKey: ['student', id] });
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.error || 'Failed to delete document');
+    },
   });
 
   const handleReactivate = () => {
@@ -534,6 +549,18 @@ const StudentProfilePage: React.FC = () => {
                         >
                           <Download size={18} />
                         </a>
+                        <button 
+                          onClick={() => {
+                            if (window.confirm('Are you sure you want to delete this document permanently?')) {
+                              deleteDocumentMutation.mutate(doc.id);
+                            }
+                          }}
+                          disabled={deleteDocumentMutation.isPending}
+                          className="p-2 text-gray-400 hover:text-red-600 transition-colors disabled:opacity-50"
+                          title="Delete Document"
+                        >
+                          <Trash2 size={18} />
+                        </button>
                     </div>
                   </div>
                 )) : (

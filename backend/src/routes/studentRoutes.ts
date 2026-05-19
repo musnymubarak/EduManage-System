@@ -41,6 +41,7 @@ router.post(
   upload.single('file'),
   studentController.uploadStudentDocument
 );
+router.delete('/:id/documents/:documentId', authorize(...managers), studentController.deleteStudentDocument);
 router.delete('/:id', authorize('SUPER_ADMIN'), studentController.deleteStudent);
 
 // Medical History Routes

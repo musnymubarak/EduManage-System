@@ -110,6 +110,20 @@ const TeacherProfilePage: React.FC = () => {
     },
   });
 
+  const deleteDocumentMutation = useMutation({
+    mutationFn: async (documentId: string) => {
+      const response = await api.delete(`/teachers/${id}/documents/${documentId}`);
+      return response.data;
+    },
+    onSuccess: () => {
+      toast.success('Document deleted successfully!');
+      queryClient.invalidateQueries({ queryKey: ['teacher', id] });
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.error || 'Failed to delete document');
+    },
+  });
+
   if (isLoading) {
     return (
       <div className="flex h-[60vh] items-center justify-center">
@@ -517,6 +531,18 @@ const TeacherProfilePage: React.FC = () => {
                         >
                           <Download size={18} />
                         </a>
+                        <button 
+                          onClick={() => {
+                            if (window.confirm('Are you sure you want to delete this document permanently?')) {
+                              deleteDocumentMutation.mutate(doc.id);
+                            }
+                          }}
+                          disabled={deleteDocumentMutation.isPending}
+                          className="p-2 text-gray-400 hover:text-red-600 transition-colors disabled:opacity-50"
+                          title="Delete Document"
+                        >
+                          <Trash2 size={18} />
+                        </button>
                     </div>
                   </div>
                 )) : (

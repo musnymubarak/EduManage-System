@@ -127,6 +127,20 @@ const StaffProfilePage: React.FC = () => {
         }
     });
 
+    const deleteDocumentMutation = useMutation({
+        mutationFn: async (documentId: string) => {
+            const response = await api.delete(`/staff/${id}/documents/${documentId}`);
+            return response.data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['staff', id] });
+            toast.success('Document deleted successfully');
+        },
+        onError: (err: any) => {
+            toast.error(err.response?.data?.error || 'Failed to delete document');
+        }
+    });
+
     const updateStaffMutation = useMutation({
         mutationFn: async (formData: FormData) => {
             const response = await api.put(`/staff/${id}`, formData, {
@@ -605,6 +619,18 @@ const StaffProfilePage: React.FC = () => {
                                         <a href={doc.fileUrl} download className="p-2 text-gray-400 hover:text-blue-600 transition-colors">
                                             <Download size={16} />
                                         </a>
+                                        <button 
+                                            onClick={() => {
+                                                if (window.confirm('Are you sure you want to delete this document permanently?')) {
+                                                    deleteDocumentMutation.mutate(doc.id);
+                                                }
+                                            }}
+                                            disabled={deleteDocumentMutation.isPending}
+                                            className="p-2 text-gray-400 hover:text-red-600 transition-colors disabled:opacity-50"
+                                            title="Delete Document"
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
                                     </div>
                                 </Card>
                             ))}

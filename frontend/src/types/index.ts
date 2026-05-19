@@ -409,6 +409,7 @@ export interface DashboardStats {
   financial: {
     pendingFees: number;
     monthlyCollection: number;
+    monthlyExpenses?: number;
   };
   alerts: {
     todos: number;

@@ -184,6 +184,10 @@ export const getDashboardStats = async (_req: AuthRequest, res: Response): Promi
       if (financialTrendMap.has(key)) financialTrendMap.get(key)!.expense += e.amount;
     });
 
+    const monthlyExpenses = recentExpenditures
+      .filter(e => e.date >= firstDayOfMonth)
+      .reduce((sum, e) => sum + e.amount, 0);
+
     const financialTrends = Array.from(financialTrendMap.values());
 
     // 4. Weekly Attendance Trend
@@ -262,6 +266,7 @@ export const getDashboardStats = async (_req: AuthRequest, res: Response): Promi
         financial: {
           pendingFees,
           monthlyCollection: monthlyFeeCollection,
+          monthlyExpenses,
         },
         alerts: {
           todos: todayTodos,

@@ -384,6 +384,40 @@ export const uploadTeacherDocument = async (req: AuthRequest, res: Response): Pr
   }
 };
 
+export const deleteTeacherDocument = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { documentId } = req.params;
+
+    const document = await prisma.teacherDocument.findUnique({
+      where: { id: documentId },
+    });
+
+    if (!document) {
+      throw new AppError('Document not found', 404);
+    }
+
+    // Delete file from local storage
+    await deleteFromCloudinary(document.fileUrl);
+
+    // Delete record from DB
+    await prisma.teacherDocument.delete({
+      where: { id: documentId },
+    });
+
+    res.json({
+      success: true,
+      message: 'Document deleted successfully',
+    });
+  } catch (error) {
+    if (error instanceof AppError) {
+      res.status(error.statusCode).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: 'Failed to delete document' });
+    }
+  }
+};
+
+
 export const addTeacherMemo = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;

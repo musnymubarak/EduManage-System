@@ -492,3 +492,37 @@ export const markStaffAsLeft = async (req: AuthRequest, res: Response): Promise<
         res.status(500).json({ error: 'Failed to process staff leaving' });
     }
 };
+
+export const deleteStaffDocument = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const { documentId } = req.params;
+
+        const document = await prisma.staffDocument.findUnique({
+            where: { id: documentId },
+        });
+
+        if (!document) {
+            throw new AppError('Document not found', 404);
+        }
+
+        // Delete file from local storage
+        await deleteFromCloudinary(document.fileUrl);
+
+        // Delete record from DB
+        await prisma.staffDocument.delete({
+            where: { id: documentId },
+        });
+
+        res.json({
+            success: true,
+            message: 'Document deleted successfully',
+        });
+    } catch (error) {
+        if (error instanceof AppError) {
+            res.status(error.statusCode).json({ error: error.message });
+        } else {
+            res.status(500).json({ error: 'Failed to delete document' });
+        }
+    }
+};
+

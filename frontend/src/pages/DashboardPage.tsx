@@ -142,11 +142,11 @@ const DashboardPage: React.FC = () => {
           accent="emerald"
         />
         <StatCard
-          to="/attendance"
-          label="Today's Attendance"
-          value={`${stats?.todayAttendance.students.percentage || 0}%`}
-          sublabel={`${stats?.todayAttendance.students.present || 0}/${stats?.todayAttendance.students.total || 0} present today`}
-          icon={CalendarCheck}
+          to="/finance"
+          label="Monthly Expenditures"
+          value={`LKR ${(stats?.financial.monthlyExpenses || 0).toLocaleString()}`}
+          sublabel="Total outgoing this month"
+          icon={DollarSign}
           accent="violet"
         />
         <StatCard

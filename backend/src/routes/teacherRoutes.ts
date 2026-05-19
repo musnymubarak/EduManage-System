@@ -29,6 +29,7 @@ router.post(
   upload.single('file'),
   teacherController.uploadTeacherDocument
 );
+router.delete('/:id/documents/:documentId', authorize(...managers), teacherController.deleteTeacherDocument);
 
 // Memos
 router.post('/:id/memos', authorize(...managers), teacherController.addTeacherMemo);
