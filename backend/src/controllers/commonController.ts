@@ -5,15 +5,21 @@ import prisma from '../utils/prisma';
 // Classes
 export const getAllClasses = async (_req: AuthRequest, res: Response): Promise<void> => {
   try {
-    // Get active academic year
-    const activeYear = await prisma.academicYear.findFirst({
-      where: { isCurrent: true },
-    });
-    const activeYearStr = activeYear?.year || new Date().getFullYear().toString();
+    const { academicYear } = _req.query;
+    let yearFilter: string;
+
+    if (academicYear) {
+      yearFilter = academicYear as string;
+    } else {
+      const activeYear = await prisma.academicYear.findFirst({
+        where: { isCurrent: true },
+      });
+      yearFilter = activeYear?.year || new Date().getFullYear().toString();
+    }
 
     const classes = await prisma.class.findMany({
       where: {
-        academicYear: activeYearStr,
+        academicYear: yearFilter,
       },
       include: {
         _count: {
@@ -221,9 +227,12 @@ export const removeStudentFromClass = async (req: AuthRequest, res: Response): P
 // Exams
 export const getAllExams = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { classId, term, search, page = '1', limit = '50' } = req.query;
+    const { classId, term, search, academicYear, page = '1', limit = '50' } = req.query;
     const where: any = {};
 
+    if (academicYear) {
+      where.academicYear = academicYear;
+    }
     if (classId) where.classId = classId;
     if (term) where.term = term;
     if (search) {
@@ -279,18 +288,79 @@ export const createExam = async (req: AuthRequest, res: Response): Promise<void>
       }
     }
 
-    const exam = await prisma.exam.create({
-      data: {
-        ...req.body,
-        examDate: new Date(req.body.examDate),
+    const { name, term, classId, subject, examDate, totalMarks, passingMarks, examFee } = req.body;
+
+    // Find the selected class to check for sibling classes (same grade, different sections)
+    const selectedClass = await prisma.class.findUnique({ where: { id: classId } });
+    if (!selectedClass) {
+      res.status(400).json({ error: 'Class not found' });
+      return;
+    }
+
+    // Find sibling classes (same grade + academicYear, with sections like 10A, 10B)
+    const siblingClasses = await prisma.class.findMany({
+      where: {
+        grade: selectedClass.grade,
         academicYear: currentAcademicYear,
+        section: { not: null },
+      },
+    });
+
+    // If the selected class has sections (siblings exist), create exam for all siblings
+    // Otherwise create only for the selected class
+    const targetClassIds = siblingClasses.length > 1
+      ? siblingClasses.map((c) => c.id)
+      : [classId];
+
+    const examData = {
+      name,
+      term,
+      subject,
+      examDate: new Date(examDate),
+      totalMarks: parseFloat(totalMarks),
+      passingMarks: parseFloat(passingMarks),
+      examFee: examFee ? parseFloat(examFee) : null,
+      academicYear: currentAcademicYear,
+    };
+
+    const exams = await Promise.all(
+      targetClassIds.map((cId) =>
+        prisma.exam.create({
+          data: { ...examData, classId: cId },
+          include: { class: true },
+        })
+      )
+    );
+
+    res.status(201).json({ success: true, data: exams.length === 1 ? exams[0] : exams });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to create exam' });
+  }
+};
+
+export const updateExam = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { examId } = req.params;
+    const { name, term, classId, subject, examDate, totalMarks, passingMarks, examFee } = req.body;
+
+    const exam = await prisma.exam.update({
+      where: { id: examId },
+      data: {
+        name,
+        term,
+        classId,
+        subject,
+        examDate: examDate ? new Date(examDate) : undefined,
+        totalMarks: totalMarks !== undefined ? parseFloat(totalMarks) : undefined,
+        passingMarks: passingMarks !== undefined ? parseFloat(passingMarks) : undefined,
+        examFee: examFee !== undefined ? (examFee === null || examFee === '' ? null : parseFloat(examFee)) : undefined,
       },
       include: { class: true },
     });
 
-    res.status(201).json({ success: true, data: exam });
+    res.json({ success: true, data: exam });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to create exam' });
+    res.status(500).json({ error: 'Failed to update exam' });
   }
 };
 
@@ -298,6 +368,21 @@ export const enterExamMarks = async (req: AuthRequest, res: Response): Promise<v
   try {
     const { examId } = req.params;
     const { marks } = req.body;
+
+    const exam = await prisma.exam.findUnique({
+      where: { id: examId },
+    });
+
+    if (!exam) {
+      res.status(404).json({ error: 'Exam not found' });
+      return;
+    }
+
+    const invalidMark = marks.find((m: any) => parseFloat(m.marksObtained) > exam.totalMarks);
+    if (invalidMark) {
+      res.status(400).json({ error: `Marks obtained cannot exceed maximum marks of ${exam.totalMarks}` });
+      return;
+    }
 
     const markRecords = await Promise.all(
       marks.map((m: any) =>
@@ -345,6 +430,8 @@ export const getExamMarks = async (req: AuthRequest, res: Response): Promise<voi
             fullName: true,
             admissionNumber: true,
             indexNumber: true,
+            classId: true,
+            class: { select: { name: true } },
           },
         },
       },
@@ -393,6 +480,223 @@ export const deleteExam = async (req: AuthRequest, res: Response): Promise<void>
     res.json({ success: true, message: 'Exam deleted successfully' });
   } catch (error) {
     res.status(500).json({ error: 'Failed to delete exam' });
+  }
+};
+
+// Rankings
+interface StudentAggregate {
+  studentId: string;
+  studentName: string;
+  admissionNumber: string;
+  indexNumber: string | null;
+  totalObtained: number;
+  totalMax: number;
+  subjectBreakdown: {
+    examId: string;
+    examName: string;
+    subject: string;
+    marksObtained: number;
+    totalMarks: number;
+    classHighest: number;
+    classAverage: number;
+    grade: string;
+  }[];
+}
+
+function calculateGrade(marksObtained: number, totalMarks: number, passingMarks: number): string {
+  const percentage = (marksObtained / totalMarks) * 100;
+  if (percentage >= 75) return 'A';
+  if (percentage >= 65) return 'B';
+  if (percentage >= 50) return 'C';
+  if (marksObtained >= passingMarks) return 'S';
+  return 'F';
+}
+
+function calculateOverallGrade(percentage: number): string {
+  if (percentage >= 75) return 'A';
+  if (percentage >= 65) return 'B';
+  if (percentage >= 50) return 'C';
+  if (percentage >= 35) return 'S';
+  return 'F';
+}
+
+async function computeClassRankings(classId: string, term: string, academicYear: string) {
+  const exams = await prisma.exam.findMany({
+    where: { classId, term: term as any, academicYear },
+    include: {
+      marks: {
+        include: {
+          student: {
+            select: { id: true, fullName: true, admissionNumber: true, indexNumber: true },
+          },
+        },
+      },
+    },
+    orderBy: { subject: 'asc' },
+  });
+
+  if (exams.length === 0) return null;
+
+  // Get all students in this class
+  const classStudents = await prisma.student.findMany({
+    where: { classId, status: 'ACTIVE' },
+    select: { id: true, fullName: true, admissionNumber: true, indexNumber: true },
+  });
+
+  // Compute per-exam stats
+  const examStats: Record<string, { highest: number; average: number }> = {};
+  for (const exam of exams) {
+    const markValues = exam.marks.map((m) => m.marksObtained);
+    if (markValues.length > 0) {
+      examStats[exam.id] = {
+        highest: Math.max(...markValues),
+        average: parseFloat((markValues.reduce((a, b) => a + b, 0) / markValues.length).toFixed(1)),
+      };
+    } else {
+      examStats[exam.id] = { highest: 0, average: 0 };
+    }
+  }
+
+  // Build per-student aggregates
+  const studentMap: Record<string, StudentAggregate> = {};
+
+  // Initialize all class students (missing exams = 0)
+  for (const s of classStudents) {
+    studentMap[s.id] = {
+      studentId: s.id,
+      studentName: s.fullName,
+      admissionNumber: s.admissionNumber,
+      indexNumber: s.indexNumber,
+      totalObtained: 0,
+      totalMax: 0,
+      subjectBreakdown: [],
+    };
+  }
+
+  // Populate marks
+  for (const exam of exams) {
+    const marksMap: Record<string, number> = {};
+    for (const mark of exam.marks) {
+      marksMap[mark.studentId] = mark.marksObtained;
+    }
+
+    for (const studentId of Object.keys(studentMap)) {
+      const obtained = marksMap[studentId] ?? 0;
+      studentMap[studentId].totalObtained += obtained;
+      studentMap[studentId].totalMax += exam.totalMarks;
+      studentMap[studentId].subjectBreakdown.push({
+        examId: exam.id,
+        examName: exam.name,
+        subject: exam.subject,
+        marksObtained: obtained,
+        totalMarks: exam.totalMarks,
+        classHighest: examStats[exam.id].highest,
+        classAverage: examStats[exam.id].average,
+        grade: calculateGrade(obtained, exam.totalMarks, exam.passingMarks),
+      });
+    }
+  }
+
+  // Sort by totalObtained DESC and assign dense ranks
+  const sorted = Object.values(studentMap).sort((a, b) => b.totalObtained - a.totalObtained);
+  let currentRank = 1;
+  for (let i = 0; i < sorted.length; i++) {
+    if (i > 0 && sorted[i].totalObtained < sorted[i - 1].totalObtained) {
+      currentRank = i + 1;
+    }
+    (sorted[i] as any).rank = currentRank;
+    (sorted[i] as any).percentage = sorted[i].totalMax > 0
+      ? parseFloat(((sorted[i].totalObtained / sorted[i].totalMax) * 100).toFixed(1))
+      : 0;
+    (sorted[i] as any).overallGrade = calculateOverallGrade((sorted[i] as any).percentage);
+  }
+
+  return {
+    classId,
+    term,
+    academicYear,
+    totalExams: exams.length,
+    totalStudents: sorted.length,
+    rankings: sorted,
+  };
+}
+
+export const getClassRankings = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { classId, term, academicYear } = req.query;
+
+    if (!classId || !term || !academicYear) {
+      res.status(400).json({ error: 'classId, term, and academicYear are required' });
+      return;
+    }
+
+    const cls = await prisma.class.findUnique({ where: { id: classId as string } });
+    const rankings = await computeClassRankings(classId as string, term as string, academicYear as string);
+
+    if (!rankings) {
+      res.json({ success: true, data: { classId, className: cls?.name, term, academicYear, totalExams: 0, totalStudents: 0, rankings: [] } });
+      return;
+    }
+
+    res.json({ success: true, data: { ...rankings, className: cls?.name } });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to compute rankings' });
+  }
+};
+
+export const getStudentRanking = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { studentId } = req.params;
+    const { academicYear } = req.query;
+
+    const student = await prisma.student.findUnique({
+      where: { id: studentId },
+      include: { class: true },
+    });
+
+    if (!student) {
+      res.status(404).json({ error: 'Student not found' });
+      return;
+    }
+
+    let yearFilter = academicYear as string;
+    if (!yearFilter) {
+      const activeYear = await prisma.academicYear.findFirst({ where: { isCurrent: true } });
+      yearFilter = activeYear?.year || '';
+    }
+
+    const terms = ['FIRST_TERM', 'SECOND_TERM', 'THIRD_TERM'];
+    const termRankings = [];
+
+    for (const term of terms) {
+      const rankings = await computeClassRankings(student.classId, term, yearFilter);
+      if (rankings && rankings.rankings.length > 0) {
+        const studentEntry = rankings.rankings.find((r: any) => r.studentId === studentId);
+        if (studentEntry) {
+          termRankings.push({
+            term,
+            rank: (studentEntry as any).rank,
+            totalStudents: rankings.totalStudents,
+            totalMarksObtained: studentEntry.totalObtained,
+            totalMaxMarks: studentEntry.totalMax,
+            percentage: (studentEntry as any).percentage,
+          });
+        }
+      }
+    }
+
+    res.json({
+      success: true,
+      data: {
+        studentId,
+        classId: student.classId,
+        className: student.class?.name,
+        academicYear: yearFilter,
+        rankings: termRankings,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to compute student ranking' });
   }
 };
 

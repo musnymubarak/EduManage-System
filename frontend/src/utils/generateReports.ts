@@ -8,7 +8,7 @@ export interface ReportResult {
   filename: string;
 }
 
-function toReportResult(doc: jsPDF, filename: string): ReportResult {
+export function toReportResult(doc: jsPDF, filename: string): ReportResult {
   const blob = doc.output('blob');
   const blobUrl = URL.createObjectURL(blob);
   return { blobUrl, filename };
@@ -18,12 +18,12 @@ function toReportResult(doc: jsPDF, filename: string): ReportResult {
 // Shared PDF helpers
 // ============================================================
 
-function addReportHeader(doc: jsPDF, title: string, subtitle: string, period: string) {
+export function addReportHeader(doc: jsPDF, title: string, subtitle: string, period: string) {
   const pageWidth = doc.internal.pageSize.width;
 
   doc.setFontSize(22);
   doc.setFont('helvetica', 'bold');
-  doc.text('SAMAIYA MADRASA', pageWidth / 2, 20, { align: 'center' });
+  doc.text('SUMAIYA ARABIC LADIES COLLEGE', pageWidth / 2, 20, { align: 'center' });
 
   doc.setFontSize(14);
   doc.setFont('helvetica', 'normal');
@@ -43,7 +43,7 @@ function addReportHeader(doc: jsPDF, title: string, subtitle: string, period: st
   doc.text(`Generated: ${new Date().toLocaleString()}`, pageWidth - 15, 48, { align: 'right' });
 }
 
-function addPageFooter(doc: jsPDF) {
+export function addPageFooter(doc: jsPDF) {
   const pageCount = (doc as any).internal.getNumberOfPages();
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);

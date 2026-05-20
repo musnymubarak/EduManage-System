@@ -19,9 +19,14 @@ router.get('/classes/:id/students', commonController.getClassStudents);
 router.post('/classes/:id/students', authorize(...managers), commonController.addStudentToClass);
 router.delete('/classes/:id/students/:studentId', authorize(...managers), commonController.removeStudentFromClass);
 
+// Exam Rankings (must be before /exams/:examId to avoid param collision)
+router.get('/exams/rankings', commonController.getClassRankings);
+router.get('/exams/rankings/student/:studentId', commonController.getStudentRanking);
+
 // Exams
 router.get('/exams', commonController.getAllExams);
 router.post('/exams', authorize(...managers), commonController.createExam);
+router.put('/exams/:examId', authorize(...managers), commonController.updateExam);
 router.delete('/exams/:examId', authorize(...managers), commonController.deleteExam);
 router.get('/exams/:examId/marks', commonController.getExamMarks);
 router.post('/exams/:examId/marks', authorize(...managers), commonController.enterExamMarks);

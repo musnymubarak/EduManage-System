@@ -246,7 +246,9 @@ export const getStudentById = async (req: AuthRequest, res: Response): Promise<v
         },
         examMarks: {
           include: {
-            exam: true,
+            exam: {
+              include: { class: true },
+            },
           },
           orderBy: {
             exam: {

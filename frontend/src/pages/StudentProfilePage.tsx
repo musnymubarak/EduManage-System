@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { 
-  ArrowLeft, 
-  User, 
-  BookOpen, 
-  CreditCard, 
-  Calendar, 
-  FileText, 
-  Phone, 
-  MapPin, 
-  Users, 
-  ShieldAlert, 
+import {
+  ArrowLeft,
+  User,
+  BookOpen,
+  CreditCard,
+  Calendar,
+  FileText,
+  Phone,
+  MapPin,
+  Users,
+  ShieldAlert,
   Stethoscope,
   Download,
   GraduationCap,
@@ -23,7 +23,8 @@ import {
   CheckCircle,
   Eye,
   X,
-  Trash2
+  Trash2,
+  Trophy
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../services/api';
@@ -35,6 +36,7 @@ import { Modal } from '../components/UI/Modal';
 import { formatDate, formatCurrency, getStatusColor, getFileUrl } from '../utils/helpers';
 import StudentMedicalHistoryTab from '../components/Student/StudentMedicalHistoryTab';
 import { StudentModal } from './StudentsPage';
+import { generateStudentReportCard } from '../utils/generateReportCards';
 
 const StudentProfilePage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -401,63 +403,7 @@ const StudentProfilePage: React.FC = () => {
         )}
 
         {activeTab === 'academics' && (
-          <div className="space-y-6">
-             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-              <StatCard label="Total Exams" value={student.examMarks?.length || 0} icon={BookOpen} color="blue" />
-              <StatCard label="Average Score" value={calculateAverageMark(student.examMarks || [])} suffix="%" icon={GraduationCap} color="green" />
-              <StatCard label="Highest Mark" value={calculateMaxMark(student.examMarks || [])} icon={ArrowLeft} color="purple" rotateIcon={90} />
-              <StatCard label="Rank in Class" value="N/A" icon={Users} color="orange" />
-            </div>
-
-            <Card className="overflow-hidden">
-              <div className="border-b bg-gray-50 px-6 py-4">
-                <h3 className="font-bold text-gray-900">Exam History</h3>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left">
-                  <thead>
-                    <tr className="bg-gray-50/50 text-xs font-bold uppercase tracking-wider text-gray-500">
-                      <th className="px-6 py-4">Exam Name</th>
-                      <th className="px-6 py-4">Subject</th>
-                      <th className="px-6 py-4">Date</th>
-                      <th className="px-6 py-4">Marks Obtained</th>
-                      <th className="px-6 py-4">Grade</th>
-                      <th className="px-6 py-4">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {student.examMarks && student.examMarks.length > 0 ? student.examMarks.map((mark) => (
-                      <tr key={mark.id} className="hover:bg-gray-50/80 transition-colors">
-                        <td className="px-6 py-4 font-bold text-gray-900">{mark.exam.name}</td>
-                        <td className="px-6 py-4 text-gray-600">{mark.exam.subject}</td>
-                        <td className="px-6 py-4 text-sm text-gray-500">{formatDate(mark.exam.examDate)}</td>
-                        <td className="px-6 py-4">
-                          <span className="font-bold text-gray-900">{mark.marksObtained}</span>
-                          <span className="text-xs text-gray-400"> / {mark.exam.totalMarks}</span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <Badge variant={mark.grade === 'F' ? 'danger' : 'success'} className="px-3">
-                            {mark.grade || 'N/A'}
-                          </Badge>
-                        </td>
-                        <td className="px-6 py-4">
-                          {mark.marksObtained >= mark.exam.passingMarks ? (
-                            <span className="text-xs font-bold text-green-600 px-2 py-1 bg-green-50 rounded">PASS</span>
-                          ) : (
-                            <span className="text-xs font-bold text-red-600 px-2 py-1 bg-red-50 rounded">FAIL</span>
-                          )}
-                        </td>
-                      </tr>
-                    )) : (
-                      <tr>
-                        <td colSpan={6} className="py-12 text-center text-gray-400 font-medium">No exam records found for this student.</td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </Card>
-          </div>
+          <AcademicsTab student={student} studentId={id!} />
         )}
 
         {activeTab === 'fees' && (
@@ -814,14 +760,29 @@ const StatCard: React.FC<{ label: string; value: string | number; suffix?: strin
 
 // Helper functions for stats
 const calculateAverageMark = (marks: any[]) => {
-  if (marks.length === 0) return 0;
-  const totalPercentage = marks.reduce((acc, m) => acc + (m.marksObtained / m.exam.totalMarks) * 100, 0);
-  return (totalPercentage / marks.length).toFixed(1);
+  if (!marks || marks.length === 0) return '0.0';
+  
+  let totalObtained = 0;
+  let totalMax = 0;
+  
+  marks.forEach(m => {
+    if (m && m.exam && typeof m.exam.totalMarks === 'number' && m.exam.totalMarks > 0 && typeof m.marksObtained === 'number') {
+      totalObtained += m.marksObtained;
+      totalMax += m.exam.totalMarks;
+    }
+  });
+  
+  if (totalMax === 0) return '0.0';
+  return ((totalObtained / totalMax) * 100).toFixed(1);
 };
 
 const calculateMaxMark = (marks: any[]) => {
-  if (marks.length === 0) return 0;
-  return Math.max(...marks.map(m => m.marksObtained));
+  if (!marks || marks.length === 0) return 0;
+  const validMarks = marks
+    .map(m => m.marksObtained)
+    .filter(val => typeof val === 'number');
+  if (validMarks.length === 0) return 0;
+  return Math.max(...validMarks);
 };
 
 // Student Fee Ledger Component (month-by-month breakdown)
@@ -1007,6 +968,202 @@ const StudentFeeLedger: React.FC<{ studentId: string }> = ({ studentId }) => {
           </div>
         </div>
       </Card>
+    </div>
+  );
+};
+
+// Academics Tab Component
+const TERM_OPTIONS = [
+  { value: '', label: 'All Terms' },
+  { value: 'FIRST_TERM', label: 'First Term' },
+  { value: 'SECOND_TERM', label: 'Second Term' },
+  { value: 'THIRD_TERM', label: 'Third Term' },
+];
+
+const AcademicsTab: React.FC<{ student: any; studentId: string }> = ({ student, studentId }) => {
+  const [selectedTerm, setSelectedTerm] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  // Fetch ranking data
+  const { data: rankingData } = useQuery({
+    queryKey: ['student-ranking', studentId, student.class?.academicYear],
+    queryFn: async () => {
+      const params = student.class?.academicYear ? `?academicYear=${student.class.academicYear}` : '';
+      const response = await api.get(`/exams/rankings/student/${studentId}${params}`);
+      return response.data.data;
+    },
+    enabled: !!studentId,
+  });
+
+  const currentClassId = student.classId;
+  const allMarks = student.examMarks || [];
+  const currentClassMarks = allMarks.filter((m: any) => m.exam.classId === currentClassId);
+  const pastMarks = allMarks.filter((m: any) => m.exam.classId !== currentClassId);
+
+  // Filter by term
+  const filteredMarks = selectedTerm
+    ? currentClassMarks.filter((m: any) => m.exam.term === selectedTerm)
+    : currentClassMarks;
+
+  // Get ranking for selected term
+  const termRankings = rankingData?.rankings || [];
+  const currentTermRank = selectedTerm
+    ? termRankings.find((r: any) => r.term === selectedTerm)
+    : termRankings.length > 0 ? termRankings[termRankings.length - 1] : null;
+
+  const rankDisplay = currentTermRank
+    ? `${currentTermRank.rank} / ${currentTermRank.totalStudents}`
+    : 'N/A';
+
+  // Group past marks
+  const pastGroups: Record<string, { className: string; academicYear: string; marks: any[] }> = {};
+  pastMarks.forEach((m: any) => {
+    const className = m.exam.class?.name || 'Unknown';
+    const yr = m.exam.academicYear || '';
+    const key = `${yr}__${className}`;
+    if (!pastGroups[key]) pastGroups[key] = { className, academicYear: yr, marks: [] };
+    pastGroups[key].marks.push(m);
+  });
+  const pastGroupKeys = Object.keys(pastGroups).sort().reverse();
+
+  const handleDownloadReportCard = async (term: string) => {
+    if (!student.classId || !student.class?.academicYear) {
+      toast.error('Missing class or academic year information');
+      return;
+    }
+    setIsGenerating(true);
+    try {
+      const result = await generateStudentReportCard(student.classId, term, student.class.academicYear, studentId);
+      window.open(result.blobUrl, '_blank');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to generate report card');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const renderExamTable = (marks: any[]) => (
+    <div className="overflow-x-auto">
+      <table className="w-full text-left">
+        <thead>
+          <tr className="bg-gray-50/50 text-xs font-bold uppercase tracking-wider text-gray-500">
+            <th className="px-6 py-4">Exam Name</th>
+            <th className="px-6 py-4">Subject</th>
+            <th className="px-6 py-4">Term</th>
+            <th className="px-6 py-4">Date</th>
+            <th className="px-6 py-4">Marks Obtained</th>
+            <th className="px-6 py-4">Grade</th>
+            <th className="px-6 py-4">Status</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-gray-200">
+          {marks.length > 0 ? marks.map((mark: any) => (
+            <tr key={mark.id} className="hover:bg-gray-50/80 transition-colors">
+              <td className="px-6 py-4 font-bold text-gray-900">{mark.exam.name}</td>
+              <td className="px-6 py-4 text-gray-600">{mark.exam.subject}</td>
+              <td className="px-6 py-4 text-sm text-gray-500">{mark.exam.term?.replace(/_/g, ' ')}</td>
+              <td className="px-6 py-4 text-sm text-gray-500">{formatDate(mark.exam.examDate)}</td>
+              <td className="px-6 py-4">
+                <span className="font-bold text-gray-900">{mark.marksObtained}</span>
+                <span className="text-xs text-gray-400"> / {mark.exam.totalMarks}</span>
+              </td>
+              <td className="px-6 py-4">
+                <Badge variant={mark.grade === 'F' ? 'danger' : 'success'} className="px-3">
+                  {mark.grade || 'N/A'}
+                </Badge>
+              </td>
+              <td className="px-6 py-4">
+                {mark.marksObtained >= mark.exam.passingMarks ? (
+                  <span className="text-xs font-bold text-green-600 px-2 py-1 bg-green-50 rounded">PASS</span>
+                ) : (
+                  <span className="text-xs font-bold text-red-600 px-2 py-1 bg-red-50 rounded">FAIL</span>
+                )}
+              </td>
+            </tr>
+          )) : (
+            <tr>
+              <td colSpan={7} className="py-12 text-center text-gray-400 font-medium">No exam records found.</td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+
+  return (
+    <div className="space-y-6">
+      {/* Term Filter + Report Card Download */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <select
+          value={selectedTerm}
+          onChange={(e) => setSelectedTerm(e.target.value)}
+          className="w-full sm:w-48 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          {TERM_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
+        </select>
+        {selectedTerm && (
+          <Button
+            onClick={() => handleDownloadReportCard(selectedTerm)}
+            disabled={isGenerating}
+            variant="secondary"
+          >
+            <Download size={16} className="mr-2" />
+            {isGenerating ? 'Generating...' : 'Download Report Card'}
+          </Button>
+        )}
+      </div>
+
+      {/* Stat Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+        <StatCard label="Total Exams" value={filteredMarks.length} icon={BookOpen} color="blue" />
+        <StatCard label="Average Score" value={calculateAverageMark(filteredMarks)} suffix="%" icon={GraduationCap} color="green" />
+        <StatCard label="Highest Mark" value={calculateMaxMark(filteredMarks)} icon={ArrowLeft} color="purple" rotateIcon={90} />
+        <StatCard label="Rank in Class" value={rankDisplay} icon={Trophy} color="orange" />
+      </div>
+
+      {/* Term-wise rank badges */}
+      {termRankings.length > 0 && !selectedTerm && (
+        <Card>
+          <div className="flex flex-wrap items-center gap-3 px-2 py-1">
+            <span className="text-sm font-medium text-gray-600">Term Rankings:</span>
+            {termRankings.map((tr: any) => (
+              <button
+                key={tr.term}
+                onClick={() => setSelectedTerm(tr.term)}
+                className="inline-flex items-center gap-1.5 rounded-full bg-purple-50 px-3 py-1 text-sm font-medium text-purple-700 hover:bg-purple-100 transition-colors"
+              >
+                <Trophy size={13} />
+                {tr.term.replace(/_/g, ' ')}: Rank {tr.rank}/{tr.totalStudents} ({tr.percentage}%)
+              </button>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {/* Current Class Exams */}
+      <Card className="overflow-hidden">
+        <div className="border-b bg-gray-50 px-6 py-4">
+          <h3 className="font-bold text-gray-900">
+            {student.class?.name || 'Current Class'} — {selectedTerm ? TERM_OPTIONS.find((t) => t.value === selectedTerm)?.label : 'All Exams'}
+          </h3>
+        </div>
+        {renderExamTable(filteredMarks)}
+      </Card>
+
+      {/* Past Class Records */}
+      {!selectedTerm && pastGroupKeys.length > 0 && pastGroupKeys.map((key) => {
+        const group = pastGroups[key];
+        return (
+          <Card key={key} className="overflow-hidden">
+            <div className="border-b bg-gray-50 px-6 py-4">
+              <h3 className="font-bold text-gray-600">Past — {group.className} ({group.academicYear})</h3>
+            </div>
+            {renderExamTable(group.marks)}
+          </Card>
+        );
+      })}
     </div>
   );
 };
