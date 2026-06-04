@@ -315,7 +315,7 @@ export const TeacherModal: React.FC<TeacherModalProps> = ({ isOpen, onClose, ini
     const formData = new FormData(e.currentTarget);
     
     // Add qualifications as JSON string
-    const validQualifications = qualifications.filter(q => q.degree && q.institution);
+    const validQualifications = qualifications.filter(q => q.degree && q.institution && q.year && !Number.isNaN(parseInt(q.year)));
     formData.append('qualifications', JSON.stringify(validQualifications));
 
     if (profilePhoto instanceof File) {

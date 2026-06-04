@@ -405,6 +405,11 @@ export interface DashboardStats {
       total: number;
       percentage: string;
     };
+    staff: {
+      present: number;
+      total: number;
+      percentage: string;
+    };
   };
   financial: {
     pendingFees: number;

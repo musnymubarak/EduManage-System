@@ -377,10 +377,10 @@ interface ReportTypeCardProps {
 }
 
 const ACCENTS = {
-  blue:    { gradient: 'from-[#2563eb] to-[#4f46e5]', lightBg: 'bg-blue-50', lightText: 'text-blue-600' },
+  blue: { gradient: 'from-[#2563eb] to-[#4f46e5]', lightBg: 'bg-blue-50', lightText: 'text-blue-600' },
   emerald: { gradient: 'from-[#10b981] to-[#0d9488]', lightBg: 'bg-green-50', lightText: 'text-green-600' },
-  violet:  { gradient: 'from-[#8b5cf6] to-[#7c3aed]', lightBg: 'bg-purple-50', lightText: 'text-purple-600' },
-  amber:   { gradient: 'from-[#f59e0b] to-[#ea580c]', lightBg: 'bg-orange-50', lightText: 'text-orange-600' },
+  violet: { gradient: 'from-[#8b5cf6] to-[#7c3aed]', lightBg: 'bg-purple-50', lightText: 'text-purple-600' },
+  amber: { gradient: 'from-[#f59e0b] to-[#ea580c]', lightBg: 'bg-orange-50', lightText: 'text-orange-600' },
 };
 
 const ReportTypeCard: React.FC<ReportTypeCardProps> = ({
@@ -395,11 +395,10 @@ const ReportTypeCard: React.FC<ReportTypeCardProps> = ({
   return (
     <button
       onClick={onClick}
-      className={`group relative overflow-hidden text-left p-5 rounded-2xl transition-all duration-300 border border-gray-100/30 outline-none active:scale-[0.98] ${
-        isActive
-          ? `bg-gradient-to-r ${a.gradient} text-white shadow-lg shadow-blue-100/10`
-          : 'bg-white border-2 border-gray-100/70 hover:border-gray-200 text-gray-900 shadow-sm hover:shadow-md hover:-translate-y-1'
-      }`}
+      className={`group relative overflow-hidden text-left p-5 rounded-2xl transition-all duration-300 border border-gray-100/30 outline-none active:scale-[0.98] ${isActive
+        ? `bg-gradient-to-r ${a.gradient} text-white shadow-lg shadow-blue-100/10`
+        : 'bg-white border-2 border-gray-100/70 hover:border-gray-200 text-gray-900 shadow-sm hover:shadow-md hover:-translate-y-1'
+        }`}
     >
       {isActive && (
         <>
@@ -409,11 +408,10 @@ const ReportTypeCard: React.FC<ReportTypeCardProps> = ({
       )}
 
       <div className="mb-4 relative z-10">
-        <div className={`h-12 w-12 rounded-2xl flex items-center justify-center transition-all duration-300 group-hover:scale-105 ${
-          isActive
-            ? 'bg-white/15 backdrop-blur-md border border-white/20 text-white shadow-[inset_0_1.5px_0_rgba(255,255,255,0.25),_0_8px_16px_rgba(0,0,0,0.06)]'
-            : `${a.lightBg} ${a.lightText}`
-        }`}>
+        <div className={`h-12 w-12 rounded-2xl flex items-center justify-center transition-all duration-300 group-hover:scale-105 ${isActive
+          ? 'bg-white/15 backdrop-blur-md border border-white/20 text-white shadow-[inset_0_1.5px_0_rgba(255,255,255,0.25),_0_8px_16px_rgba(0,0,0,0.06)]'
+          : `${a.lightBg} ${a.lightText}`
+          }`}>
           <Icon size={24} className="stroke-[2]" />
         </div>
       </div>
@@ -463,15 +461,15 @@ const ReportDataPreview: React.FC<ReportDataPreviewProps> = ({
         <div className="mb-6 border-b pb-4 flex items-center gap-4">
           <img src={logo} alt="Samaiya Madrasa Logo" className="h-16 w-16 object-contain" />
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Samaiya Madrasa</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Sumaiya Ladies Arabic College</h1>
             <p className="text-gray-600">
               {reportType.charAt(0).toUpperCase() + reportType.slice(1)} Report
             </p>
           </div>
         </div>
-          <p className="text-sm text-gray-500">
-            Period: {formatDate(startDate)} to {formatDate(endDate)}
-          </p>
+        <p className="text-sm text-gray-500">
+          Period: {formatDate(startDate)} to {formatDate(endDate)}
+        </p>
 
         {reportType === 'attendance' && classId && (
           <div>

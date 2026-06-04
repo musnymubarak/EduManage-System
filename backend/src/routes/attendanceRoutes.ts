@@ -14,6 +14,7 @@ router.post('/teachers', authorize(...managers), attendanceController.markTeache
 router.post('/staff', authorize(...managers), attendanceController.markStaffAttendance);
 
 router.get('/students', attendanceController.getStudentAttendance);
+router.get('/teachers', attendanceController.getTeacherAttendance);
 router.get('/staff', attendanceController.getStaffAttendance);
 router.get('/summary', attendanceController.getAttendanceSummary);
 

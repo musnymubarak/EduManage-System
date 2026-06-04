@@ -108,14 +108,6 @@ const LoginPage: React.FC = () => {
             </button>
           </form>
 
-          <div className="mt-6 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-center text-xs text-gray-600">
-            <p className="font-medium text-gray-700">Default credentials</p>
-            <p className="mt-1 font-mono">
-              <span className="font-semibold text-gray-900">superadmin</span>
-              <span className="mx-2 text-gray-400">/</span>
-              <span className="font-semibold text-gray-900">Admin@123</span>
-            </p>
-          </div>
         </div>
 
         <p className="mt-6 text-center text-xs text-gray-500">

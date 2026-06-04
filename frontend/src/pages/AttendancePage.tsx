@@ -176,7 +176,14 @@ const StudentAttendanceMarking: React.FC<StudentAttendanceMarkingProps> = ({
   });
 
   const handleStatusChange = (studentId: string, status: string) => {
-    setAttendanceData({ ...attendanceData, [studentId]: status });
+    setAttendanceData((prev) => {
+      if (prev[studentId] === status) {
+        const next = { ...prev };
+        delete next[studentId];
+        return next;
+      }
+      return { ...prev, [studentId]: status };
+    });
   };
 
   const handleRemarksChange = (studentId: string, remarks: string) => {
@@ -283,7 +290,8 @@ const StudentAttendanceMarking: React.FC<StudentAttendanceMarkingProps> = ({
                         type="radio"
                         name={`attendance-${student.id}`}
                         checked={attendanceData[student.id] === 'PRESENT'}
-                        onChange={() => handleStatusChange(student.id, 'PRESENT')}
+                        onChange={() => {}}
+                        onClick={() => handleStatusChange(student.id, 'PRESENT')}
                         className="h-4 w-4 text-green-600"
                       />
                     </td>
@@ -292,7 +300,8 @@ const StudentAttendanceMarking: React.FC<StudentAttendanceMarkingProps> = ({
                         type="radio"
                         name={`attendance-${student.id}`}
                         checked={attendanceData[student.id] === 'ABSENT'}
-                        onChange={() => handleStatusChange(student.id, 'ABSENT')}
+                        onChange={() => {}}
+                        onClick={() => handleStatusChange(student.id, 'ABSENT')}
                         className="h-4 w-4 text-red-600"
                       />
                     </td>
@@ -301,7 +310,8 @@ const StudentAttendanceMarking: React.FC<StudentAttendanceMarkingProps> = ({
                         type="radio"
                         name={`attendance-${student.id}`}
                         checked={attendanceData[student.id] === 'LATE'}
-                        onChange={() => handleStatusChange(student.id, 'LATE')}
+                        onChange={() => {}}
+                        onClick={() => handleStatusChange(student.id, 'LATE')}
                         className="h-4 w-4 text-yellow-600"
                       />
                     </td>
@@ -310,7 +320,8 @@ const StudentAttendanceMarking: React.FC<StudentAttendanceMarkingProps> = ({
                         type="radio"
                         name={`attendance-${student.id}`}
                         checked={attendanceData[student.id] === 'SICK_LEAVE'}
-                        onChange={() => handleStatusChange(student.id, 'SICK_LEAVE')}
+                        onChange={() => {}}
+                        onClick={() => handleStatusChange(student.id, 'SICK_LEAVE')}
                         className="h-4 w-4 text-blue-600"
                       />
                     </td>
@@ -400,7 +411,14 @@ const TeacherAttendanceMarking: React.FC<TeacherAttendanceMarkingProps> = ({ sel
   });
 
   const handleStatusChange = (teacherId: string, status: string) => {
-    setAttendanceData({ ...attendanceData, [teacherId]: status });
+    setAttendanceData((prev) => {
+      if (prev[teacherId] === status) {
+        const next = { ...prev };
+        delete next[teacherId];
+        return next;
+      }
+      return { ...prev, [teacherId]: status };
+    });
   };
 
   const handleRemarksChange = (teacherId: string, remarks: string) => {
@@ -495,7 +513,8 @@ const TeacherAttendanceMarking: React.FC<TeacherAttendanceMarkingProps> = ({ sel
                         type="radio"
                         name={`attendance-${teacher.id}`}
                         checked={attendanceData[teacher.id] === 'PRESENT'}
-                        onChange={() => handleStatusChange(teacher.id, 'PRESENT')}
+                        onChange={() => {}}
+                        onClick={() => handleStatusChange(teacher.id, 'PRESENT')}
                         className="h-4 w-4 text-green-600"
                       />
                     </td>
@@ -504,7 +523,8 @@ const TeacherAttendanceMarking: React.FC<TeacherAttendanceMarkingProps> = ({ sel
                         type="radio"
                         name={`attendance-${teacher.id}`}
                         checked={attendanceData[teacher.id] === 'ABSENT'}
-                        onChange={() => handleStatusChange(teacher.id, 'ABSENT')}
+                        onChange={() => {}}
+                        onClick={() => handleStatusChange(teacher.id, 'ABSENT')}
                         className="h-4 w-4 text-red-600"
                       />
                     </td>
@@ -513,7 +533,8 @@ const TeacherAttendanceMarking: React.FC<TeacherAttendanceMarkingProps> = ({ sel
                         type="radio"
                         name={`attendance-${teacher.id}`}
                         checked={attendanceData[teacher.id] === 'LATE'}
-                        onChange={() => handleStatusChange(teacher.id, 'LATE')}
+                        onChange={() => {}}
+                        onClick={() => handleStatusChange(teacher.id, 'LATE')}
                         className="h-4 w-4 text-yellow-600"
                       />
                     </td>
@@ -522,7 +543,8 @@ const TeacherAttendanceMarking: React.FC<TeacherAttendanceMarkingProps> = ({ sel
                         type="radio"
                         name={`attendance-${teacher.id}`}
                         checked={attendanceData[teacher.id] === 'SICK_LEAVE'}
-                        onChange={() => handleStatusChange(teacher.id, 'SICK_LEAVE')}
+                        onChange={() => {}}
+                        onClick={() => handleStatusChange(teacher.id, 'SICK_LEAVE')}
                         className="h-4 w-4 text-blue-600"
                       />
                     </td>
@@ -612,7 +634,14 @@ const StaffAttendanceMarking: React.FC<StaffAttendanceMarkingProps> = ({ selecte
   });
 
   const handleStatusChange = (staffId: string, status: string) => {
-    setAttendanceData({ ...attendanceData, [staffId]: status });
+    setAttendanceData((prev) => {
+      if (prev[staffId] === status) {
+        const next = { ...prev };
+        delete next[staffId];
+        return next;
+      }
+      return { ...prev, [staffId]: status };
+    });
   };
 
   const handleRemarksChange = (staffId: string, remarks: string) => {
@@ -694,7 +723,8 @@ const StaffAttendanceMarking: React.FC<StaffAttendanceMarkingProps> = ({ selecte
                           type="radio"
                           name={`attendance-${s.id}`}
                           checked={attendanceData[s.id] === status}
-                          onChange={() => handleStatusChange(s.id, status)}
+                          onChange={() => {}}
+                          onClick={() => handleStatusChange(s.id, status)}
                           className={`h-5 w-5 ${
                             status === 'PRESENT' ? 'text-green-600' :
                             status === 'ABSENT' ? 'text-red-600' :

@@ -7,7 +7,7 @@ import logo from '../logo.png';
 import {
   Users, GraduationCap, CalendarCheck, AlertCircle,
   DollarSign, ArrowRight, CheckCircle2, Clock,
-  AlertTriangle, TrendingUp, BookOpen,
+  AlertTriangle, TrendingUp, BookOpen, Briefcase,
   type LucideIcon,
 } from 'lucide-react';
 import {
@@ -142,11 +142,11 @@ const DashboardPage: React.FC = () => {
           accent="emerald"
         />
         <StatCard
-          to="/finance"
-          label="Monthly Expenditures"
-          value={`LKR ${(stats?.financial.monthlyExpenses || 0).toLocaleString()}`}
-          sublabel="Total outgoing this month"
-          icon={DollarSign}
+          to="/attendance"
+          label="Staff Attendance"
+          value={`${stats?.todayAttendance.staff?.present || 0}/${stats?.todayAttendance.staff?.total || 0}`}
+          sublabel={`${stats?.todayAttendance.staff?.percentage || 0}% present today`}
+          icon={Briefcase}
           accent="violet"
         />
         <StatCard

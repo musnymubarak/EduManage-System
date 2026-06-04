@@ -21,8 +21,10 @@ export const getDashboardStats = async (_req: AuthRequest, res: Response): Promi
       totalClasses,
       activeStudents,
       activeTeachers,
+      activeStaff,
       studentAttendanceToday,
       teacherAttendanceToday,
+      staffAttendanceToday,
       paidStudentsCurrentMonth,
       todayTodos,
       lowStockItems,
@@ -32,6 +34,7 @@ export const getDashboardStats = async (_req: AuthRequest, res: Response): Promi
       prisma.class.count({ where: { academicYear: activeYearStr } }),
       prisma.student.count({ where: { status: 'ACTIVE' } }),
       prisma.teacher.count({ where: { status: 'ACTIVE' } }),
+      prisma.staff.count({ where: { status: 'ACTIVE' } }),
       prisma.studentAttendance.count({
         where: {
           date: today,
@@ -46,6 +49,15 @@ export const getDashboardStats = async (_req: AuthRequest, res: Response): Promi
           date: today,
           status: 'PRESENT',
           teacher: {
+            status: 'ACTIVE',
+          },
+        },
+      }),
+      prisma.staffAttendance.count({
+        where: {
+          date: today,
+          status: 'PRESENT',
+          staff: {
             status: 'ACTIVE',
           },
         },
@@ -260,6 +272,13 @@ export const getDashboardStats = async (_req: AuthRequest, res: Response): Promi
             total: activeTeachers,
             percentage: activeTeachers > 0
               ? ((teacherAttendanceToday / activeTeachers) * 100).toFixed(1)
+              : 0,
+          },
+          staff: {
+            present: staffAttendanceToday,
+            total: activeStaff,
+            percentage: activeStaff > 0
+              ? ((staffAttendanceToday / activeStaff) * 100).toFixed(1)
               : 0,
           },
         },

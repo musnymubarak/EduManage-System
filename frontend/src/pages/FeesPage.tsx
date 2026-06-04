@@ -306,19 +306,19 @@ const FeesPage: React.FC = () => {
           </div>
         </Card>
 
-        {/* Grand Total Owed */}
+        {/* Arrears (Prior Months) */}
         <Card
           className="group relative overflow-hidden bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] border-none shadow-[0_8px_20px_rgba(0,0,0,0.04)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_24px_rgba(0,0,0,0.08)] active:scale-[0.98] border border-white/10"
           padding="none"
         >
           <div className="absolute right-0 top-0 -mr-6 -mt-6 w-24 h-24 rounded-full bg-white/[0.07] pointer-events-none" />
           <div className="absolute right-4 top-4 w-12 h-12 rounded-full bg-white/[0.04] pointer-events-none" />
-          
+
           <div className="flex items-center justify-between gap-3 relative z-10 p-5">
             <div className="min-w-0">
-              <p className="text-[11px] font-semibold text-white/80 tracking-wider uppercase">Grand Total Owed</p>
-              <h3 className="mt-1 text-2xl font-black text-white tracking-tight">{formatCurrency(summary.grandTotalOutstanding || summary.totalOutstandingAmount)}</h3>
-              <p className="text-xs text-white/70 mt-1 font-medium">Incl. {formatCurrency(summary.totalArrears || 0)} Arrears</p>
+              <p className="text-[11px] font-semibold text-white/80 tracking-wider uppercase">Arrears</p>
+              <h3 className="mt-1 text-2xl font-black text-white tracking-tight">{formatCurrency(summary.totalArrears || 0)}</h3>
+              <p className="text-xs text-white/70 mt-1 font-medium">From previous months</p>
             </div>
             <div className="relative flex-shrink-0 flex items-center justify-center h-12 w-12">
               <div className="h-10 w-10 rounded-xl bg-white/15 backdrop-blur-md border border-white/20 flex items-center justify-center text-white shadow-[inset_0_1.5px_0_rgba(255,255,255,0.25),_0_8px_16px_rgba(0,0,0,0.06)] group-hover:scale-105 transition-all duration-300">

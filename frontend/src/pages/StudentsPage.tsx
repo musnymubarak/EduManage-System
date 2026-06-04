@@ -49,8 +49,25 @@ const StudentsPage: React.FC = () => {
     },
   });
 
+  // Independent stat counts (so cards aren't affected by table filters/pagination)
+  const { data: totalStudentsData } = useQuery({
+    queryKey: ['studentsStat', 'total'],
+    queryFn: async () => (await api.get('/students?limit=1')).data,
+  });
+  const { data: activeStudentsData } = useQuery({
+    queryKey: ['studentsStat', 'active'],
+    queryFn: async () => (await api.get('/students?status=ACTIVE&limit=1')).data,
+  });
+  const { data: inactiveStudentsData } = useQuery({
+    queryKey: ['studentsStat', 'inactive'],
+    queryFn: async () => (await api.get('/students?status=INACTIVE&limit=1')).data,
+  });
+
   const students: Student[] = studentsData?.data || [];
   const classes: Class[] = classesData?.data || [];
+  const totalCount = totalStudentsData?.pagination?.total ?? 0;
+  const activeCount = activeStudentsData?.pagination?.total ?? 0;
+  const inactiveCount = inactiveStudentsData?.pagination?.total ?? 0;
 
   // Apply sorting
   const sortedStudents = [...students].sort((a, b) => {
@@ -90,10 +107,10 @@ const StudentsPage: React.FC = () => {
   };
 
   const stats = [
-    { label: 'Total Students', value: students.length, icon: Users, accent: 'blue' as const },
-    { label: 'Active Students', value: students.filter((s: any) => s.status === 'ACTIVE').length, icon: TrendingUp, accent: 'emerald' as const },
+    { label: 'Total Students', value: totalCount, icon: Users, accent: 'blue' as const },
+    { label: 'Active Students', value: activeCount, icon: TrendingUp, accent: 'emerald' as const },
     { label: 'Total Classes', value: classes.length, icon: School, accent: 'violet' as const },
-    { label: 'Enrollments', value: students.length, icon: BookOpen, accent: 'amber' as const },
+    { label: 'Inactive Students', value: inactiveCount, icon: BookOpen, accent: 'amber' as const },
   ];
 
   return (

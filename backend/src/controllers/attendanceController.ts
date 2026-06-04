@@ -142,11 +142,15 @@ export const markStaffAttendance = async (req: AuthRequest, res: Response): Prom
 
 export const getStudentAttendance = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { classId, startDate, endDate } = req.query;
+    const { classId, date, startDate, endDate } = req.query;
 
     const where: any = {};
     if (classId) where.classId = classId;
-    if (startDate && endDate) {
+    if (date) {
+      const queryDate = new Date(date as string);
+      queryDate.setHours(0, 0, 0, 0);
+      where.date = queryDate;
+    } else if (startDate && endDate) {
       where.date = {
         gte: new Date(startDate as string),
         lte: new Date(endDate as string),
@@ -176,6 +180,42 @@ export const getStudentAttendance = async (req: AuthRequest, res: Response): Pro
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch attendance' });
   }
+};
+
+export const getTeacherAttendance = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const { date } = req.query;
+
+        const where: any = {};
+        if (date) {
+            const queryDate = new Date(date as string);
+            queryDate.setHours(0, 0, 0, 0);
+            where.date = queryDate;
+        }
+
+        const attendance = await prisma.teacherAttendance.findMany({
+            where,
+            include: {
+                teacher: {
+                    select: {
+                        id: true,
+                        employeeNumber: true,
+                        fullName: true,
+                        designation: true,
+                    },
+                },
+            },
+            orderBy: { date: 'desc' },
+        });
+
+        res.json({
+            success: true,
+            data: attendance,
+            total: attendance.length,
+        });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch teacher attendance' });
+    }
 };
 
 export const getStaffAttendance = async (req: AuthRequest, res: Response): Promise<void> => {
