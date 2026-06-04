@@ -54,8 +54,12 @@ export function getFileUrl(path: string | null | undefined): string {
   if (!path) return '';
   if (path.startsWith('http')) return path;
   
-  const apiBase = (import.meta as any).env.VITE_API_URL || 'http://localhost:5000/api';
+  const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
   const serverBase = apiBase.replace('/api', '');
   
-  return `${serverBase}${path.startsWith('/') ? '' : '/'}${path}`;
+  let fullPath = `${serverBase}${path.startsWith('/') ? '' : '/'}${path}`;
+  if (fullPath.startsWith('//')) {
+    fullPath = fullPath.substring(1);
+  }
+  return fullPath;
 }

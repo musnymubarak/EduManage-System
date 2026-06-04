@@ -514,6 +514,24 @@ model Expenditure {
   @@map("expenditures")
 }
 
+model Income {
+  id               String         @id @default(uuid())
+  date             DateTime       @default(now())
+  category         IncomeCategory
+  amount           Float
+  paymentMethod    PaymentMethod  @default(CASH)
+  source           String?
+  description      String?
+  receiptNumber    String?        @unique
+  remarks          String?
+  sourceDonationId String?        @unique
+  recordedBy       String
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  @@map("incomes")
+}
+
 model Todo {
   id          String        @id @default(uuid())
   title       String
@@ -680,6 +698,16 @@ enum ExpenditureCategory {
   ADMINISTRATION
   DEVELOPMENT
   OTHERS
+}
+
+enum IncomeCategory {
+  DONATION
+  IFTAR_DONATION
+  FIXED_DEPOSIT_PROFIT
+  LAND_SHARE_RENT
+  SOLAR_PANEL_PROFIT
+  ALMS_BOX
+  OTHER
 }
 
 enum TodoStatus {

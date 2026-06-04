@@ -35,6 +35,7 @@ const StudentsPage: React.FC = () => {
       if (selectedClass) params.append('classId', selectedClass);
       if (statusFilter && statusFilter !== 'ALL') params.append('status', statusFilter);
       
+      params.append('limit', '1000');
       const response = await api.get(`/students?${params}`);
       return response.data;
     },

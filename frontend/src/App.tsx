@@ -17,12 +17,12 @@ import TeacherProfilePage from './pages/TeacherProfilePage';
 import StaffPage from './pages/StaffPage';
 import StaffProfilePage from './pages/StaffProfilePage';
 import FinancePage from './pages/FinancePage';
+import IncomePage from './pages/IncomePage';
 import ExamsPage from './pages/ExamsPage';
 import InventoryPage from './pages/InventoryPage';
 import TodoPage from './pages/TodoPage';
 import UsersPage from './pages/UsersPage';
 import ExpenditurePage from './pages/ExpenditurePage';
-import DonationsPage from './pages/DonationsPage';
 import ReportsPage from './pages/ReportsPage';
 import MigrationPage from './pages/MigrationPage';
 
@@ -89,15 +89,16 @@ function App() {
               <Route path="staff/:id" element={<StaffProfilePage />} />
               <Route path="attendance" element={<AttendancePage />} />
               <Route path="finance" element={<FinancePage />} />
+              <Route path="income" element={<IncomePage />} />
               {/* Legacy Redirects */}
               <Route path="fees" element={<Navigate to="/finance" replace />} />
               <Route path="payments" element={<Navigate to="/finance" replace />} />
+              <Route path="donations" element={<Navigate to="/finance" replace />} />
               <Route path="exams" element={<ExamsPage />} />
               <Route path="inventory" element={<InventoryPage />} />
               <Route path="todos" element={<TodoPage />} />
               <Route path="users" element={<UsersPage />} />
               <Route path="expenditures" element={<ExpenditurePage />} />
-              <Route path="donations" element={<DonationsPage />} />
               <Route path="reports" element={<ReportsPage />} />
               <Route path="migration" element={<MigrationPage />} />
             </Route>

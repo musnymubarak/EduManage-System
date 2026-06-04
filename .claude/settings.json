@@ -2,7 +2,21 @@
   "permissions": {
     "allow": [
       "Bash(docker compose:*)",
-      "Bash(docker exec edumanage_db psql -U postgres -d edumanage -c ':*)"
+      "Bash(docker exec edumanage_db psql -U postgres -d edumanage -c ':*)",
+      "Bash(npx prisma *)",
+      "Bash(head -25 prisma/seed.ts)",
+      "Bash(tail -15 prisma/seed.ts)",
+      "Bash(export DATABASE_URL=\"postgresql://postgres:0826@172.19.0.2:5432/edumanage_system\")",
+      "Bash(pkill -f \"ts-node src/index.ts\")",
+      "Bash(curl -s http://localhost:5055/health)",
+      "Bash(rm -f /tmp/income_test_server.log)",
+      "Bash(curl -s --max-time 3 http://localhost:5055/health)",
+      "Bash(pkill -9 -f \"src/index.ts\")",
+      "Bash(curl -s -o /dev/null -w \"GET /api/income -> HTTP %{http_code}\\\\n\" http://127.0.0.1:8003/api/income)",
+      "Bash(curl -s -o /dev/null -w \"GET / \\(frontend\\) -> HTTP %{http_code}\\\\n\" http://127.0.0.1:8003/)",
+      "Bash(curl -s -o /dev/null -w \"POST /api/donations -> HTTP %{http_code}\\\\n\" -X POST -H \"Content-Type: application/json\" -d '{}' http://127.0.0.1:8003/api/donations)",
+      "Bash(curl -s -o /dev/null -w \"GET /api/dashboard/stats -> HTTP %{http_code}\\\\n\" http://127.0.0.1:8003/api/dashboard/stats)",
+      "Bash(curl -s -o /dev/null -w \"GET /donations -> HTTP %{http_code}\\\\n\" http://127.0.0.1:8003/donations)"
     ]
   }
 }

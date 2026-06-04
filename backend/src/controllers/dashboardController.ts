@@ -161,8 +161,10 @@ export const getDashboardStats = async (_req: AuthRequest, res: Response): Promi
         where: { paymentDate: { gte: sixMonthsAgo } },
         select: { paymentDate: true, amount: true }
       }),
-      prisma.donation.findMany({
-        where: { date: { gte: sixMonthsAgo } },
+      // Donations now live in the unified Income model (categories DONATION / IFTAR_DONATION).
+      // Kept scoped to donation categories so dashboard income stays "fees + donations" as before.
+      prisma.income.findMany({
+        where: { date: { gte: sixMonthsAgo }, category: { in: ['DONATION', 'IFTAR_DONATION'] } },
         select: { date: true, amount: true }
       }),
       prisma.expenditure.findMany({

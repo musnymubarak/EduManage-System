@@ -222,6 +222,7 @@ export const updateTeacher = async (req: AuthRequest, res: Response): Promise<vo
   try {
     const { id } = req.params;
     const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+    const { qualifications, ...bodyData } = req.body;
 
     // Create a clean update object with only allowed fields
     const allowedFields = [
@@ -234,8 +235,8 @@ export const updateTeacher = async (req: AuthRequest, res: Response): Promise<vo
 
     const updateData: any = {};
     allowedFields.forEach(field => {
-      if (req.body[field] !== undefined) {
-        updateData[field] = req.body[field];
+      if (bodyData[field] !== undefined) {
+        updateData[field] = bodyData[field];
       }
     });
 
@@ -258,6 +259,18 @@ export const updateTeacher = async (req: AuthRequest, res: Response): Promise<vo
     // Parse numeric fields
     if (updateData.basicSalary) {
       updateData.basicSalary = parseFloat(updateData.basicSalary);
+    }
+
+    // Map qualifications if provided
+    let mappedQualifications;
+    if (qualifications !== undefined) {
+      const qualificationsArray = qualifications ? (typeof qualifications === 'string' ? JSON.parse(qualifications) : qualifications) : [];
+      mappedQualifications = qualificationsArray.map((q: any) => ({
+        qualification: q.degree || q.qualification,
+        institution: q.institution,
+        year: parseInt(q.year),
+        field: q.fieldOfStudy || q.field
+      }));
     }
 
     // Handle Profile Photo Removal or Update
@@ -289,7 +302,11 @@ export const updateTeacher = async (req: AuthRequest, res: Response): Promise<vo
         ...updateData,
         phoneNumbers: updateData.phoneNumbers 
           ? (Array.isArray(updateData.phoneNumbers) ? updateData.phoneNumbers : [updateData.phoneNumbers])
-          : undefined
+          : undefined,
+        qualifications: mappedQualifications ? {
+          deleteMany: {},
+          create: mappedQualifications
+        } : undefined
       } as any,
       include: {
         qualifications: true,

@@ -264,7 +264,11 @@ export const getStudentFeeLedger = async (req: AuthRequest, res: Response): Prom
 
     // 3. Get all monthly payments for this student
     const monthlyPayments = await prisma.feePayment.findMany({
-      where: { studentId, feeType: 'MONTHLY' },
+      where: { 
+        studentId, 
+        feeType: 'MONTHLY',
+        month: { gte: '2026-01' }
+      },
       orderBy: { month: 'asc' },
     });
 
@@ -277,7 +281,11 @@ export const getStudentFeeLedger = async (req: AuthRequest, res: Response): Prom
     // 5. Build month-by-month ledger from admission to current month
     const now = new Date();
     const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-    const admissionMonth = `${student.admissionDate.getFullYear()}-${String(student.admissionDate.getMonth() + 1).padStart(2, '0')}`;
+    const SYSTEM_START_MONTH = '2026-01';
+    let admissionMonth = `${student.admissionDate.getFullYear()}-${String(student.admissionDate.getMonth() + 1).padStart(2, '0')}`;
+    if (admissionMonth < SYSTEM_START_MONTH) {
+      admissionMonth = SYSTEM_START_MONTH;
+    }
 
     // Generate all months from admission to current
     const allMonths: string[] = [];
@@ -563,30 +571,38 @@ export const getMonthlyFeeStatus = async (req: AuthRequest, res: Response): Prom
       },
     });
 
-    // 5. Get previous months arrears via DB aggregation (O(1) query instead of O(students×months) loop)
-    // Groups by studentId: counts how many month records exist and sums remaining balances
-    const prevAggs = await prisma.feePayment.groupBy({
-      by: ['studentId'],
+    // 5. Get all monthly payments for previous months
+    const prevPayments = await prisma.feePayment.findMany({
       where: {
         studentId: { in: studentIds },
         feeType: 'MONTHLY',
-        month: { lt: month as string },  // YYYY-MM lexicographic comparison works correctly
+        month: { 
+          lt: month as string,
+          gte: '2026-01'
+        },
       },
-      _count: { id: true },
-      _sum: { balance: true },
+      select: {
+        studentId: true,
+        month: true,
+        balance: true,
+      },
     });
 
-    // Build a lookup map for O(1) access
-    const prevAggsMap = new Map(prevAggs.map(a => [a.studentId, a]));
+    // Build a lookup map of studentId -> month -> array of balances
+    const prevPaymentsMap = new Map<string, Map<string, number[]>>();
+    prevPayments.forEach(p => {
+      if (!p.month) return;
+      if (!prevPaymentsMap.has(p.studentId)) {
+        prevPaymentsMap.set(p.studentId, new Map());
+      }
+      const monthMap = prevPaymentsMap.get(p.studentId)!;
+      if (!monthMap.has(p.month)) {
+        monthMap.set(p.month, []);
+      }
+      monthMap.get(p.month)!.push(p.balance);
+    });
 
-    // 6. Helper: count months between two YYYY-MM strings (exclusive of end)
-    const countMonthsBetween = (startStr: string, endStr: string): number => {
-      const [sy, sm] = startStr.split('-').map(Number);
-      const [ey, em] = endStr.split('-').map(Number);
-      return (ey - sy) * 12 + (em - sm);
-    };
-
-    // 7. Combine: O(n) in-memory pass
+    // 6. Combine: O(n) in-memory pass
     const data = students.map(student => {
       // --- Current month ---
       const currentMonthPayment = currentMonthPayments.find(p => p.studentId === student.id);
@@ -602,19 +618,37 @@ export const getMonthlyFeeStatus = async (req: AuthRequest, res: Response): Prom
         currentBalance = currentMonthPayment.balance;
       }
 
-      // --- Previous arrears (DB-aggregated) ---
-      const admissionMonth = `${student.admissionDate.getFullYear()}-${String(student.admissionDate.getMonth() + 1).padStart(2, '0')}`;
-      const expectedMonthCount = Math.max(0, countMonthsBetween(admissionMonth, month as string));
-      
-      const agg = prevAggsMap.get(student.id);
-      const recordCount = agg?._count?.id || 0;
-      const partialBalanceSum = agg?._sum?.balance || 0;  // Sum of remaining balances from partial/pending records (PAID records contribute 0)
+      // --- Previous arrears ---
+      const SYSTEM_START_MONTH = '2026-01';
+      let admissionMonth = `${student.admissionDate.getFullYear()}-${String(student.admissionDate.getMonth() + 1).padStart(2, '0')}`;
+      if (admissionMonth < SYSTEM_START_MONTH) {
+        admissionMonth = SYSTEM_START_MONTH;
+      }
 
-      // Missing months = months with no record at all (fully unpaid)
-      const missingMonths = Math.max(0, expectedMonthCount - recordCount);
-      
-      // Total arrears = fully missing months × current fee + leftover balances from partial payments
-      const previousArrears = (missingMonths * monthlyFeeAmount) + partialBalanceSum;
+      // Generate all expected months before the current query month
+      const expectedMonthsList: string[] = [];
+      const [sy, sm] = admissionMonth.split('-').map(Number);
+      const [ey, em] = (month as string).split('-').map(Number);
+      let currY = sy, currM = sm;
+      while (currY < ey || (currY === ey && currM < em)) {
+        expectedMonthsList.push(`${currY}-${String(currM).padStart(2, '0')}`);
+        currM++;
+        if (currM > 12) { currM = 1; currY++; }
+      }
+
+      let previousArrears = 0;
+      const studentMonthMap = prevPaymentsMap.get(student.id);
+
+      expectedMonthsList.forEach(mStr => {
+        const balances = studentMonthMap?.get(mStr);
+        if (!balances || balances.length === 0) {
+          // No payment record for this expected month -> fully unpaid
+          previousArrears += monthlyFeeAmount;
+        } else {
+          // Take the minimum balance if multiple records exist for the month
+          previousArrears += Math.min(...balances);
+        }
+      });
 
       return {
         studentId: student.id,

@@ -45,11 +45,8 @@ router.post('/schedules', authorize(...managers), commonController.assignTeacher
 router.get('/schedules', commonController.getTeacherSchedules);
 router.delete('/schedules/:id', authorize(...managers), commonController.deleteTeacherSchedule);
 
-// Donations
-router.get('/donations', commonController.getAllDonations);
-router.post('/donations', authorize(...managers), commonController.recordDonation);
-router.delete('/donations/:id', authorize(...managers), commonController.deleteDonation);
-router.get('/donations/report', commonController.getDonationReport);
+// Donations moved into the unified Income module (see /api/income).
+// The Donation model is retained as a historical backup; its data is migrated into Income.
 
 // Expenditures - Only Expenditure Receptionist
 router.post(

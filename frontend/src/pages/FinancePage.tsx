@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { 
-  Clock, 
+import {
+  Clock,
   Wallet,
   TrendingUp
 } from 'lucide-react';
@@ -53,12 +53,13 @@ const FinancePage: React.FC = () => {
 
             {/* Content Area */}
             <div className="transition-all duration-500 ease-in-out">
-                {activeTab === 'tracker' ? (
+                {activeTab === 'tracker' && (
                     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
                          {/* We can pass optional props if needed, but FeesPage is self-contained */}
                          <FeesPage />
                     </div>
-                ) : (
+                )}
+                {activeTab === 'ledger' && (
                     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
                          <PaymentsPage />
                     </div>

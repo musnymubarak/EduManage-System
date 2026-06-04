@@ -19,7 +19,7 @@ import { Card } from '../components/UI/Card';
 import { Button } from '../components/UI/Button';
 import { Modal } from '../components/UI/Modal';
 import { Badge } from '../components/UI/Badge';
-import { formatDate } from '../utils/helpers'; // Removed unused formatCurrency
+import { formatDate, getFileUrl } from '../utils/helpers'; // Removed unused formatCurrency
 
 const ClassDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -199,7 +199,7 @@ const StudentsTab: React.FC<{ classId: string; students: any[] }> = ({ classId, 
                     <div className="flex items-center gap-3">
                       <div className="h-10 w-10 rounded-full bg-gray-200 flex-shrink-0 flex items-center justify-center text-gray-500 font-bold overflow-hidden border border-white shadow-sm">
                         {student.profilePhoto ? (
-                          <img src={student.profilePhoto} alt="" className="h-full w-full object-cover" />
+                          <img src={getFileUrl(student.profilePhoto)} alt="" className="h-full w-full object-cover" />
                         ) : student.fullName.charAt(0)}
                       </div>
                       <span className="font-bold text-gray-900">{student.fullName}</span>

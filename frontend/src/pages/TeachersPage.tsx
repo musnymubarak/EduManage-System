@@ -19,7 +19,8 @@ import { ActionMenu } from '../components/UI/ActionMenu';
 const TeachersPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
-  const [sortBy, setSortBy] = useState<'id_asc' | 'id_desc' | 'name_asc' | 'name_desc'>('id_asc');
+  const [typeFilter, setTypeFilter] = useState('');
+  const [sortBy, setSortBy] = useState<'id_asc' | 'id_desc' | 'name_asc' | 'name_desc' | 'type_asc' | 'type_desc'>('id_asc');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTeacher, setEditingTeacher] = useState<any | null>(null);
   const navigate = useNavigate();
@@ -40,12 +41,20 @@ const TeachersPage: React.FC = () => {
 
   const teachers: Teacher[] = teachersData?.data || [];
 
+  // Filter by employment type
+  const filteredTeachers = teachers.filter((teacher) => {
+    if (!typeFilter) return true;
+    return teacher.employmentType === typeFilter;
+  });
+
   // Apply sorting
-  const sortedTeachers = [...teachers].sort((a, b) => {
+  const sortedTeachers = [...filteredTeachers].sort((a, b) => {
     if (sortBy === 'id_asc') return a.employeeNumber.localeCompare(b.employeeNumber, undefined, { numeric: true });
     if (sortBy === 'id_desc') return b.employeeNumber.localeCompare(a.employeeNumber, undefined, { numeric: true });
     if (sortBy === 'name_asc') return a.fullName.localeCompare(b.fullName);
     if (sortBy === 'name_desc') return b.fullName.localeCompare(a.fullName);
+    if (sortBy === 'type_asc') return a.employmentType.localeCompare(b.employmentType);
+    if (sortBy === 'type_desc') return b.employmentType.localeCompare(a.employmentType);
     return 0;
   });
 
@@ -166,8 +175,20 @@ const TeachersPage: React.FC = () => {
                   <option value="id_desc">Teacher ID (Z-A)</option>
                   <option value="name_asc">Name (A-Z)</option>
                   <option value="name_desc">Name (Z-A)</option>
+                  <option value="type_asc">Employment Type (A-Z)</option>
+                  <option value="type_desc">Employment Type (Z-A)</option>
                 </select>
             </div>
+            <select
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value)}
+              className="h-11 px-4 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none min-w-[140px] text-sm font-bold text-gray-600 cursor-pointer"
+            >
+              <option value="">All Types</option>
+              <option value="FULL_TIME">Full Time</option>
+              <option value="PART_TIME">Part Time</option>
+              <option value="CONTRACT">Contract</option>
+            </select>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
@@ -277,6 +298,18 @@ export const TeacherModal: React.FC<TeacherModalProps> = ({ isOpen, onClose, ini
   React.useEffect(() => {
     if (isOpen) {
       setProfilePhoto(initialData?.profilePhoto || null);
+      if (initialData?.qualifications && initialData.qualifications.length > 0) {
+        setQualifications(
+          initialData.qualifications.map((q: any) => ({
+            degree: q.qualification,
+            institution: q.institution,
+            year: q.year,
+            fieldOfStudy: q.field || ''
+          }))
+        );
+      } else {
+        setQualifications([{ degree: '', institution: '', year: '', fieldOfStudy: '' }]);
+      }
     }
   }, [isOpen, initialData]);
 

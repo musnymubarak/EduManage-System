@@ -386,6 +386,52 @@ export interface Expenditure {
   paymentMethod: string;
 }
 
+export type IncomeCategory =
+  | 'DONATION'
+  | 'IFTAR_DONATION'
+  | 'FIXED_DEPOSIT_PROFIT'
+  | 'LAND_SHARE_RENT'
+  | 'SOLAR_PANEL_PROFIT'
+  | 'ALMS_BOX'
+  | 'OTHER';
+
+export interface Income {
+  id: string;
+  date: string;
+  category: IncomeCategory;
+  amount: number;
+  paymentMethod: 'CASH' | 'BANK_TRANSFER' | 'ONLINE' | 'CHEQUE';
+  source?: string;
+  description?: string;
+  receiptNumber?: string;
+  remarks?: string;
+  recordedBy: string;
+  createdAt: string;
+}
+
+// A normalized row from GET /income (merges student fees + manual income records)
+export interface IncomeLedgerRow {
+  id: string;
+  source: 'FEE' | 'INCOME';
+  category: string; // IncomeCategory value or FEE_MONTHLY/FEE_EXAM/FEE_ADMISSION/FEE_OTHER
+  categoryLabel: string;
+  date: string | null;
+  amount: number;
+  paymentMethod?: string | null;
+  payerName?: string | null;
+  description?: string | null;
+  receiptNumber?: string | null;
+  deletable: boolean;
+}
+
+export interface IncomeLedgerSummary {
+  count: number;
+  grandTotal: number;
+  studentFeesTotal: number;
+  donationsTotal: number;
+  otherIncomeTotal: number;
+}
+
 export interface DashboardStats {
   overview: {
     totalStudents: number;
