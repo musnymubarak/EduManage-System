@@ -339,7 +339,7 @@ export const recordSalaryPayment = async (req: AuthRequest, res: Response): Prom
         await prisma.expenditure.create({
             data: {
                 date: new Date(),
-                category: 'SALARIES',
+                category: 'ADMINISTRATION',
                 description: `Staff Salary - ${staff?.fullName || 'Unknown Personnel'} (${month})`,
                 amount: netSalary,
                 vendor: staff?.fullName || 'Staff Member',

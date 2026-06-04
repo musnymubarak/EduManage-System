@@ -79,9 +79,9 @@ const MainLayout: React.FC = () => {
       ],
     },
     {
-      label: 'Finance',
+      label: 'Student Fee',
       items: [
-        { path: '/finance', icon: DollarSign, label: 'Finance', roles: ['SUPER_ADMIN', 'ADMIN'] },
+        { path: '/finance', icon: DollarSign, label: 'Student Fee', roles: ['SUPER_ADMIN', 'ADMIN'] },
         { path: '/donations', icon: Gift, label: 'Donations', roles: ['SUPER_ADMIN', 'ADMIN'] },
         { path: '/expenditures', icon: TrendingUp, label: 'Expenditures', roles: ['SUPER_ADMIN', 'FINANCE_OFFICER'] },
       ],

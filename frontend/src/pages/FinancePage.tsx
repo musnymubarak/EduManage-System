@@ -12,16 +12,16 @@ const FinancePage: React.FC = () => {
 
     return (
         <div className="space-y-6 pb-10">
-            {/* Unified Finance Header */}
+            {/* Unified Student Fee Header */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
                      <h2 className="text-3xl font-black text-gray-900 tracking-tight flex items-center gap-3">
                         <div className="p-2 bg-blue-600 rounded-xl text-white shadow-lg shadow-blue-200">
                              <TrendingUp size={24} />
                         </div>
-                        Finance Hub
+                        Student Fee Hub
                      </h2>
-                     <p className="text-gray-500 mt-2 font-medium">Unified management for fee tracking and global accounting records.</p>
+                     <p className="text-gray-500 mt-2 font-medium">Unified management for student fee tracking and global ledger records.</p>
                 </div>
 
                 {/* Premium Tab Switcher */}
@@ -35,7 +35,7 @@ const FinancePage: React.FC = () => {
                         }`}
                     >
                         <Clock size={18} />
-                        Monthly Tracker
+                        Monthly Student Fee Tracker
                     </button>
                     <button
                         onClick={() => setActiveTab('ledger')}
@@ -46,7 +46,7 @@ const FinancePage: React.FC = () => {
                         }`}
                     >
                         <Wallet size={18} />
-                        General Ledger
+                        Student Ledger
                     </button>
                 </div>
             </div>

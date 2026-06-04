@@ -189,7 +189,7 @@ const FeesPage: React.FC = () => {
       {/* Header Section */}
       <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between py-2">
         <div className="flex-1 min-w-0">
-          <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight truncate">Fee Management</h2>
+          <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight truncate">Student Fee Management</h2>
           <p className="text-gray-500 mt-1 font-medium flex items-center gap-2 truncate">
             <Calendar size={16} className="text-blue-500" />
             Tracking status for <span className="text-blue-600 font-bold">{currentMonthLabel}</span>
@@ -226,7 +226,7 @@ const FeesPage: React.FC = () => {
             className="h-12 px-6 rounded-2xl flex items-center gap-2 bg-amber-50 text-amber-700 hover:bg-amber-100 border-amber-100 shadow-sm transition-all hover:scale-105 whitespace-nowrap"
           >
             <Settings2 size={18} className="shrink-0" />
-            <span className="font-medium text-sm">Manage Fee</span>
+            <span className="font-medium text-sm">Manage Student Fee</span>
           </Button>
           <Button 
             onClick={() => setIsGlobalPaymentModalOpen(true)} 
@@ -537,7 +537,7 @@ const FeesPage: React.FC = () => {
       <Modal
         isOpen={isFeeSettingModalOpen}
         onClose={() => setIsFeeSettingModalOpen(false)}
-        title="Global Monthly Fee Setting"
+        title="Global Monthly Student Fee Setting"
         size="sm"
       >
         <form onSubmit={handleUpdateGlobalFee} className="space-y-6">
@@ -556,7 +556,7 @@ const FeesPage: React.FC = () => {
           </div>
 
           <Input 
-            label="Monthly Fee Amount (LKR)" 
+            label="Monthly Student Fee Amount (LKR)" 
             name="amount" 
             type="number" 
             step="0.01" 
@@ -572,7 +572,7 @@ const FeesPage: React.FC = () => {
               disabled={updateSettingMutation.isPending}
               className="bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-100 font-medium text-sm px-8 h-12 rounded-xl"
             >
-              {updateSettingMutation.isPending ? 'Updating...' : 'Update Fee Amount'}
+              {updateSettingMutation.isPending ? 'Updating...' : 'Update Student Fee Amount'}
             </Button>
           </div>
         </form>
@@ -641,7 +641,7 @@ const RecordPaymentModal: React.FC<{ isOpen: boolean; onClose: () => void; stude
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-2 gap-5">
-          <Input label="System Fee (LKR)" value={formData.amount} readOnly className="bg-gray-50 font-bold" />
+          <Input label="System Student Fee (LKR)" value={formData.amount} readOnly className="bg-gray-50 font-bold" />
           <Input
             label="Collection Now (LKR)"
             type="number"

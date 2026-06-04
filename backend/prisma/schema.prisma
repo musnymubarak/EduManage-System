@@ -676,13 +676,10 @@ enum InventoryStatus {
 }
 
 enum ExpenditureCategory {
-  SALARIES
-  UTILITIES
-  MAINTENANCE
-  SUPPLIES
-  TRANSPORTATION
-  EVENTS
-  OTHER
+  COOKING
+  ADMINISTRATION
+  DEVELOPMENT
+  OTHERS
 }
 
 enum TodoStatus {

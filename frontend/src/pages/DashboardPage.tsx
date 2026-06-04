@@ -151,9 +151,9 @@ const DashboardPage: React.FC = () => {
         />
         <StatCard
           to="/finance"
-          label="Monthly Collection"
+          label="Monthly Student Fee"
           value={`LKR ${(stats?.financial.monthlyCollection || 0).toLocaleString()}`}
-          sublabel={`${stats?.financial.pendingFees || 0} pending fees`}
+          sublabel={`${stats?.financial.pendingFees || 0} pending student fees`}
           icon={DollarSign}
           accent="amber"
         />
@@ -169,7 +169,7 @@ const DashboardPage: React.FC = () => {
               <h3 className="text-base font-semibold text-gray-900">6-Month Financial Trend</h3>
             </div>
             <Link to="/finance" className="inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700">
-              View Finance <ArrowRight size={14} />
+              View Student Fee <ArrowRight size={14} />
             </Link>
           </div>
           <div className="h-[300px] w-full">

@@ -23,7 +23,7 @@ const GlobalHistoryModal: React.FC<GlobalHistoryModalProps> = ({ isOpen, onClose
   const history = historyData?.data || [];
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Consolidated Financial Ledger" size="xl">
+    <Modal isOpen={isOpen} onClose={onClose} title="Consolidated Student Ledger" size="xl">
         {isLoading ? (
             <div className="py-20 text-center">
                 <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>

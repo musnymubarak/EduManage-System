@@ -164,7 +164,7 @@ const GlobalPaymentModal: React.FC<GlobalPaymentModalProps> = ({
                 value={formData.feeType}
                 onChange={(e) => setFormData({...formData, feeType: e.target.value})}
                 options={[
-                    { value: 'MONTHLY', label: 'Monthly Fee' },
+                    { value: 'MONTHLY', label: 'Monthly Student Fee' },
                     { value: 'ADMISSION', label: 'Admission Fee' },
                     { value: 'EXAM', label: 'Examination Fee' },
                     { value: 'OTHER', label: 'Others' }

@@ -95,7 +95,7 @@ const PaymentsPage: React.FC = () => {
             {/* Header */}
             <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
                 <div className="flex-1 min-w-0">
-                    <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight truncate">Payments Portal</h2>
+                    <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight truncate">Student Payments Portal</h2>
                     <p className="text-gray-500 mt-1 font-medium flex items-center gap-2 truncate">
                         <History size={16} className="text-blue-500" />
                         Centralized Financial Ledger & Accounting
@@ -192,7 +192,7 @@ const PaymentsPage: React.FC = () => {
                     
                     <div className="flex items-center justify-between gap-3 relative z-10 p-5">
                         <div className="min-w-0">
-                            <p className="text-[11px] font-semibold text-white/80 tracking-wider uppercase">Monthly Tuition</p>
+                            <p className="text-[11px] font-semibold text-white/80 tracking-wider uppercase">Monthly Student Fee</p>
                             <h3 className="mt-1 text-2xl font-black text-white tracking-tight leading-none">
                                 {formatCurrency(transactions.filter((t: any) => t.feeType === 'MONTHLY').reduce((acc: number, t: any) => acc + t.paidAmount, 0))}
                             </h3>
@@ -252,7 +252,7 @@ const PaymentsPage: React.FC = () => {
                             onChange={(e) => setFeeTypeFilter(e.target.value)}
                             options={[
                                 { value: 'ALL', label: 'All Transactions' },
-                                { value: 'MONTHLY', label: 'Monthly Tuition' },
+                                { value: 'MONTHLY', label: 'Monthly Student Fee' },
                                 { value: 'ADMISSION', label: 'Admission Fees' },
                                 { value: 'EXAM', label: 'Exam Fees' },
                                 { value: 'OTHER', label: 'Misc. Collections' }

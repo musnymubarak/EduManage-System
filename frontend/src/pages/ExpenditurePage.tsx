@@ -12,13 +12,10 @@ import { formatDate, formatCurrency } from '../utils/helpers';
 import { ActionMenu } from '../components/UI/ActionMenu';
 
 const CATEGORY_LABELS: Record<string, string> = {
-  SALARIES: 'Salary',
-  UTILITIES: 'Utilities',
-  MAINTENANCE: 'Maintenance',
-  SUPPLIES: 'Supplies',
-  TRANSPORTATION: 'Transport',
-  EVENTS: 'Events',
-  OTHER: 'Other',
+  COOKING: 'Cooking',
+  ADMINISTRATION: 'Administration',
+  DEVELOPMENT: 'Development',
+  OTHERS: 'Others',
 };
 
 const PAYMENT_METHOD_LABELS: Record<string, string> = {
@@ -109,13 +106,10 @@ const ExpenditurePage: React.FC = () => {
               className="rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">All Categories</option>
-              <option value="SALARIES">Salary</option>
-              <option value="UTILITIES">Utilities</option>
-              <option value="MAINTENANCE">Maintenance</option>
-              <option value="SUPPLIES">Supplies</option>
-              <option value="TRANSPORTATION">Transport</option>
-              <option value="EVENTS">Events</option>
-              <option value="OTHER">Other</option>
+              <option value="COOKING">Cooking</option>
+              <option value="ADMINISTRATION">Administration</option>
+              <option value="DEVELOPMENT">Development</option>
+              <option value="OTHERS">Others</option>
             </select>
           </div>
 
@@ -316,13 +310,10 @@ const AddExpenditureModal: React.FC<AddExpenditureModalProps> = ({ isOpen, onClo
           value={formData.category}
           onChange={handleChange}
           options={[
-            { value: 'SALARIES', label: 'Salary' },
-            { value: 'UTILITIES', label: 'Utilities (Electricity, Water)' },
-            { value: 'MAINTENANCE', label: 'Maintenance & Repairs' },
-            { value: 'SUPPLIES', label: 'Supplies & Materials' },
-            { value: 'TRANSPORTATION', label: 'Transport' },
-            { value: 'EVENTS', label: 'Events' },
-            { value: 'OTHER', label: 'Other' },
+            { value: 'COOKING', label: 'Cooking' },
+            { value: 'ADMINISTRATION', label: 'Administration' },
+            { value: 'DEVELOPMENT', label: 'Development' },
+            { value: 'OTHERS', label: 'Others' },
           ]}
           required
         />
