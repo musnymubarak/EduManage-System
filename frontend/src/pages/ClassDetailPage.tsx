@@ -138,7 +138,7 @@ const ClassDetailPage: React.FC = () => {
           <StudentsTab classId={id!} students={classData.students || []} />
         )}
         {activeTab === 'subjects' && (
-          <SubjectsTab classId={id!} schedules={classData.schedules || []} />
+          <SubjectsTab classData={classData} />
         )}
         {activeTab === 'exams' && (
           <ClassExamsTab exams={classData.exams || []} />
@@ -315,12 +315,121 @@ const AddStudentToClassModal: React.FC<{ isOpen: boolean; onClose: () => void; c
   );
 };
 
-const SubjectsTab: React.FC<{ classId: string; schedules: any[] }> = ({ classId, schedules }) => {
+const SubjectsTab: React.FC<{ classData: any }> = ({ classData }) => {
+  const classId = classData.id;
+  const schedules = classData.schedules || [];
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+  const [newSubject, setNewSubject] = useState('');
+  const queryClient = useQueryClient();
+
+  const updateClassMutation = useMutation({
+    mutationFn: (data: any) => api.put(`/classes/${classId}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['class', classId] });
+      toast.success('Subjects updated successfully');
+      setNewSubject('');
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.error || 'Failed to update subjects');
+    }
+  });
+
+  const handleAddSubject = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newSubject.trim()) return;
+    
+    const currentSubjects = classData.subjects || [];
+    if (currentSubjects.includes(newSubject.trim())) {
+      toast.error('Subject already exists in this class');
+      return;
+    }
+
+    const updatedSubjects = [...currentSubjects, newSubject.trim()];
+    updateClassMutation.mutate({
+      name: classData.name,
+      grade: classData.grade,
+      section: classData.section,
+      capacity: classData.capacity,
+      academicYear: classData.academicYear,
+      subjects: updatedSubjects
+    });
+  };
+
+  const handleRemoveSubject = (subjectName: string) => {
+    if (window.confirm(`Are you sure you want to remove "${subjectName}" from this class?`)) {
+      const currentSubjects = classData.subjects || [];
+      const updatedSubjects = currentSubjects.filter((s: string) => s !== subjectName);
+      updateClassMutation.mutate({
+        name: classData.name,
+        grade: classData.grade,
+        section: classData.section,
+        capacity: classData.capacity,
+        academicYear: classData.academicYear,
+        subjects: updatedSubjects
+      });
+    }
+  };
 
   return (
-    <>
-      <Card className="p-0 overflow-hidden">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Subjects list card */}
+      <Card className="lg:col-span-1 p-6">
+        <div className="border-b border-gray-100 pb-4 mb-4">
+          <h3 className="text-lg font-bold text-gray-900">Class Subjects</h3>
+          <p className="text-xs text-gray-500 mt-1">Configure subjects offered in this class.</p>
+        </div>
+
+        {/* Inline Add Subject Form */}
+        <form onSubmit={handleAddSubject} className="flex gap-2 mb-4">
+          <input
+            type="text"
+            placeholder="Add new subject (e.g. Physics)"
+            value={newSubject}
+            onChange={(e) => setNewSubject(e.target.value)}
+            className="flex-1 rounded-xl border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            disabled={updateClassMutation.isPending}
+          />
+          <Button type="submit" disabled={updateClassMutation.isPending} size="sm">
+            <Plus size={16} />
+          </Button>
+        </form>
+
+        {/* Subject list */}
+        <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1">
+          {classData.subjects && classData.subjects.length > 0 ? (
+            classData.subjects.map((subject: string, idx: number) => (
+              <div 
+                key={idx} 
+                className="flex items-center justify-between p-3 rounded-xl bg-gray-50 border border-gray-100 hover:bg-gray-100/70 transition-all"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="p-1.5 rounded-lg bg-blue-50 text-blue-600">
+                    <BookOpen size={15} />
+                  </div>
+                  <span className="text-sm font-bold text-gray-800">{subject}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleRemoveSubject(subject)}
+                  disabled={updateClassMutation.isPending}
+                  className="p-1 text-gray-400 hover:text-red-505 rounded-lg hover:bg-red-50 active:scale-95 transition-all"
+                >
+                  <Trash2 size={15} />
+                </button>
+              </div>
+            ))
+          ) : (
+            <div className="text-center py-8 border border-dashed border-gray-200 rounded-xl">
+              <BookOpen className="h-8 w-8 mx-auto text-gray-300 stroke-[1.5] mb-2" />
+              <p className="text-xs font-bold text-gray-500">No subjects configured</p>
+              <p className="text-[10px] text-gray-400 mt-0.5">Use the input above to add subjects.</p>
+            </div>
+          )}
+        </div>
+      </Card>
+
+      {/* Teaching Schedule card */}
+      <Card className="lg:col-span-2 p-0 overflow-hidden">
         <div className="flex items-center justify-between p-6 border-b border-gray-50">
           <h3 className="text-lg font-bold text-gray-900">Subjects & Assigned Teachers</h3>
           <Button size="sm" onClick={() => setIsAssignModalOpen(true)}>
@@ -339,7 +448,7 @@ const SubjectsTab: React.FC<{ classId: string; schedules: any[] }> = ({ classId,
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {schedules.map((schedule) => (
+              {schedules.map((schedule: any) => (
                 <tr key={schedule.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center gap-2">
@@ -382,12 +491,20 @@ const SubjectsTab: React.FC<{ classId: string; schedules: any[] }> = ({ classId,
         isOpen={isAssignModalOpen} 
         onClose={() => setIsAssignModalOpen(false)}
         classId={classId}
+        classSubjects={classData.subjects || []}
       />
-    </>
+    </div>
   );
 };
 
-const AssignTeacherModal: React.FC<{ isOpen: boolean; onClose: () => void; classId: string }> = ({ isOpen, onClose, classId }) => {
+interface AssignTeacherModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  classId: string;
+  classSubjects: string[];
+}
+
+const AssignTeacherModal: React.FC<AssignTeacherModalProps> = ({ isOpen, onClose, classId, classSubjects }) => {
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState({
     teacherId: '',
@@ -417,7 +534,8 @@ const AssignTeacherModal: React.FC<{ isOpen: boolean; onClose: () => void; class
     onError: () => toast.error('Failed to assign teacher')
   });
 
-  const subjects = ['Arabic', 'Quran', 'Islamic Studies', 'Mathematics', 'English', 'Science', 'History', 'Other'];
+  const defaultSubjects = ['Arabic', 'Quran', 'Islamic Studies', 'Mathematics', 'English', 'Science', 'History', 'Other'];
+  const subjects = classSubjects && classSubjects.length > 0 ? classSubjects : defaultSubjects;
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Assign Teacher & Subject">

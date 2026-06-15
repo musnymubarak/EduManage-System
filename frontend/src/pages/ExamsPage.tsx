@@ -704,11 +704,18 @@ const EditExamModal: React.FC<EditExamModalProps> = ({ isOpen, onClose, classGro
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    if (name === 'classId') {
+      setFormData((prev) => ({ ...prev, classId: value, subject: '' }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
   // Flatten all classes for the dropdown
   const allClasses = classGroups.flatMap((g) => g.classes);
+  const selectedClass = allClasses.find((c) => c.id === formData.classId);
+  const classSubjects = selectedClass?.subjects || [];
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Edit Exam" size="lg"
@@ -733,7 +740,12 @@ const EditExamModal: React.FC<EditExamModalProps> = ({ isOpen, onClose, classGro
           <Select label="Class" name="classId" value={formData.classId} onChange={handleChange}
             options={allClasses.map((cls) => ({ value: cls.id, label: cls.name }))} required />
         </div>
-        <Input label="Subject" name="subject" value={formData.subject} onChange={handleChange} placeholder="e.g. Mathematics, Arabic" required />
+        {classSubjects.length > 0 ? (
+          <Select label="Subject" name="subject" value={formData.subject} onChange={handleChange}
+            options={classSubjects.map((s) => ({ value: s, label: s }))} required />
+        ) : (
+          <Input label="Subject" name="subject" value={formData.subject} onChange={handleChange} placeholder="e.g. Mathematics, Arabic" required />
+        )}
         <Input label="Exam Date" name="examDate" type="date" value={formData.examDate} onChange={handleChange} required />
         <div className="grid grid-cols-2 gap-4">
           <Input label="Total Marks" name="totalMarks" type="number" value={formData.totalMarks} onChange={handleChange} required />
@@ -825,10 +837,17 @@ const AddExamModal: React.FC<AddExamModalProps> = ({ isOpen, onClose, classGroup
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    if (name === 'groupIndex') {
+      setFormData((prev) => ({ ...prev, groupIndex: value, subject: '' }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
-  const selectedGroupForHint = formData.groupIndex !== '' ? classGroups[parseInt(formData.groupIndex)] : null;
+  const selectedGroup = formData.groupIndex !== '' ? classGroups[parseInt(formData.groupIndex)] : null;
+  const groupClasses = selectedGroup?.classes || [];
+  const groupSubjects = Array.from(new Set(groupClasses.flatMap((c) => c.subjects || [])));
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Create New Exam" size="lg"
@@ -853,12 +872,20 @@ const AddExamModal: React.FC<AddExamModalProps> = ({ isOpen, onClose, classGroup
           <Select label="Class" name="groupIndex" value={formData.groupIndex} onChange={handleChange}
             options={classGroups.map((g, i) => ({ value: i.toString(), label: g.label }))} required />
         </div>
-        {selectedGroupForHint?.hasSections && (
+        {selectedGroup?.hasSections && (
           <div className="rounded-lg bg-blue-50 px-3 py-2 text-sm text-blue-700">
-            This exam will be created for: <strong>{selectedGroupForHint.classes.map((c) => c.name).join(', ')}</strong>
+            This exam will be created for: <strong>{selectedGroup.classes.map((c) => c.name).join(', ')}</strong>
           </div>
         )}
-        <Input label="Subject" name="subject" value={formData.subject} onChange={handleChange} placeholder="e.g. Mathematics, Arabic, Quran" required />
+        {groupSubjects.length > 0 ? (
+          <Select label="Subject" name="subject" value={formData.subject} onChange={handleChange}
+            options={[
+              { value: '', label: 'Select Subject' },
+              ...groupSubjects.map((s) => ({ value: s, label: s }))
+            ]} required />
+        ) : (
+          <Input label="Subject" name="subject" value={formData.subject} onChange={handleChange} placeholder="e.g. Mathematics, Arabic, Quran" required />
+        )}
         <Input label="Exam Date" name="examDate" type="date" value={formData.examDate} onChange={handleChange} required />
         <div className="grid grid-cols-2 gap-4">
           <Input label="Total Marks" name="totalMarks" type="number" value={formData.totalMarks} onChange={handleChange} required />

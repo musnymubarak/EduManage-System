@@ -25,6 +25,7 @@ import UsersPage from './pages/UsersPage';
 import ExpenditurePage from './pages/ExpenditurePage';
 import ReportsPage from './pages/ReportsPage';
 import MigrationPage from './pages/MigrationPage';
+import BalanceSheetPage from './pages/BalanceSheetPage';
 
 // Layout
 import MainLayout from './components/Layout/MainLayout';
@@ -90,6 +91,7 @@ function App() {
               <Route path="attendance" element={<AttendancePage />} />
               <Route path="finance" element={<FinancePage />} />
               <Route path="income" element={<IncomePage />} />
+              <Route path="balance-sheet" element={<BalanceSheetPage />} />
               {/* Legacy Redirects */}
               <Route path="fees" element={<Navigate to="/finance" replace />} />
               <Route path="payments" element={<Navigate to="/finance" replace />} />

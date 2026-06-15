@@ -294,6 +294,7 @@ export interface Class {
   section?: string;
   capacity: number;
   academicYear: string;
+  subjects?: string[];
 }
 
 export interface Attendance {

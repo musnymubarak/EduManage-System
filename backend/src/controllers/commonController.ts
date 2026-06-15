@@ -81,7 +81,7 @@ export const getClassById = async (req: AuthRequest, res: Response): Promise<voi
 
 export const createClass = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { name, grade, section, capacity, academicYear } = req.body;
+    const { name, grade, section, capacity, academicYear, subjects } = req.body;
 
     let targetAcademicYear = academicYear;
     if (!targetAcademicYear) {
@@ -98,6 +98,7 @@ export const createClass = async (req: AuthRequest, res: Response): Promise<void
         section,
         capacity: parseInt(capacity || '30'),
         academicYear: targetAcademicYear,
+        subjects: subjects || [],
       },
     });
 
@@ -114,7 +115,7 @@ export const createClass = async (req: AuthRequest, res: Response): Promise<void
 export const updateClass = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const { name, grade, section, capacity, academicYear } = req.body;
+    const { name, grade, section, capacity, academicYear, subjects } = req.body;
 
     const updatedClass = await prisma.class.update({
       where: { id },
@@ -124,6 +125,7 @@ export const updateClass = async (req: AuthRequest, res: Response): Promise<void
         section,
         capacity: capacity ? parseInt(capacity) : undefined,
         academicYear,
+        subjects: subjects !== undefined ? subjects : undefined,
       },
     });
 

@@ -322,6 +322,7 @@ model Class {
   section      String?
   capacity     Int                 @default(30)
   academicYear String
+  subjects     String[]            @default([])
   createdAt    DateTime            @default(now())
   updatedAt    DateTime            @updatedAt
   exams        Exam[]
