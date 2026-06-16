@@ -511,6 +511,8 @@ model Expenditure {
   recordedBy    String
   createdAt     DateTime            @default(now())
   updatedAt     DateTime            @updatedAt
+  bankAccountId String?
+  bankAccount   BankAccount?        @relation(fields: [bankAccountId], references: [id])
 
   @@map("expenditures")
 }
@@ -529,6 +531,8 @@ model Income {
   recordedBy       String
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
+  bankAccountId    String?
+  bankAccount      BankAccount?   @relation(fields: [bankAccountId], references: [id])
 
   @@map("incomes")
 }
@@ -722,4 +726,58 @@ enum TodoPriority {
   MEDIUM
   HIGH
   URGENT
+}
+
+enum BankAccountType {
+  SAVINGS
+  CURRENT
+  FIXED_DEPOSIT
+}
+
+enum BankTransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  TRANSFER_IN
+  TRANSFER_OUT
+}
+
+model BankAccount {
+  id              String            @id @default(uuid())
+  accountName     String
+  bankName        String
+  accountNumber   String            @unique
+  branch          String?
+  accountType     BankAccountType   @default(CURRENT)
+  openingBalance  Float             @default(0)
+  isActive        Boolean           @default(true)
+  remarks         String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  transactions    BankTransaction[]
+  incomes         Income[]
+  expenditures    Expenditure[]
+
+  @@map("bank_accounts")
+}
+
+model BankTransaction {
+  id                    String              @id @default(uuid())
+  bankAccountId         String
+  type                  BankTransactionType
+  amount                Float
+  description           String
+  referenceNumber       String?
+  referenceDate         DateTime?
+  paymentMethod         PaymentMethod
+  proofUrl              String?
+  relatedIncomeId       String?
+  relatedExpenditureId  String?
+  transferAccountId     String?
+  transactionDate       DateTime            @default(now())
+  recordedBy            String
+  remarks               String?
+  createdAt             DateTime            @default(now())
+  bankAccount           BankAccount         @relation(fields: [bankAccountId], references: [id], onDelete: Cascade)
+
+  @@map("bank_transactions")
 }

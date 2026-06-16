@@ -24,6 +24,7 @@ import TodoPage from './pages/TodoPage';
 import UsersPage from './pages/UsersPage';
 import ExpenditurePage from './pages/ExpenditurePage';
 import ReportsPage from './pages/ReportsPage';
+import BankingPage from './pages/BankingPage';
 import MigrationPage from './pages/MigrationPage';
 import BalanceSheetPage from './pages/BalanceSheetPage';
 
@@ -101,6 +102,7 @@ function App() {
               <Route path="todos" element={<TodoPage />} />
               <Route path="users" element={<UsersPage />} />
               <Route path="expenditures" element={<ExpenditurePage />} />
+              <Route path="banking" element={<BankingPage />} />
               <Route path="reports" element={<ReportsPage />} />
               <Route path="migration" element={<MigrationPage />} />
             </Route>

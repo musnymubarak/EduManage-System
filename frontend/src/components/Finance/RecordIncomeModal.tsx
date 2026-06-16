@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
 import { Modal } from '../UI/Modal';
 import { Input, Select, TextArea } from '../UI/Input';
 import { Button } from '../UI/Button';
-import { IncomeCategory } from '../../types';
+import { IncomeCategory, BankAccount } from '../../types';
 
 interface RecordIncomeModalProps {
   isOpen: boolean;
@@ -32,6 +32,9 @@ const emptyForm = {
   source: '',
   description: '',
   remarks: '',
+  bankAccountId: '',
+  referenceNumber: '',
+  referenceDate: '',
 };
 
 const RecordIncomeModal: React.FC<RecordIncomeModalProps> = ({ isOpen, onClose }) => {
@@ -40,6 +43,11 @@ const RecordIncomeModal: React.FC<RecordIncomeModalProps> = ({ isOpen, onClose }
 
   const isDonation = DONATION_CATEGORIES.includes(formData.category);
   const isOther = formData.category === 'OTHER';
+
+  const { data: accounts } = useQuery({
+    queryKey: ['activeBankAccounts'],
+    queryFn: () => api.get('/banking/accounts').then(res => res.data.data.filter((a: BankAccount) => a.isActive)),
+  });
 
   const recordMutation = useMutation({
     mutationFn: async () => {
@@ -51,6 +59,9 @@ const RecordIncomeModal: React.FC<RecordIncomeModalProps> = ({ isOpen, onClose }
         source: formData.source,
         description: formData.description,
         remarks: formData.remarks,
+        bankAccountId: formData.bankAccountId || undefined,
+        referenceNumber: formData.referenceNumber || undefined,
+        referenceDate: formData.referenceDate || undefined,
       });
       return response.data;
     },
@@ -69,6 +80,10 @@ const RecordIncomeModal: React.FC<RecordIncomeModalProps> = ({ isOpen, onClose }
     e.preventDefault();
     if (!formData.amount || parseFloat(formData.amount) <= 0) {
       toast.error('Please enter a valid amount');
+      return;
+    }
+    if ((formData.paymentMethod === 'BANK_TRANSFER' || formData.paymentMethod === 'CHEQUE') && !formData.bankAccountId) {
+      toast.error('Please select a bank account');
       return;
     }
     if (isOther && !formData.description.trim()) {
@@ -160,9 +175,46 @@ const RecordIncomeModal: React.FC<RecordIncomeModalProps> = ({ isOpen, onClose }
           options={[
             { value: 'CASH', label: 'Cash' },
             { value: 'BANK_TRANSFER', label: 'Bank Deposit' },
+            { value: 'CHEQUE', label: 'Cheque' },
           ]}
           required
         />
+
+        {(formData.paymentMethod === 'BANK_TRANSFER' || formData.paymentMethod === 'CHEQUE') && (
+          <Select
+            label="Deposit to Bank Account"
+            name="bankAccountId"
+            value={formData.bankAccountId}
+            onChange={handleChange}
+            options={[
+              ...(accounts?.map((a: BankAccount) => ({
+                value: a.id,
+                label: `${a.accountName} (****${a.accountNumber.slice(-4)})`
+              })) || [])
+            ]}
+            required
+          />
+        )}
+
+        {formData.paymentMethod === 'CHEQUE' && (
+          <div className="grid grid-cols-2 gap-4">
+            <Input
+              label="Cheque Number"
+              name="referenceNumber"
+              value={formData.referenceNumber}
+              onChange={handleChange}
+              required
+            />
+            <Input
+              label="Cheque Date"
+              name="referenceDate"
+              type="date"
+              value={formData.referenceDate}
+              onChange={handleChange}
+              required
+            />
+          </div>
+        )}
 
         <TextArea
           label="Remarks (Optional)"

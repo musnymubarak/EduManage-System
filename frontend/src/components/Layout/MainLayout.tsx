@@ -21,6 +21,7 @@ import {
   X,
   ChevronDown,
   FileSpreadsheet,
+  Landmark,
   type LucideIcon,
 } from 'lucide-react';
 import logo from '../../logo.png';
@@ -85,6 +86,7 @@ const MainLayout: React.FC = () => {
         { path: '/finance', icon: DollarSign, label: 'Student Fee', roles: ['SUPER_ADMIN', 'ADMIN'] },
         { path: '/income', icon: Coins, label: 'Income', roles: ['SUPER_ADMIN', 'ADMIN'] },
         { path: '/expenditures', icon: TrendingUp, label: 'Expenditures', roles: ['SUPER_ADMIN', 'FINANCE_OFFICER'] },
+        { path: '/banking', icon: Landmark, label: 'Banking', roles: ['SUPER_ADMIN', 'FINANCE_OFFICER'] },
         { path: '/balance-sheet', icon: FileSpreadsheet, label: 'Balance Sheet', roles: ['SUPER_ADMIN', 'ADMIN'] },
       ],
     },

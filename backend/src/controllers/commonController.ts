@@ -1050,13 +1050,40 @@ export const getAllExpenditures = async (req: AuthRequest, res: Response): Promi
 
 export const recordExpenditure = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
+    const { date, category, description, amount, vendor, billNumber, paymentMethod, remarks, bankAccountId, referenceNumber, referenceDate } = req.body;
+
     const expenditure = await prisma.expenditure.create({
       data: {
-        ...req.body,
-        date: new Date(req.body.date),
+        date: new Date(date),
+        category,
+        description,
+        amount: parseFloat(amount),
+        vendor,
+        billNumber,
+        paymentMethod,
+        remarks,
+        bankAccountId: bankAccountId || null,
         recordedBy: req.user!.id,
       },
     });
+
+    if (bankAccountId && (paymentMethod === 'BANK_TRANSFER' || paymentMethod === 'CHEQUE')) {
+      await prisma.bankTransaction.create({
+        data: {
+          bankAccountId,
+          type: 'WITHDRAWAL',
+          amount: parseFloat(amount),
+          description: `Expenditure: ${category} - ${description}`,
+          referenceNumber: referenceNumber || null,
+          referenceDate: referenceDate ? new Date(referenceDate) : null,
+          paymentMethod,
+          relatedExpenditureId: expenditure.id,
+          transactionDate: expenditure.date,
+          recordedBy: req.user!.id,
+          remarks: 'Auto-generated from Expenditure record',
+        }
+      });
+    }
 
     res.status(201).json({ success: true, data: expenditure });
   } catch (error) {
@@ -1068,6 +1095,7 @@ export const deleteExpenditure = async (req: AuthRequest, res: Response): Promis
   try {
     const { id } = req.params;
 
+    await prisma.bankTransaction.deleteMany({ where: { relatedExpenditureId: id } });
     await prisma.expenditure.delete({ where: { id } });
 
     res.json({ success: true, message: 'Expenditure record deleted successfully' });

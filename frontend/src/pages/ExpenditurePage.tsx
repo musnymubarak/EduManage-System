@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { Plus, Search, Calendar, DollarSign, Trash2 } from 'lucide-react';
 import api from '../services/api';
-import { Expenditure } from '../types';
+import { Expenditure, BankAccount } from '../types';
 import { Card } from '../components/UI/Card';
 import { Button } from '../components/UI/Button';
 import { Input, Select, TextArea } from '../components/UI/Input';
@@ -233,7 +233,15 @@ const AddExpenditureModal: React.FC<AddExpenditureModalProps> = ({ isOpen, onClo
     amount: '',
     vendor: '',
     billNumber: '',
-    paymentMethod: '',
+    paymentMethod: 'CASH',
+    bankAccountId: '',
+    referenceNumber: '',
+    referenceDate: '',
+  });
+
+  const { data: accounts } = useQuery({
+    queryKey: ['activeBankAccounts'],
+    queryFn: () => api.get('/banking/accounts').then(res => res.data.data.filter((a: BankAccount) => a.isActive)),
   });
 
   const queryClient = useQueryClient();
@@ -254,7 +262,10 @@ const AddExpenditureModal: React.FC<AddExpenditureModalProps> = ({ isOpen, onClo
         amount: '',
         vendor: '',
         billNumber: '',
-        paymentMethod: '',
+        paymentMethod: 'CASH',
+        bankAccountId: '',
+        referenceNumber: '',
+        referenceDate: '',
       });
     },
     onError: (error: any) => {
@@ -264,10 +275,17 @@ const AddExpenditureModal: React.FC<AddExpenditureModalProps> = ({ isOpen, onClo
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if ((formData.paymentMethod === 'BANK_TRANSFER' || formData.paymentMethod === 'CHEQUE') && !formData.bankAccountId) {
+      toast.error('Please select a bank account');
+      return;
+    }
     
     const submitData = {
       ...formData,
       amount: parseFloat(formData.amount),
+      bankAccountId: formData.bankAccountId || undefined,
+      referenceNumber: formData.referenceNumber || undefined,
+      referenceDate: formData.referenceDate || undefined,
     };
 
     addExpenditureMutation.mutate(submitData);
@@ -364,6 +382,42 @@ const AddExpenditureModal: React.FC<AddExpenditureModalProps> = ({ isOpen, onClo
           ]}
           required
         />
+
+        {(formData.paymentMethod === 'BANK_TRANSFER' || formData.paymentMethod === 'CHEQUE') && (
+          <Select
+            label="Withdraw from Bank Account"
+            name="bankAccountId"
+            value={formData.bankAccountId}
+            onChange={handleChange}
+            options={[
+              ...(accounts?.map((a: BankAccount) => ({
+                value: a.id,
+                label: `${a.accountName} (****${a.accountNumber.slice(-4)})`
+              })) || [])
+            ]}
+            required
+          />
+        )}
+
+        {formData.paymentMethod === 'CHEQUE' && (
+          <div className="grid grid-cols-2 gap-4">
+            <Input
+              label="Cheque Number"
+              name="referenceNumber"
+              value={formData.referenceNumber}
+              onChange={handleChange}
+              required
+            />
+            <Input
+              label="Cheque Date"
+              name="referenceDate"
+              type="date"
+              value={formData.referenceDate}
+              onChange={handleChange}
+              required
+            />
+          </div>
+        )}
       </form>
     </Modal>
   );

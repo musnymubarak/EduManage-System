@@ -18,7 +18,7 @@ import commonRoutes from './routes/commonRoutes';
 import staffRoutes from './routes/staffRoutes';
 import academicYearRoutes from './routes/academicYearRoutes';
 import balanceSheetRoutes from './routes/balanceSheetRoutes';
-
+import bankingRoutes from './routes/bankingRoutes';
 dotenv.config();
 
 const app: Application = express();
@@ -64,6 +64,7 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/staff', staffRoutes);
 app.use('/api/academic-years', academicYearRoutes);
 app.use('/api/balance-sheet', balanceSheetRoutes);
+app.use('/api/banking', bankingRoutes);
 app.use('/api', commonRoutes);
 
 // Error handling

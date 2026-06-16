@@ -208,7 +208,7 @@ const generateReceiptNumber = async (): Promise<string> => {
 
 export const recordIncome = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { date, category, amount, paymentMethod, source, description, remarks } = req.body;
+    const { date, category, amount, paymentMethod, source, description, remarks, bankAccountId, referenceNumber, referenceDate } = req.body;
 
     if (!category || !INCOME_CATEGORIES.includes(category)) {
       throw new AppError('A valid income category is required', 400);
@@ -233,6 +233,7 @@ export const recordIncome = async (req: AuthRequest, res: Response): Promise<voi
       remarks: remarks?.trim() || null,
       receiptNumber,
       recordedBy: req.user!.id,
+      bankAccountId: bankAccountId || null,
     });
 
     // Create with a one-time retry in case two concurrent requests collide on the unique receipt number
@@ -245,6 +246,24 @@ export const recordIncome = async (req: AuthRequest, res: Response): Promise<voi
       } else {
         throw e;
       }
+    }
+
+    if (bankAccountId && (paymentMethod === 'BANK_TRANSFER' || paymentMethod === 'CHEQUE')) {
+      await prisma.bankTransaction.create({
+        data: {
+          bankAccountId,
+          type: 'DEPOSIT',
+          amount: numAmount,
+          description: `Income: ${INCOME_CATEGORY_LABELS[category as IncomeCategory]}`,
+          referenceNumber: referenceNumber || null,
+          referenceDate: referenceDate ? new Date(referenceDate) : null,
+          paymentMethod,
+          relatedIncomeId: income.id,
+          transactionDate: income.date,
+          recordedBy: req.user!.id,
+          remarks: 'Auto-generated from Income record',
+        }
+      });
     }
 
     res.status(201).json({ success: true, message: 'Income recorded successfully', data: income });
@@ -299,6 +318,7 @@ export const updateIncome = async (req: AuthRequest, res: Response): Promise<voi
 export const deleteIncome = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
+    await prisma.bankTransaction.deleteMany({ where: { relatedIncomeId: id } });
     await prisma.income.delete({ where: { id } });
     res.json({ success: true, message: 'Income record deleted successfully' });
   } catch (error) {

@@ -385,6 +385,7 @@ export interface Expenditure {
   vendor?: string;
   billNumber?: string;
   paymentMethod: string;
+  bankAccountId?: string;
 }
 
 export type IncomeCategory =
@@ -408,6 +409,7 @@ export interface Income {
   remarks?: string;
   recordedBy: string;
   createdAt: string;
+  bankAccountId?: string;
 }
 
 // A normalized row from GET /income (merges student fees + manual income records)
@@ -473,4 +475,41 @@ export interface DashboardStats {
   feeStatusCounts: { name: string; value: number }[];
   financialTrends: { name: string; income: number; expense: number }[];
   attendanceTrends: { date: string; studentPercentage: number; teacherPercentage: number }[];
+}
+
+export type BankAccountType = 'SAVINGS' | 'CURRENT' | 'FIXED_DEPOSIT';
+export type BankTransactionType = 'DEPOSIT' | 'WITHDRAWAL' | 'TRANSFER_IN' | 'TRANSFER_OUT';
+
+export interface BankAccount {
+  id: string;
+  accountName: string;
+  bankName: string;
+  accountNumber: string;
+  branch?: string;
+  accountType: BankAccountType;
+  openingBalance: number;
+  currentBalance: number;
+  isActive: boolean;
+  remarks?: string;
+  createdAt: string;
+}
+
+export interface BankTransaction {
+  id: string;
+  bankAccountId: string;
+  type: BankTransactionType;
+  amount: number;
+  description: string;
+  referenceNumber?: string;
+  referenceDate?: string;
+  paymentMethod: string;
+  proofUrl?: string;
+  relatedIncomeId?: string;
+  relatedExpenditureId?: string;
+  transferAccountId?: string;
+  transactionDate: string;
+  recordedBy: string;
+  remarks?: string;
+  createdAt: string;
+  deletable: boolean;
 }
