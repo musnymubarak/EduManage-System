@@ -21,7 +21,7 @@ const FEE_CATEGORY_LABELS: Record<FeeType, string> = {
 };
 
 const EXPENDITURE_CATEGORY_LABELS: Record<ExpenditureCategory, string> = {
-  COOKING: 'Cooking',
+  COOKING: 'Food & Bevarages',
   ADMINISTRATION: 'Administration',
   DEVELOPMENT: 'Development',
   OTHERS: 'Others',
@@ -91,6 +91,48 @@ export const getMonthlyBalanceSheet = async (req: AuthRequest, res: Response): P
       },
       orderBy: { date: 'desc' },
     });
+
+
+    const prevYear = m === 1 ? year - 1 : year;
+    const prevM = m === 1 ? 12 : m - 1;
+    const prevStartDate = new Date(Date.UTC(prevYear, prevM - 1, 1, 0, 0, 0, 0));
+    const prevEndDate = new Date(Date.UTC(prevYear, prevM, 0, 23, 59, 59, 999));
+
+    const [prevFeePayments, prevIncomes, prevExpenditures] = await Promise.all([
+      prisma.feePayment.findMany({
+        where: {
+          paidAmount: { gt: 0 },
+          paymentDate: {
+            gte: prevStartDate,
+            lte: prevEndDate,
+          },
+        },
+        select: { paidAmount: true },
+      }),
+      prisma.income.findMany({
+        where: {
+          date: {
+            gte: prevStartDate,
+            lte: prevEndDate,
+          },
+        },
+        select: { amount: true },
+      }),
+      prisma.expenditure.findMany({
+        where: {
+          date: {
+            gte: prevStartDate,
+            lte: prevEndDate,
+          },
+        },
+        select: { amount: true },
+      }),
+    ]);
+
+    const prevTotalIncome = prevFeePayments.reduce((sum, f) => sum + f.paidAmount, 0) +
+                            prevIncomes.reduce((sum, i) => sum + i.amount, 0);
+    const prevTotalExpenditure = prevExpenditures.reduce((sum, e) => sum + e.amount, 0);
+    const prevNetBalance = prevTotalIncome - prevTotalExpenditure;
 
     // --- Process Income ---
     const studentFeesBreakdown = {
@@ -235,6 +277,7 @@ export const getMonthlyBalanceSheet = async (req: AuthRequest, res: Response): P
           transactions: expenditureTransactions,
         },
         netBalance,
+        previousMonthNetGain: prevNetBalance,
       },
     });
   } catch (error) {

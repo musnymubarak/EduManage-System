@@ -51,7 +51,7 @@ const FEE_CATEGORY_LABELS: Record<string, string> = {
 };
 
 const EXPENDITURE_CATEGORY_LABELS: Record<string, string> = {
-  COOKING: 'Cooking',
+  COOKING: 'Food & Bevarages',
   ADMINISTRATION: 'Administration',
   DEVELOPMENT: 'Development',
   OTHERS: 'Others',

@@ -45,6 +45,8 @@ const FeesPage: React.FC = () => {
   const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isFeeSettingModalOpen, setIsFeeSettingModalOpen] = useState(false);
+  const [selectedStudentForReport, setSelectedStudentForReport] = useState<any>(null);
+  const [isStatementModalOpen, setIsStatementModalOpen] = useState(false);
 
   // Date Handling
   const now = new Date();
@@ -182,6 +184,11 @@ const FeesPage: React.FC = () => {
             }
         });
     }
+  };
+
+  const handlePrintStatement = (row: any) => {
+     setSelectedStudentForReport(row);
+     setIsStatementModalOpen(true);
   };
 
   return (
@@ -402,7 +409,7 @@ const FeesPage: React.FC = () => {
              <p className="text-gray-500 mt-2">Try adjusting your search criteria or filters.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto pb-28">
             <table className="w-full">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-100 text-left">
@@ -464,6 +471,7 @@ const FeesPage: React.FC = () => {
                         <ActionMenu items={[
                           { label: row.paymentStatus === 'PENDING' ? 'Collect' : 'Resume', icon: <DollarSign size={15} />, onClick: () => handleRecordPayment(row), disabled: row.paymentStatus === 'PAID' },
                           { label: 'Receipt', icon: <FileText size={15} />, onClick: () => handleViewReceipt(row), hidden: !row.paymentId },
+                          { label: 'Print Statement', icon: <Printer size={15} />, onClick: () => handlePrintStatement(row) },
                           { label: 'Correction', icon: <Pencil size={15} />, onClick: () => handleEditPayment(row), hidden: !row.paymentId },
                           { label: 'Delete', icon: <Trash2 size={15} />, onClick: () => handleDeleteFeePayment(row), variant: 'danger', hidden: !row.paymentId },
                         ]} />
@@ -531,6 +539,18 @@ const FeesPage: React.FC = () => {
                 setSelectedFee(null);
             }}
             fee={selectedFee}
+        />
+      )}
+
+      {/* Student Statement View */}
+      {selectedStudentForReport && (
+        <StudentStatementModal
+            isOpen={isStatementModalOpen}
+            onClose={() => {
+                setIsStatementModalOpen(false);
+                setSelectedStudentForReport(null);
+            }}
+            studentId={selectedStudentForReport.studentId}
         />
       )}
       {/* Fee Setting Modal */}
@@ -949,6 +969,259 @@ const FeeReceiptModal: React.FC<{ isOpen: boolean; onClose: () => void; fee: any
             visibility: visible !important;
           }
           #receipt-print-grid * { visibility: visible !important; }
+        }
+      `}} />
+    </Modal>
+  );
+};
+
+const StatementContent: React.FC<{ student: any; summary: any; monthlyLedger: any[]; otherPayments: any[]; logo: any }> = ({
+  student, summary, monthlyLedger, otherPayments, logo
+}) => {
+  return (
+    <div className="flex flex-col justify-between h-full min-h-full">
+      <div>
+        {/* Institutional Header */}
+        <div className="flex justify-between items-start border-b-2 border-blue-900 pb-4 mb-6">
+          <div className="flex items-center gap-3">
+            <img src={logo} alt="Logo" className="h-16 w-16 object-contain" />
+            <div>
+              <h1 className="text-xl font-black text-blue-950 uppercase tracking-tight">SUMAIYA LADIES ARABIC COLLEGE</h1>
+              <p className="text-xs font-bold text-blue-800 tracking-wider">Munaichchenai, Kinniya 31100, Sri Lanka</p>
+              <p className="text-[10px] text-gray-500 font-medium">Phone: 0262 236 033 | Email: sumaiyaladiescollege@gmail.com</p>
+            </div>
+          </div>
+          <div className="text-right">
+            <span className="inline-block px-3 py-1 bg-red-50 text-red-700 text-xs font-black rounded-lg border border-red-100 uppercase tracking-widest">
+              OFFICIAL STATEMENT
+            </span>
+            <p className="text-[10px] text-gray-400 mt-2 font-medium">Generated: {new Date().toLocaleDateString('en-GB')}</p>
+          </div>
+        </div>
+
+        {/* Title */}
+        <div className="text-center mb-6">
+          <h2 className="text-base font-extrabold text-gray-900 tracking-wider uppercase border-b border-gray-150 pb-2">Student Fee Statement of Account</h2>
+        </div>
+
+        {/* Student details grid */}
+        <div className="grid grid-cols-2 gap-6 bg-gray-50 p-4 rounded-xl border border-gray-150 mb-6 text-xs">
+          <div>
+            <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Student Name</p>
+            <p className="font-extrabold text-gray-800 text-sm">{student.fullName}</p>
+            <p className="text-[10px] text-blue-700 font-bold mt-1 uppercase tracking-wider">Class: {student.className}</p>
+          </div>
+          <div className="text-right">
+            <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Admission / Index Details</p>
+            <p className="font-extrabold text-gray-800">Adm No: {student.admissionNumber}</p>
+            {student.indexNumber && <p className="text-xs font-bold text-gray-600">Index No: {student.indexNumber}</p>}
+            <p className="text-[9px] text-gray-500 font-semibold mt-1">Admission Date: {new Date(student.admissionDate).toLocaleDateString('en-GB')}</p>
+          </div>
+        </div>
+
+        {/* Summary Card Grid */}
+        <div className="grid grid-cols-3 gap-4 mb-6">
+          <div className="border border-gray-150 rounded-xl p-3 bg-gray-50/50">
+            <p className="text-[9px] font-bold text-gray-500 uppercase tracking-wider">Total Expected Tuition</p>
+            <p className="text-base font-black text-gray-900 mt-1">{formatCurrency(summary.totalExpected)}</p>
+          </div>
+          <div className="border border-gray-150 rounded-xl p-3 bg-emerald-50/30">
+            <p className="text-[9px] font-bold text-emerald-700 uppercase tracking-wider">Total Paid Amount</p>
+            <p className="text-base font-black text-green-700 mt-1">{formatCurrency(summary.totalPaid)}</p>
+          </div>
+          <div className="border-2 border-red-200 rounded-xl p-3 bg-red-50/30">
+            <p className="text-[9px] font-bold text-red-700 uppercase tracking-wider">Total Arrears Owed</p>
+            <p className="text-base font-black text-red-700 mt-1">{formatCurrency(summary.grandTotalOwed)}</p>
+          </div>
+        </div>
+
+        {/* Breakdown Table */}
+        <div className="mb-6">
+          <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Monthly Fee Breakdown & Status</h3>
+          <div className="border border-gray-200 rounded-lg overflow-hidden">
+            <table className="w-full text-left text-[11px]">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th className="px-3 py-2 font-bold text-gray-600">Period / Month</th>
+                  <th className="px-3 py-2 text-right font-bold text-gray-600">Expected</th>
+                  <th className="px-3 py-2 text-right font-bold text-gray-600">Paid</th>
+                  <th className="px-3 py-2 text-right font-bold text-gray-600">Balance</th>
+                  <th className="px-3 py-2 text-center font-bold text-gray-600">Status</th>
+                  <th className="px-3 py-2 font-bold text-gray-600">Transaction Details</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-150">
+                {monthlyLedger.map((row: any) => {
+                  const hasArrears = row.balance > 0;
+                  const monthDate = new Date(row.month + '-01');
+                  const monthLabel = monthDate.toLocaleDateString('default', { month: 'long', year: 'numeric' });
+                  
+                  return (
+                    <tr key={row.month} className={`${hasArrears ? 'bg-red-50/20' : 'bg-white'}`}>
+                      <td className="px-3 py-2 font-extrabold text-gray-900">{monthLabel}</td>
+                      <td className="px-3 py-2 text-right font-semibold text-gray-800">{formatCurrency(row.expectedAmount)}</td>
+                      <td className="px-3 py-2 text-right font-semibold text-green-700">{formatCurrency(row.paidAmount)}</td>
+                      <td className={`px-3 py-2 text-right font-extrabold ${hasArrears ? 'text-red-600 bg-red-50/30' : 'text-gray-800'}`}>
+                        {formatCurrency(row.balance)}
+                      </td>
+                      <td className="px-3 py-2 text-center">
+                        <span className={`inline-block px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider ${
+                          row.status === 'PAID' 
+                            ? 'bg-green-100 text-green-800' 
+                            : row.status === 'PARTIAL' 
+                            ? 'bg-amber-100 text-amber-800' 
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {row.status === 'MISSING' ? 'UNPAID' : row.status}
+                        </span>
+                      </td>
+                      <td className="px-3 py-2 text-gray-500 text-[10px]">
+                        {row.receiptNumber ? (
+                          <div className="font-semibold text-gray-700">
+                            <span>Receipt: {row.receiptNumber}</span>
+                            {row.paymentDate && <span className="block text-[9px] text-gray-400 font-normal">Paid: {formatDate(row.paymentDate)}</span>}
+                          </div>
+                        ) : (
+                          <span className="italic text-gray-400">No payment record</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Other Fees Section (only if relevant) */}
+        {otherPayments.length > 0 && (
+          <div className="mb-6">
+            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Other Fee Transactions</h3>
+            <div className="border border-gray-200 rounded-lg overflow-hidden">
+              <table className="w-full text-left text-[11px]">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="px-3 py-2 font-bold text-gray-600">Date</th>
+                    <th className="px-3 py-2 font-bold text-gray-600">Description</th>
+                    <th className="px-3 py-2 text-right font-bold text-gray-600">Expected</th>
+                    <th className="px-3 py-2 text-right font-bold text-gray-600">Paid</th>
+                    <th className="px-3 py-2 text-right font-bold text-gray-600">Balance</th>
+                    <th className="px-3 py-2 font-bold text-gray-600">Receipt No</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-150">
+                  {otherPayments.map((row: any) => (
+                    <tr key={row.id} className={row.balance > 0 ? 'bg-red-50/20' : 'bg-white'}>
+                      <td className="px-3 py-2 text-gray-700">{formatDate(row.createdAt)}</td>
+                      <td className="px-3 py-2 font-semibold text-gray-800">{row.remarks || row.feeType}</td>
+                      <td className="px-3 py-2 text-right font-semibold text-gray-800">{formatCurrency(row.amount)}</td>
+                      <td className="px-3 py-2 text-right font-semibold text-green-700">{formatCurrency(row.paidAmount)}</td>
+                      <td className="px-3 py-2 text-right font-extrabold text-gray-800">{formatCurrency(row.balance)}</td>
+                      <td className="px-3 py-2 font-mono text-gray-600 text-[10px]">{row.receiptNumber || '-'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Footer & Signatures */}
+      <div className="border-t border-gray-200 pt-6 mt-8">
+        <div className="grid grid-cols-2 gap-12">
+          <div className="space-y-2 text-[10px] text-gray-500 leading-normal">
+            <h4 className="font-bold text-gray-700 uppercase tracking-wider">Statement Information</h4>
+            <p>1. This is a computer-generated statement of outstanding arrears. No physical signature is required unless requested.</p>
+            <p>2. Please clear all pending arrears as soon as possible to avoid administrative holds or restrictions.</p>
+            <p>3. Payments can be settled via Cash at the administration office or Bank Transfer to our official accounts.</p>
+          </div>
+          <div className="text-right flex flex-col justify-end">
+            <div className="w-48 border-b border-gray-300 ml-auto mb-1 h-12"></div>
+            <p className="text-xs font-bold text-gray-700 uppercase tracking-wider">Authorized Signature / Stamp</p>
+            <p className="text-[10px] text-gray-400 mt-1">Sumaiya Ladies Arabic College Accounts Office</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const StudentStatementModal: React.FC<{ isOpen: boolean; onClose: () => void; studentId: string }> = ({
+  isOpen, onClose, studentId
+}) => {
+  const handlePrint = () => window.print();
+
+  const { data: ledgerResponse, isLoading, error } = useQuery({
+    queryKey: ['studentLedger', studentId],
+    queryFn: async () => {
+      const response = await api.get(`/fees/student/${studentId}/ledger`);
+      return response.data;
+    },
+    enabled: isOpen && !!studentId,
+  });
+
+  if (!isOpen) return null;
+
+  const ledgerData = ledgerResponse?.data;
+  const student = ledgerData?.student;
+  const summary = ledgerData?.summary;
+  const monthlyLedger = ledgerData?.monthlyLedger || [];
+  const otherPayments = ledgerData?.otherPayments || [];
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title="Student Arrears Statement" size="xl" footer={
+        <div className="flex justify-end gap-3 no-print p-4 bg-gray-50 border-t rounded-b-2xl">
+            <Button variant="secondary" onClick={onClose} className="font-bold border-none">Close</Button>
+            <Button onClick={handlePrint} className="bg-blue-600 hover:bg-blue-700 shadow-md font-black px-6">
+                <Printer size={18} className="mr-2" /> 
+                Print Statement
+            </Button>
+        </div>
+    }>
+        {isLoading ? (
+          <div className="py-24 text-center">
+             <div className="inline-block relative">
+                <div className="h-16 w-16 rounded-full border-4 border-blue-50 border-t-blue-600 animate-spin"></div>
+             </div>
+             <p className="text-gray-500 mt-4 font-bold tracking-widest uppercase text-xs">Generating Ledger Statement...</p>
+          </div>
+        ) : error || !ledgerData ? (
+          <div className="py-12 text-center text-red-500 font-bold">
+             Failed to load student ledger details. Please try again.
+          </div>
+        ) : (
+          <>
+             {/* SCREEN PREVIEW CONTAINER */}
+             <div className="no-print p-4 bg-gray-100 rounded-xl overflow-x-auto">
+                 <div className="bg-white shadow-lg mx-auto border border-gray-200 p-8 text-slate-800" style={{ width: '210mm', minHeight: '297mm', boxSizing: 'border-box', fontFamily: 'Inter, system-ui, sans-serif' }}>
+                      <StatementContent student={student} summary={summary} monthlyLedger={monthlyLedger} otherPayments={otherPayments} logo={logo} />
+                 </div>
+             </div>
+
+             {/* PRINT LAYOUT CONTAINER */}
+             <div id="arrears-print-page" className="hidden print:block print:bg-white text-slate-900" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
+                 <StatementContent student={student} summary={summary} monthlyLedger={monthlyLedger} otherPayments={otherPayments} logo={logo} />
+             </div>
+          </>
+        )}
+
+        <style dangerouslySetInnerHTML={{ __html: `
+        @media print {
+          @page { size: A4 portrait; margin: 15mm; }
+          body { background: white !important; margin: 0 !important; padding: 0 !important; }
+          .no-print, header, nav, footer, aside, .modal-overlay, .modal-content-wrapper { display: none !important; }
+          #arrears-print-page { 
+            display: block !important;
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            width: 100% !important; 
+            z-index: 99999;
+            background: white !important;
+            visibility: visible !important;
+          }
+          #arrears-print-page * { visibility: visible !important; }
         }
       `}} />
     </Modal>

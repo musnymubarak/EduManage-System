@@ -12,7 +12,7 @@ import { formatDate, formatCurrency } from '../utils/helpers';
 import { ActionMenu } from '../components/UI/ActionMenu';
 
 const CATEGORY_LABELS: Record<string, string> = {
-  COOKING: 'Cooking',
+  COOKING: 'Food & Bevarages',
   ADMINISTRATION: 'Administration',
   DEVELOPMENT: 'Development',
   OTHERS: 'Others',
@@ -106,7 +106,7 @@ const ExpenditurePage: React.FC = () => {
               className="rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">All Categories</option>
-              <option value="COOKING">Cooking</option>
+              <option value="COOKING">Food & Bevarages</option>
               <option value="ADMINISTRATION">Administration</option>
               <option value="DEVELOPMENT">Development</option>
               <option value="OTHERS">Others</option>
@@ -328,7 +328,7 @@ const AddExpenditureModal: React.FC<AddExpenditureModalProps> = ({ isOpen, onClo
           value={formData.category}
           onChange={handleChange}
           options={[
-            { value: 'COOKING', label: 'Cooking' },
+            { value: 'COOKING', label: 'Food & Bevarages' },
             { value: 'ADMINISTRATION', label: 'Administration' },
             { value: 'DEVELOPMENT', label: 'Development' },
             { value: 'OTHERS', label: 'Others' },

@@ -167,7 +167,7 @@ export default function BankingPage() {
                 </Button>
               </div>
               
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto pb-28">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>

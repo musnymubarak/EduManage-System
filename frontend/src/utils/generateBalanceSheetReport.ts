@@ -19,6 +19,7 @@ export async function generateBalanceSheetReport(data: any): Promise<ReportResul
       ['Total Income', formatCurrency(data.income.total)],
       ['Total Expenditures', formatCurrency(data.expenditure.total)],
       [netText, formatCurrency(data.netBalance)],
+      ['Previous Month Net Gain', formatCurrency(data.previousMonthNetGain || 0)],
     ],
     theme: 'grid',
     headStyles: { fillColor: [79, 70, 229], textColor: 255, fontStyle: 'bold' },
@@ -27,6 +28,16 @@ export async function generateBalanceSheetReport(data: any): Promise<ReportResul
       if (cellData.section === 'body' && cellData.row.index === 2) {
         // Highlight Net Balance
         if (data.netBalance >= 0) {
+          cellData.cell.styles.textColor = [22, 163, 74]; // green
+          cellData.cell.styles.fillColor = [240, 253, 244];
+        } else {
+          cellData.cell.styles.textColor = [220, 38, 38]; // red
+          cellData.cell.styles.fillColor = [254, 242, 242];
+        }
+      } else if (cellData.section === 'body' && cellData.row.index === 3) {
+        // Highlight Previous Month Net Gain
+        const prevNet = data.previousMonthNetGain || 0;
+        if (prevNet >= 0) {
           cellData.cell.styles.textColor = [22, 163, 74]; // green
           cellData.cell.styles.fillColor = [240, 253, 244];
         } else {
@@ -68,7 +79,7 @@ export async function generateBalanceSheetReport(data: any): Promise<ReportResul
   // Prepare Expenditure Category Breakdown Data
   const expBreakdowns: [string, number][] = [];
   const expB = data.expenditure.breakdown;
-  if (expB.cooking > 0) expBreakdowns.push(['Cooking Expenditures', expB.cooking]);
+  if (expB.cooking > 0) expBreakdowns.push(['Food & Bevarages Expenditures', expB.cooking]);
   if (expB.administration > 0) expBreakdowns.push(['Administrative Expenses', expB.administration]);
   if (expB.development > 0) expBreakdowns.push(['Development / Maintenance', expB.development]);
   if (expB.others > 0) expBreakdowns.push(['Other Expenses', expB.others]);
